@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   aimToward, applyHit, CLIP, fire, GAME_SECONDS, hitZone, makeBird, newGame, reloading, RELOAD_SECONDS, step, type BirdKind,
 } from '@/game/engine';
+import { FLOCK_SPECIES } from '@/game/sprites';
 
 const game = () => {
   const s = newGame(400, 800, 650, 80);
@@ -49,10 +50,48 @@ describe('scoring', () => {
       const { s, b } = bird('duck', { hen });
       applyHit(s, b, 'body', 0, 0);
       expect(b.alive).toBe(true);
+      expect(s.score).toBe(0);
       applyHit(s, b, 'body', 0, 0);
       expect(b.alive).toBe(false);
       expect(s.score).toBe(2);
     }
+  });
+
+  it('merganser pays +2 on knockdown', () => {
+    const s = game();
+    const home = FLOCK_SPECIES.findIndex((f) => f.id === 'home');
+    const b = makeBird(s, 'duck', 100, 200, 0, { species: home });
+    s.birds.push(b);
+    applyHit(s, b, 'ko', 0, 0);
+    expect(s.score).toBe(5);
+  });
+
+  it('teal dart up and down', () => {
+    const s = game();
+    const teal = FLOCK_SPECIES.findIndex((f) => f.id === 'gwte');
+    const b = makeBird(s, 'duck', 100, 300, 10, { species: teal });
+    s.birds.push(b);
+    let moved = 0;
+    for (let i = 0; i < 180; i++) {
+      step(s, 1 / 60);
+      moved = Math.max(moved, Math.abs(b.y - b.baseY));
+    }
+    expect(moved).toBeGreaterThan(20);
+  });
+
+  it('a gadwall can land on the pond; shooting it pays in full and mocks you', () => {
+    const s = game();
+    const gadw = FLOCK_SPECIES.findIndex((f) => f.id === 'gadw');
+    const b = makeBird(s, 'duck', 0, 200, 120, { species: gadw });
+    b.landX = 150;
+    s.birds.push(b);
+    for (let i = 0; i < 180; i++) step(s, 1 / 60);
+    expect(b.sit).toBe(2);
+    expect(b.y + b.h).toBeGreaterThan(s.waterY - b.h * 0.2);
+    applyHit(s, b, 'ko', 0, 0);
+    expect(s.score).toBe(3);
+    expect(s.events.some((e) => e.k === 'sitting')).toBe(true);
+    expect(s.popups.at(-1)?.label).toBe('GADWALL');
   });
 
   it('coot costs a point', () => {
@@ -71,6 +110,7 @@ describe('scoring', () => {
     const { s, b } = bird(kind);
     for (let i = 0; i < hits; i++) {
       expect(b.alive).toBe(true);
+      expect(s.score).toBe(0);
       applyHit(s, b, zone, 0, 0);
     }
     expect(b.alive).toBe(false);

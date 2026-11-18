@@ -5,8 +5,15 @@
  *
  * Units are screen points; time in seconds.
  *
- * Scoring:
+ * Keep helpers above the worklets that call them: the worklet compiler captures a
+ * worklet's dependencies where it's defined, so a helper declared further down is
+ * undefined on the UI thread (it still works under Vitest, which hides the bug).
+ *
+ * Scoring — nothing counts until the bird is down; hits bank on the bird and pay out when it falls:
  *  - Duck: body hit 1 (two body hits knock it out — 2 total). KO zone: hen 2, drake 3.
+ *  - Merganser: a fast loner, +2 on top when it goes down.
+ *  - Gadwall and spoonies fly slow and sometimes land on the open water. Shooting a
+ *    sitting duck still pays in full — and the game mocks you for it.
  *  - Coot: any hit −1, and the game mocks you.
  *  - Goose: damage adds up — 4 KO hits or 10 body hits. KO hit 3 (+1 on the killing
  *    blow → 13 for a clean four), body hit 1 (→ 10). Banded goose: everything ×2.
@@ -65,17 +72,30 @@ export type Bird = {
   flash: number;
   landed: boolean;
   gone: boolean;
+  /** Teal and wood ducks dart up or down now and then: when the next one starts, and the current one. */
+  jinkNext: number;
+  jinkStart: number;
+  jinkAmp: number;
+  /** Landing on the pond: 0 flying, 1 gliding down, 2 sitting. */
+  sit: number;
+  /** Where it drops in (x of its centre), or Infinity for birds that never land. */
+  landX: number;
+  landT0: number;
+  landY0: number;
 };
 
 export type Dog = { x: number; t: number; flip: boolean; birdId: number; lead: boolean };
 export type Bullet = { x: number; y: number; vx: number; vy: number };
 export type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string };
-export type Popup = { x: number; y: number; text: string; life: number };
+export type Popup = { x: number; y: number; text: string; life: number; label: string };
+
+/** Popups live this long; they pop in large and settle. */
+export const POPUP_LIFE = 1.1;
 
 export type GameEvent =
   | { k: 'shot' | 'dry' | 'reload' | 'dog' }
   | { k: 'hit' | 'ko'; pts: number }
-  | { k: 'coot' }
+  | { k: 'coot' | 'sitting' }
   | { k: 'special'; kind: 'goose' | 'swan'; pts: number; banded: boolean; down: boolean };
 
 export type GameState = {
@@ -86,6 +106,10 @@ export type GameState = {
   skyBottom: number;
   /** Where downed big birds land and the dogs come up. */
   groundY: number;
+  /** The open water in the middle of the reeds, where sitting ducks float. */
+  waterY: number;
+  pondL: number;
+  pondR: number;
   gunX: number;
   gunY: number;
   aim: number;
@@ -121,6 +145,9 @@ export function newGame(width: number, height: number, gunY: number, skyTop: num
     skyTop,
     skyBottom: Math.min(reedTop - 30, skyTop + (gunY - skyTop) * 0.62),
     groundY: reedTop + 34,
+    waterY: reedTop + 26,
+    pondL: width * 0.27,
+    pondR: width * 0.73,
     gunX: width / 2,
     gunY,
     aim: -Math.PI / 2,
@@ -223,13 +250,29 @@ export function makeBird(s: GameState, kind: BirdKind, x: number, y: number, vx:
     flash: 0,
     landed: false,
     gone: false,
+    jinkNext: kind === 'duck' && FLOCK_SPECIES[species].jinks ? s.t + 0.4 + Math.random() * 1.2 : Infinity,
+    jinkStart: -1,
+    jinkAmp: 0,
+    sit: 0,
+    landX: Infinity,
+    landT0: 0,
+    landY0: 0,
   };
+}
+
+/** A quick dart: out to the jink amplitude and back over 0.45 s. */
+export function jinkOffset(b: Bird, t: number): number {
+  'worklet';
+  if (b.jinkStart < 0) return 0;
+  const p = (t - b.jinkStart) / 0.45;
+  return p >= 0 && p <= 1 ? b.jinkAmp * Math.sin(Math.PI * p) : 0;
 }
 
 function pickSpecies(): number {
   'worklet';
   let total = 0;
   for (const f of FLOCK_SPECIES) total += f.weight;
+  // Mergansers have weight 0: they come in on their own (spawnMerganser).
   let r = Math.random() * total;
   for (let i = 0; i < FLOCK_SPECIES.length; i++) {
     r -= FLOCK_SPECIES[i].weight;
@@ -255,6 +298,27 @@ function spawnFlock(s: GameState): void {
     if (Math.random() < 0.07) s.birds.push(makeBird(s, 'coot', x, y, speed * 0.85));
     else s.birds.push(makeBird(s, 'duck', x, y, speed, { species, hen: Math.random() < 0.35 }));
   }
+  // Gadwall and spoonies: sometimes one peels off and drops onto the pond.
+  if (sp.lands && Math.random() < 0.45) {
+    const flock = s.birds.slice(-size).filter((b) => b.kind === 'duck');
+    const lander = flock[Math.floor(Math.random() * flock.length)];
+    if (lander) {
+      lander.landX = s.pondL + 30 + Math.random() * (s.pondR - s.pondL - 60);
+      lander.jinkNext = Infinity;
+    }
+  }
+}
+
+/** A merganser now and then: alone, low and fast. */
+function maybeSpawnMerganser(s: GameState): void {
+  'worklet';
+  if (Math.random() > 0.3) return;
+  const options: number[] = [];
+  FLOCK_SPECIES.forEach((f, i) => f.solo && options.push(i));
+  const species = options[Math.floor(Math.random() * options.length)];
+  const y = s.skyTop + 30 + Math.random() * Math.max(10, s.skyBottom - s.skyTop - DUCK_PX_H - 60);
+  const speed = (150 + Math.random() * 50) * FLOCK_SPECIES[species].speed * Math.max(0.85, s.width / 400) * 0.8;
+  s.birds.push(makeBird(s, 'duck', -DUCK_PX_W - 120 - Math.random() * 80, y, speed, { species, hen: Math.random() < 0.35 }));
 }
 
 /** Roll for the big birds. At most one per game, and only early enough to be shot down. */
@@ -290,9 +354,19 @@ function burst(s: GameState, x: number, y: number, n: number, colors: string[], 
   }
 }
 
+export function birdName(b: Bird): string {
+  'worklet';
+  if (b.kind === 'duck') {
+    const sp = FLOCK_SPECIES[b.species];
+    return b.hen ? `${sp.name} HEN` : sp.name;
+  }
+  if (b.kind === 'goose') return b.banded ? 'BANDED GOOSE' : 'GOOSE';
+  return b.kind === 'swan' ? 'SWAN' : 'COOT';
+}
+
 function popup(s: GameState, b: Bird, pts: number): void {
   'worklet';
-  s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: 0.9 });
+  s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: POPUP_LIFE, label: birdName(b) });
 }
 
 function knockDown(b: Bird): void {
@@ -301,56 +375,61 @@ function knockDown(b: Bird): void {
   b.vy = b.kind === 'goose' || b.kind === 'swan' ? -60 : -120;
 }
 
-/** Apply one bullet to one bird. Returns the points scored. */
+/**
+ * Apply one bullet to one bird. Hits are banked on the bird and only pay out when
+ * it goes down — a wounded bird that gets away scores nothing. Returns the points
+ * scored by this shot (0 unless it knocked the bird down).
+ */
 export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number, by: number): number {
   'worklet';
   s.hits++;
-  let pts = 0;
+  let down = false;
   if (b.kind === 'coot') {
-    pts = -1;
-    knockDown(b);
+    b.earned = -1;
+    down = true;
     s.coots++;
     burst(s, bx, by, 8, ['#3A3A40', '#F4F4F4']);
     s.events.push({ k: 'coot' });
   } else if (b.kind === 'duck') {
-    const feathers = b.hen ? ['#A8865E', '#F4F4F4', '#6E5236'] : ['#F4F4F4', '#B8B2A6', '#6E665C'];
     if (zone === 'ko') {
-      pts = b.hen ? 2 : 3;
+      b.earned += b.hen ? 2 : 3;
+      down = true;
       s.kos++;
-      knockDown(b);
-      burst(s, bx, by, 6, ['#F4F4F4', '#C8342A']);
-      s.events.push({ k: 'ko', pts });
+      burst(s, bx, by, 22, ['#F4F4F4', '#C8342A', '#E8B923', '#FFFFFF'], 220);
+      s.events.push({ k: 'ko', pts: b.earned });
     } else {
-      pts = 1;
+      b.earned += 1;
       b.bodyHits++;
       b.flash = 0.12;
-      burst(s, bx, by, 16, feathers);
-      if (b.bodyHits >= 2) knockDown(b);
-      s.events.push({ k: 'hit', pts });
+      burst(s, bx, by, 16, b.hen ? ['#A8865E', '#F4F4F4', '#6E5236'] : ['#F4F4F4', '#B8B2A6', '#6E665C']);
+      down = b.bodyHits >= 2;
+      s.events.push({ k: down ? 'ko' : 'hit', pts: down ? b.earned : 0 });
     }
   } else {
     const spec = SPECIAL[b.kind];
     if (zone === 'ko') b.koHits++;
     else b.bodyHits++;
     let base = zone === 'ko' ? spec.koPts : spec.bodyPts;
-    const down = b.koHits / spec.koNeeded + b.bodyHits / spec.bodyNeeded >= 0.999;
+    down = b.koHits / spec.koNeeded + b.bodyHits / spec.bodyNeeded >= 0.999;
     if (down && zone === 'ko') base += spec.koKillBonus;
-    pts = base * (b.banded ? 2 : 1);
-    b.earned += pts;
+    b.earned += base * (b.banded ? 2 : 1);
     b.flash = 0.15;
     burst(s, bx, by, 10, b.kind === 'swan' ? ['#F7F7F2', '#DADAD2'] : ['#F4F4F4', '#8C7A64', '#141414']);
     if (down) {
-      knockDown(b);
       if (zone === 'ko') s.kos++;
       if (b.kind === 'goose') s.geese++;
       else s.swans++;
       burst(s, b.x + b.w / 2, b.y + b.h / 2, 46, ['#E8B923', '#FFFFFF', '#F26B1D', '#FFE29A'], 260);
     }
-    s.events.push({ k: 'special', kind: b.kind, pts: down ? b.earned : pts, banded: b.banded, down });
+    s.events.push({ k: 'special', kind: b.kind, pts: down ? b.earned : 0, banded: b.banded, down });
   }
-  s.score += pts;
-  popup(s, b, pts);
-  return pts;
+  if (!down) return 0;
+  if (b.kind === 'duck') b.earned += FLOCK_SPECIES[b.species].bonus ?? 0;
+  if (b.sit === 2) s.events.push({ k: 'sitting' });
+  knockDown(b);
+  s.score += b.earned;
+  popup(s, b, b.earned);
+  return b.earned;
 }
 
 /** Dog timeline: rise 0–0.3 s, hold the bird up 0.3–1.1 s, sink 1.1–1.45 s. */
@@ -393,6 +472,7 @@ export function step(s: GameState, dt: number): void {
     }
     if (s.t >= s.nextFlock && s.t < GAME_SECONDS - 1.2) {
       spawnFlock(s);
+      maybeSpawnMerganser(s);
       maybeSpawnSpecial(s);
       s.nextFlock = s.t + 1.5 + Math.random() * 0.9;
     }
@@ -400,9 +480,33 @@ export function step(s: GameState, dt: number): void {
 
   for (const b of s.birds) {
     if (b.flash > 0) b.flash -= dt;
-    if (b.alive) {
+    if (b.alive && b.sit > 0) {
+      const sitY = s.waterY - b.h * 0.85;
+      if (b.sit === 1) {
+        const p = Math.min(1, (s.t - b.landT0) / 0.8);
+        b.x += b.vx * dt * (1 - p);
+        b.y = b.landY0 + (sitY - b.landY0) * (p * p * (3 - 2 * p));
+        if (p >= 1) b.sit = 2;
+      } else {
+        b.x += 5 * dt;
+        b.y = sitY + Math.sin(s.t * 2 + b.phase) * 1.5;
+      }
+    } else if (b.alive) {
+      if (b.x + b.w / 2 >= b.landX) {
+        b.sit = 1;
+        b.landT0 = s.t;
+        b.landY0 = b.y;
+        continue;
+      }
       b.x += b.vx * dt;
-      b.y = b.baseY + Math.sin(b.phase + s.t * (b.kind === 'duck' || b.kind === 'coot' ? 4 : 2)) * 4;
+      if (s.t >= b.jinkNext) {
+        b.jinkStart = s.t;
+        // Dip or pop up, staying inside the sky.
+        const up = b.baseY - 70 > s.skyTop && (Math.random() < 0.5 || b.baseY + 70 > s.skyBottom);
+        b.jinkAmp = (up ? -1 : 1) * (35 + Math.random() * 40);
+        b.jinkNext = s.t + 0.9 + Math.random() * 1.4;
+      }
+      b.y = b.baseY + Math.sin(b.phase + s.t * (b.kind === 'duck' || b.kind === 'coot' ? 4 : 2)) * 4 + jinkOffset(b, s.t);
     } else if (!b.landed) {
       b.vy += GRAVITY * dt;
       b.y += b.vy * dt;
@@ -477,6 +581,7 @@ export function finished(s: GameState): boolean {
 
 export function wingsUp(b: Bird, t: number): boolean {
   'worklet';
+  if (b.sit === 1) return Math.floor(t / 0.07) % 2 === 0;
   const beat = b.kind === 'coot' ? 0.09 : b.kind === 'duck' ? 0.14 : 0.24;
   return Math.floor((t + b.phase) / beat) % 2 === 0;
 }

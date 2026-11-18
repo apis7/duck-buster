@@ -43,6 +43,9 @@ export default function More() {
       </Section>
 
       <Section title="Settings">
+        <Card style={{ paddingVertical: 4 }}>
+          <Row icon="❓" label="Minigame FAQ" onPress={() => router.push('/minigame-faq')} />
+        </Card>
         <Card style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Body style={{ fontWeight: '700' }}>Sound effects</Body>
           <Switch

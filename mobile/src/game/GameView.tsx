@@ -10,7 +10,7 @@ import { Pixel } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
 import {
-  aimToward, CLIP, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, newGame, reloading, shellsShown, step, wingsUp,
+  aimToward, CLIP, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
   type Bird, type GameEvent, type GameState,
 } from './engine';
 import { backgroundPicture, foregroundPicture, gamePictures, type GamePictures } from './pictures';
@@ -31,6 +31,15 @@ const COOT_JABS = [
   'POULE D’EAU? POOR YOU.',
 ];
 
+const SITTING_JABS = [
+  'SITTING DUCK? REALLY?!?',
+  'IT WAS SWIMMING. BRAVE.',
+  'SKY-BUSTING TOO HARD?',
+  "IT DIDN'T EVEN SEE YOU",
+  'GROUND SWATTER!',
+  'NEXT: SHOOT A DECOY?',
+];
+
 type Banner = { key: number; text: string; color: string; big?: boolean };
 
 function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
@@ -41,7 +50,7 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
   else if (b.kind === 'swan') flap = pics.swan;
   else if (b.kind === 'coot') flap = pics.coot;
   else flap = b.hen ? pics.ducks[b.species].hen : pics.ducks[b.species].drake;
-  const pic = up ? flap.up : flap.down;
+  const pic = b.kind === 'duck' && b.sit === 2 && b.alive ? (flap as GamePictures['ducks'][number]['drake']).sit : up ? flap.up : flap.down;
   const scale = b.kind === 'duck' ? b.w / 48 : 1;
   const shake = b.flash > 0 ? Math.sin(t * 90) * 3 : 0;
   canvas.save();
@@ -111,6 +120,10 @@ export function GameView({
           showBanner(COOT_JABS[Math.floor(Math.random() * COOT_JABS.length)], '#FFB199');
           break;
         case 'dog': play('woof'); break;
+        case 'sitting':
+          play('wrong');
+          showBanner(SITTING_JABS[Math.floor(Math.random() * SITTING_JABS.length)], '#FFB199');
+          break;
         case 'special':
           if (e.down) {
             play('celebrate');
@@ -228,18 +241,29 @@ export function GameView({
       paint.setColor(Skia.Color('#FFE29A'));
       for (const b of s.bullets) canvas.drawRect(Skia.XYWHRect(b.x - 3, b.y - 3, 6, 6), paint);
 
+      // Score pops: the bird's name over the points, bursting in large and settling.
       for (const pop of s.popups) {
-        let x = pop.x - (pop.text.length * 16) / 2;
-        for (const ch of pop.text) {
-          const g = pics.glyphs[ch];
-          if (g) {
-            canvas.save();
-            canvas.translate(x, pop.y);
-            canvas.drawPicture(g);
-            canvas.restore();
+        const age = POPUP_LIFE - pop.life;
+        const grow = age < 0.12 ? 0.6 + (age / 0.12) * 0.9 : Math.max(1, 1.5 - (age - 0.12) * 2.5);
+        canvas.save();
+        canvas.translate(pop.x, pop.y);
+        canvas.scale(grow, grow);
+        const lines: [string, number, number][] = [[pop.label, 0.6, -18], [pop.text, 1, 0]];
+        for (const [text, size, dy] of lines) {
+          let x = (-text.length * 16 * size) / 2;
+          for (const ch of text) {
+            const g = pics.glyphs[ch];
+            if (g) {
+              canvas.save();
+              canvas.translate(x, dy);
+              canvas.scale(size, size);
+              canvas.drawPicture(g);
+              canvas.restore();
+            }
+            x += 16 * size;
           }
-          x += 16;
         }
+        canvas.restore();
       }
 
       if (s.aiming) {

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { play, preload } from '@/audio/sfx';
@@ -11,13 +10,14 @@ import { PixelBird } from '@/ui/PixelBird';
 import { C, MEDALS } from '@/ui/theme';
 
 import { GameView, type GameResult } from './GameView';
+import { INTRO_MS, IntroScene } from './IntroScene';
 
 type Phase = 'whirl' | 'count' | 'play' | 'summary';
 
 const SKIP_TAPS = 7;
 
 /**
- * Whirling duck → 3-2-1 → twelve seconds of shooting → arcade summary.
+ * Logo fly-up → 3-2-1 → twelve seconds of shooting → arcade summary.
  * Tapping the duck at the top seven times skips straight to the app.
  */
 export function IntroFlow({ onDone }: { onDone: () => void }) {
@@ -39,7 +39,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     if (phase !== 'whirl') return;
-    const t = setTimeout(() => setPhase('count'), 1900);
+    const t = setTimeout(() => setPhase('count'), INTRO_MS);
     return () => clearTimeout(t);
   }, [phase]);
 
@@ -84,7 +84,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
         />
       ) : null}
 
-      {phase === 'whirl' ? <Whirl /> : null}
+      {phase === 'whirl' ? <IntroScene width={width} height={height} /> : null}
 
       {phase === 'count' ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.center]}>
@@ -109,26 +109,6 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
           </Pixel>
         </Pressable>
       ) : null}
-    </View>
-  );
-}
-
-function Whirl() {
-  const spin = useSharedValue(0);
-  const scale = useSharedValue(0.2);
-  useEffect(() => {
-    spin.value = withTiming(4 * 360, { duration: 1600, easing: Easing.out(Easing.cubic) });
-    scale.value = withSequence(withTiming(1.3, { duration: 1300 }), withTiming(1, { duration: 300 }));
-  }, [spin, scale]);
-  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${spin.value}deg` }, { scale: scale.value }] }));
-  return (
-    <View style={[StyleSheet.absoluteFill, styles.center]}>
-      <Animated.View style={style}>
-        <PixelBird species={SPECIES_BY_ID.mall} size={180} />
-      </Animated.View>
-      <Pixel size={22} color={C.white} style={{ marginTop: 36 }}>
-        DUCK BUSTER
-      </Pixel>
     </View>
   );
 }
