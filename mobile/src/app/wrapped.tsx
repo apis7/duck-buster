@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { currentSeason, seasonLabel } from '@/domain/season';
@@ -8,7 +8,7 @@ import { seasonWrapped } from '@/domain/wrapped';
 import { useStore } from '@/state/store';
 import { Body, Chip, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
-import { C } from '@/ui/theme';
+import { C, PIXEL_FONT } from '@/ui/theme';
 
 const BACKS = ['#13315C', '#F26B1D', '#3C6E47', '#8E3A22', '#2B3F73', '#6B4F2A'];
 
@@ -40,9 +40,14 @@ export default function Wrapped() {
             style={{ flex: 1, backgroundColor: BACKS[i % BACKS.length], borderWidth: 3, borderColor: C.navyDark, borderBottomWidth: 8, borderRightWidth: 8, padding: 24, justifyContent: 'center', gap: 18 }}
           >
             <Pixel size={11} color={C.white}>{card.kicker.toUpperCase()}</Pixel>
-            <Pixel size={card.big.length > 10 ? 22 : 40} color={C.white} style={{ lineHeight: card.big.length > 10 ? 34 : 56 }}>
+            <Text
+              adjustsFontSizeToFit
+              numberOfLines={card.big.length > 10 ? 2 : 1}
+              maxFontSizeMultiplier={1}
+              style={{ fontFamily: PIXEL_FONT, color: C.white, fontSize: card.big.length > 10 ? 22 : 40, lineHeight: card.big.length > 10 ? 34 : 56 }}
+            >
               {card.big.toUpperCase()}
-            </Pixel>
+            </Text>
             <Body style={{ color: C.white, fontSize: 18, lineHeight: 26 }}>{card.caption}</Body>
             <View style={{ flexDirection: 'row', gap: 6, position: 'absolute', bottom: 18, left: 24 }}>
               {cards.map((_, k) => (

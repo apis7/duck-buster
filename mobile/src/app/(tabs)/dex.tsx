@@ -20,7 +20,9 @@ export default function Dex() {
   const entries = useMemo(() => dexEntries(data), [data]);
   const bands = useMemo(() => bandTrophies(data), [data]);
   const names = new Map(data.hunters.map((h) => [h.id, h]));
-  const cardW = (width - 32 - 16) / 3;
+  // About 120 dp per card: 3 across on a small phone, more on big phones and tablets.
+  const cols = Math.max(3, Math.floor((width - 32) / 120));
+  const cardW = (width - 32 - 8 * (cols - 1)) / cols;
 
   return (
     <View style={{ flex: 1 }}>

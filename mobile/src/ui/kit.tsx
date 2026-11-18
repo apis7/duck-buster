@@ -7,11 +7,20 @@ import { C, PIXEL_FONT } from './theme';
 /** Small shared building blocks: pixel headings, chunky buttons with hard shadows, cards. */
 
 export function Pixel({ children, size = 12, color = C.navy, style }: { children: ReactNode; size?: number; color?: string; style?: StyleProp<TextStyle> }) {
-  return <Text style={[{ fontFamily: PIXEL_FONT, fontSize: size, color, lineHeight: size * 1.6 }, style]}>{children}</Text>;
+  // The pixel font is wide; past ~1.3× it breaks tight layouts on small phones.
+  return (
+    <Text maxFontSizeMultiplier={1.3} style={[{ fontFamily: PIXEL_FONT, fontSize: size, color, lineHeight: size * 1.6 }, style]}>
+      {children}
+    </Text>
+  );
 }
 
 export function Body({ children, style, muted }: { children: ReactNode; style?: StyleProp<TextStyle>; muted?: boolean }) {
-  return <Text style={[{ fontSize: 15, color: muted ? C.muted : C.ink, lineHeight: 21 }, style]}>{children}</Text>;
+  return (
+    <Text maxFontSizeMultiplier={1.6} style={[{ fontSize: 15, color: muted ? C.muted : C.ink, lineHeight: 21 }, style]}>
+      {children}
+    </Text>
+  );
 }
 
 type BtnKind = 'primary' | 'secondary' | 'ghost' | 'danger';

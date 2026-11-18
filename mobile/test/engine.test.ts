@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   aimToward, applyHit, CLIP, fire, GAME_SECONDS, hitZone, makeBird, newGame, reloading, RELOAD_SECONDS, step, type BirdKind,
 } from '@/game/engine';
+import { gameLayout } from '@/game/layout';
 import { FLOCK_SPECIES } from '@/game/sprites';
 
 const game = () => {
-  const s = newGame(400, 800, 650, 80);
+  const s = newGame(400, 800, gameLayout(400, 800, 24, 48));
   s.nextFlock = 999;
   return s;
 };
@@ -168,7 +169,7 @@ describe('gun', () => {
   });
 
   it('ends after twelve seconds', () => {
-    const s = newGame(400, 800, 650, 80);
+    const s = newGame(400, 800, gameLayout(400, 800, 24, 48));
     for (let i = 0; i < GAME_SECONDS * 60 + 5; i++) step(s, 1 / 60);
     expect(s.over).toBe(true);
   });

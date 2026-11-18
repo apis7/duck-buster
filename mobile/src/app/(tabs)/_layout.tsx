@@ -17,6 +17,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: C.navy,
         tabBarStyle: { backgroundColor: C.white, borderTopWidth: 2.5, borderTopColor: C.navy, height: undefined },
         tabBarLabelStyle: { fontFamily: PIXEL_FONT, fontSize: 7, marginTop: 2 },
+        tabBarAllowFontScaling: false,
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'HUNTS', tabBarIcon: icon('🦆') }} />

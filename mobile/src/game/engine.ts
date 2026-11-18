@@ -21,6 +21,7 @@
  *  A retriever (two for a swan) jumps out of the reeds to fetch a downed goose or swan.
  */
 
+import type { GameLayout } from './layout';
 import { COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
 
 export const GAME_SECONDS = 12;
@@ -135,9 +136,9 @@ export type GameState = {
   over: boolean;
 };
 
-export function newGame(width: number, height: number, gunY: number, skyTop: number): GameState {
+export function newGame(width: number, height: number, layout: GameLayout): GameState {
   'worklet';
-  const reedTop = gunY - 120;
+  const { gunY, skyTop, reedTop } = layout;
   return {
     t: 0,
     width,

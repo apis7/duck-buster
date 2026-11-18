@@ -13,6 +13,7 @@ import {
   aimToward, CLIP, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
   type Bird, type GameEvent, type GameState,
 } from './engine';
+import type { GameLayout } from './layout';
 import { backgroundPicture, foregroundPicture, gamePictures, type GamePictures } from './pictures';
 import { GUN_H, GUN_W } from './sprites';
 
@@ -72,11 +73,12 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
  * thread; the JS thread hears about events (sounds, banners) and the end.
  */
 export function GameView({
-  width, height, gunY, skyTop, running, onEnd,
-}: { width: number; height: number; gunY: number; skyTop: number; running: boolean; onEnd: (r: GameResult) => void }) {
+  width, height, layout, running, onEnd,
+}: { width: number; height: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void }) {
+  const { gunY, skyTop } = layout;
   const pics = useMemo(() => gamePictures(), []);
-  const initial = useMemo(() => newGame(width, height, gunY, skyTop), [width, height, gunY, skyTop]);
-  const bg = useMemo(() => backgroundPicture(width, height, gunY - 120), [width, height, gunY]);
+  const initial = useMemo(() => newGame(width, height, layout), [width, height, layout]);
+  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop), [width, height, layout]);
   const fg = useMemo(() => foregroundPicture(width, height, initial.groundY), [width, height, initial.groundY]);
   const state = useSharedValue<GameState>(initial);
   const live = useSharedValue(false);

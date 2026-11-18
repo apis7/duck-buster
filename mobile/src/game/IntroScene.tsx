@@ -78,7 +78,8 @@ export function IntroScene({ width, height }: { width: number; height: number })
   const image = useImage(require('../../assets/intro/duck.png'));
   const t = useSharedValue(0);
   const reedTop = height * 0.72;
-  const dispW = Math.min(width * 0.62, 300);
+  // Fit the logo to the screen both ways: narrow phones and short ones.
+  const dispW = Math.min(width * 0.62, 300, ((height * 0.34) * IMG_W) / IMG_H);
   const k = dispW / IMG_W;
   const dispH = IMG_H * k;
 

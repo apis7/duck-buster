@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { play, preload } from '@/audio/sfx';
@@ -11,6 +11,7 @@ import { C, MEDALS } from '@/ui/theme';
 
 import { GameView, type GameResult } from './GameView';
 import { INTRO_MS, IntroScene } from './IntroScene';
+import { gameLayout } from './layout';
 
 type Phase = 'whirl' | 'count' | 'play' | 'summary';
 
@@ -29,9 +30,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
   const [round, setRound] = useState(0);
   const [taps, setTaps] = useState(0);
 
-  // Gun sits well above Android's gesture/nav bar.
-  const gunY = height - Math.max(insets.bottom, 24) - 96;
-  const skyTop = insets.top + 110;
+  const layout = useMemo(() => gameLayout(width, height, insets.top, insets.bottom), [width, height, insets.top, insets.bottom]);
 
   useEffect(() => {
     preload();
@@ -74,8 +73,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
           key={round}
           width={width}
           height={height}
-          gunY={gunY}
-          skyTop={skyTop}
+          layout={layout}
           running={phase === 'play'}
           onEnd={(r) => {
             setResult(r);
@@ -116,6 +114,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
 function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () => void; onDone: () => void }) {
   const { highScores, addHighScore } = useStore();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const [initials, setInitials] = useState('');
   const [saved, setSaved] = useState(false);
   // You're probably still mid-shot when the buzzer goes: hold the keyboard and the
@@ -142,7 +141,12 @@ function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () 
   };
 
   return (
-    <View pointerEvents={armed ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,31,61,0.94)', paddingTop: insets.top + 70, paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }]}>
+    <View pointerEvents={armed ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,31,61,0.94)' }]}>
+      {/* Scrolls on short phones and when the keyboard is up for initials. */}
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + Math.min(70, height * 0.07), paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }}
+      >
       <View style={{ alignItems: 'center', gap: 10 }}>
         <Pixel size={12} color={C.orange}>
           GAME OVER
@@ -203,11 +207,12 @@ function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () 
         )}
       </View>
 
-      <View style={{ flex: 1 }} />
+      <View style={{ flex: 1, minHeight: 20 }} />
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <Btn label="AGAIN" kind="secondary" onPress={onAgain} style={{ flex: 1 }} />
         <Btn label="CONTINUE" onPress={onDone} style={{ flex: 1.4 }} />
       </View>
+      </ScrollView>
     </View>
   );
 }
