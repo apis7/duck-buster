@@ -1,0 +1,386 @@
+[
+  {
+    "code": "mall",
+    "kind": "image",
+    "file": "assets/quiz/img/mall.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mallard_Drake_on_Seedskadee_National_Wildlife_Refuge_(22721823154).jpg",
+    "author": "USFWS Mountain-Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "abdu",
+    "kind": "image",
+    "file": "assets/quiz/img/abdu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:028_-_AMERICAN_BLACK_DUCK_(2-19-11)_Quidi_Vidi_Lake,_St_John%27s,_Newfoundland_(8710694225).jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0"
+  },
+  {
+    "code": "modu",
+    "kind": "image",
+    "file": "assets/quiz/img/modu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mottled_Duck,_drake,_Florida_1.jpg",
+    "author": "DuckQuacker9",
+    "license": "CC0"
+  },
+  {
+    "code": "medu",
+    "kind": "image",
+    "file": "assets/quiz/img/medu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:029_-_MEXICAN_MALLARD_(1-21-2017)_male,_patagonia_lake,_santa_cruz_co,_az_-01_(32360928371).jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0"
+  },
+  {
+    "code": "gadw",
+    "kind": "image",
+    "file": "assets/quiz/img/gadw.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gadwall_Drake_-_DPLA_-_3a0518ab1519a6044a5182c72add2cba.jpg",
+    "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
+    "license": "Public domain"
+  },
+  {
+    "code": "amwi",
+    "kind": "image",
+    "file": "assets/quiz/img/amwi.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:American_Wigeon_Drake_-_DPLA_-_3cafc0e26b35f6bf390f658d2f378608.jpg",
+    "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
+    "license": "Public domain"
+  },
+  {
+    "code": "euwi",
+    "kind": "image",
+    "file": "assets/quiz/img/euwi.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mareca_penelope_Oulu_20110515_01.jpg",
+    "author": "Estormiz",
+    "license": "CC0"
+  },
+  {
+    "code": "nopi",
+    "kind": "image",
+    "file": "assets/quiz/img/nopi.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Northern_pintail_drake_(51102248085).jpg",
+    "author": "USFWSAlaska",
+    "license": "Public domain"
+  },
+  {
+    "code": "nsho",
+    "kind": "image",
+    "file": "assets/quiz/img/nsho.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Drake_Northern_Shoveler_at_J_Clark_Salyer_NWR_(42589430525).jpg",
+    "author": "USFWS Mountain Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "bwte",
+    "kind": "image",
+    "file": "assets/quiz/img/bwte.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Blue-winged_Teal_Drake_J._Clark_Salyer_National_Wildlife_Refuge_(53169398934).jpg",
+    "author": "USFWS Mountain-Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "gwte",
+    "kind": "image",
+    "file": "assets/quiz/img/gwte.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anas_carolinensis.jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0"
+  },
+  {
+    "code": "cite",
+    "kind": "image",
+    "file": "assets/quiz/img/cite.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cinnamon_Teal_(male),_Scott_Somershoe_(49717524972).jpg",
+    "author": "USFWS Mountain Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "wodu",
+    "kind": "image",
+    "file": "assets/quiz/img/wodu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:023_-_WOOD_DUCK_(12-05-2015)_bernalillo_co,_nm_-09_(23696086716).jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0"
+  },
+  {
+    "code": "fuwd",
+    "kind": "image",
+    "file": "assets/quiz/img/fuwd.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dendrocygna_bicolor_339604300.jpg",
+    "author": "Adam Jackson",
+    "license": "CC0"
+  },
+  {
+    "code": "bbwd",
+    "kind": "image",
+    "file": "assets/quiz/img/bbwd.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dendrocygna_autumnalis_autumnalis_-_Marcia_Cristina_Machado_-_711016130.jpeg",
+    "author": "Marcia Cristina Machado",
+    "license": "CC0"
+  },
+  {
+    "code": "canv",
+    "kind": "image",
+    "file": "assets/quiz/img/canv.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Canvasback_drake_FWS_6798.jpg",
+    "author": "Lee Karney / USFWS",
+    "license": "Public domain"
+  },
+  {
+    "code": "redh",
+    "kind": "image",
+    "file": "assets/quiz/img/redh.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Redhead_Duck_Drake,_Huron_Wetland_Management_District_South_Dakota_(52461291219).jpg",
+    "author": "USFWS Mountain Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "rndu",
+    "kind": "image",
+    "file": "assets/quiz/img/rndu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ring-necked_duck_at_Seedskadee_National_Wildlife_Refuge_Wyoming_(52065160675).jpg",
+    "author": "USFWS Mountain Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "grsc",
+    "kind": "image",
+    "file": "assets/quiz/img/grsc.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Greater_Scaup_drake_-_DPLA_-_2de8b13506ad36adfc37bc60dcf56042.jpg",
+    "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
+    "license": "Public domain"
+  },
+  {
+    "code": "lesc",
+    "kind": "image",
+    "file": "assets/quiz/img/lesc.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lesser_Scaup_(male)_(7027858133).jpg",
+    "author": "Pacific Southwest Region USFWS from Sacramento, US",
+    "license": "Public domain"
+  },
+  {
+    "code": "buff",
+    "kind": "image",
+    "file": "assets/quiz/img/buff.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bufflehead_Drake_Seedskadee_NWR_(16035383424).jpg",
+    "author": "USFWS Mountain-Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "cogo",
+    "kind": "image",
+    "file": "assets/quiz/img/cogo.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Drake_Common_Goldeneyes_on_Seedskadee_NWR_(24660847212).jpg",
+    "author": "USFWS Mountain-Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "bago",
+    "kind": "image",
+    "file": "assets/quiz/img/bago.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barrow%27s_Goldeneye_Drake_Seedskadee_NWR_(16656643482).jpg",
+    "author": "USFWS Mountain-Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "rudu",
+    "kind": "image",
+    "file": "assets/quiz/img/rudu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Male_Ruddy_Duck_Huron_Wetland_Management_District_South_Dakota_(51843513974).jpg",
+    "author": "USFWS Mountain Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "home",
+    "kind": "image",
+    "file": "assets/quiz/img/home.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hooded_Merganser_(19103799384).jpg",
+    "author": "U.S. Fish and Wildlife Service Southeast Region",
+    "license": "Public domain"
+  },
+  {
+    "code": "come",
+    "kind": "image",
+    "file": "assets/quiz/img/come.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Common_merganser_(Mergus_merganser)_(6796569359).jpg",
+    "author": "Pacific Southwest Region USFWS from Sacramento, US",
+    "license": "Public domain"
+  },
+  {
+    "code": "rbme",
+    "kind": "image",
+    "file": "assets/quiz/img/rbme.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Red-breasted_merganser,_Willapa_Bay_(53872565147).jpg",
+    "author": "USFWS Pacific",
+    "license": "Public domain"
+  },
+  {
+    "code": "ltdu",
+    "kind": "image",
+    "file": "assets/quiz/img/ltdu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Long-tailed_duck_male_(6728257023).jpg",
+    "author": "USFWSAlaska",
+    "license": "Public domain"
+  },
+  {
+    "code": "susc",
+    "kind": "image",
+    "file": "assets/quiz/img/susc.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:053_-_SURF_SCOTER_(11-20-07)_male,_sloco,_ca_(2)_(8716761870).jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0"
+  },
+  {
+    "code": "wwsc",
+    "kind": "image",
+    "file": "assets/quiz/img/wwsc.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wwscoter12.JPG",
+    "author": "David Menke",
+    "license": "Public domain"
+  },
+  {
+    "code": "blsc",
+    "kind": "image",
+    "file": "assets/quiz/img/blsc.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:BlackScoter23.jpg",
+    "author": "U.S. Fish & Wildlife Service, Alaska Region",
+    "license": "Public domain"
+  },
+  {
+    "code": "hadu",
+    "kind": "image",
+    "file": "assets/quiz/img/hadu.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Harlequin_Duck_Male_-_DPLA_-_12ffc339b2c2267f18813e46afa7d7fe.jpg",
+    "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
+    "license": "Public domain"
+  },
+  {
+    "code": "coei",
+    "kind": "image",
+    "file": "assets/quiz/img/coei.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Common_eider_(Somateria_mollissima).jpg",
+    "author": "Hobbyfotowiki",
+    "license": "CC0"
+  },
+  {
+    "code": "kiei",
+    "kind": "image",
+    "file": "assets/quiz/img/kiei.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:049_-_KING_EIDER_(6-15-2016)_barrow,_alaska_-06_(27577003883).jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0"
+  },
+  {
+    "code": "cago",
+    "kind": "image",
+    "file": "assets/quiz/img/cago.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Branta_canadensis_at_Maselakebucht_2019-07-07_02.jpg",
+    "author": "Leonhard Lenz",
+    "license": "CC0"
+  },
+  {
+    "code": "cacg",
+    "kind": "image",
+    "file": "assets/quiz/img/cacg.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cackling_goose_(20740450075).jpg",
+    "author": "USFWSAlaska",
+    "license": "Public domain"
+  },
+  {
+    "code": "sngo",
+    "kind": "image",
+    "file": "assets/quiz/img/sngo.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:IMGP5370Snow_goose_(Anser_caerulescens),_white_morph.jpg",
+    "author": "Hobbyfotowiki",
+    "license": "CC0"
+  },
+  {
+    "code": "rogo",
+    "kind": "image",
+    "file": "assets/quiz/img/rogo.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ross%27s_Goose_Lake_Andes_National_Wildlife_Refuge_(53382595033).jpg",
+    "author": "USFWS Mountain Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "gwfg",
+    "kind": "image",
+    "file": "assets/quiz/img/gwfg.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anser_albifrons001.jpg",
+    "author": "Zerocool.marko",
+    "license": "CC0"
+  },
+  {
+    "code": "bran",
+    "kind": "image",
+    "file": "assets/quiz/img/bran.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Black_Brant_(20747464831).jpg",
+    "author": "USFWSAlaska",
+    "license": "Public domain"
+  },
+  {
+    "code": "emgo",
+    "kind": "image",
+    "file": "assets/quiz/img/emgo.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Emperor_goose_on_a_tundra_pond_(53708052574).jpg",
+    "author": "USFWSAlaska",
+    "license": "Public domain"
+  },
+  {
+    "code": "amco",
+    "kind": "image",
+    "file": "assets/quiz/img/amco.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:American_coot_on_Seedskadee_National_Wildlife_Refuge_(26807462317).jpg",
+    "author": "USFWS Mountain-Prairie",
+    "license": "Public domain"
+  },
+  {
+    "code": "mall",
+    "kind": "audio",
+    "file": "assets/quiz/audio/mall.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ducks_snatching.ogg",
+    "author": "Bert76",
+    "license": "CC0"
+  },
+  {
+    "code": "nopi",
+    "kind": "audio",
+    "file": "assets/quiz/audio/nopi.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anas_acuta.ogg",
+    "author": "National Park Service (Wind Cave NP)",
+    "license": "Public domain"
+  },
+  {
+    "code": "cago",
+    "kind": "audio",
+    "file": "assets/quiz/audio/cago.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Branta_canadensis.ogg",
+    "author": "National Park Service (Wind Cave NP)",
+    "license": "Public domain"
+  },
+  {
+    "code": "cacg",
+    "kind": "audio",
+    "file": "assets/quiz/audio/cacg.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cackling_goose_(Branta_hutchinsii)_flock_at_Baskett_Slough_National_Wildlife_Refuge_in_western_Oregon_on_February_25,_2025.webm",
+    "author": "USFWS - Pacific Region",
+    "license": "Public domain"
+  },
+  {
+    "code": "amco",
+    "kind": "audio",
+    "file": "assets/quiz/audio/amco.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Yellowstone_sound_library_-_American_Coots_-_001.mp3",
+    "author": "NPS & MSU Acoustic Atlas/Jennifer Jerrett",
+    "license": "Public domain"
+  },
+  {
+    "code": "quack",
+    "kind": "sfx",
+    "file": "assets/sfx/quack.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ducks_snatching.ogg",
+    "author": "Bert76",
+    "license": "CC0"
+  }
+]
