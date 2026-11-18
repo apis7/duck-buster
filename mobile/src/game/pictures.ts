@@ -1,11 +1,14 @@
 import { createPicture, Skia, type SkPicture } from '@shopify/react-native-skia';
 
 import { PIXEL } from './engine';
-import { DRAKE, DUCK_DOWN, DUCK_UP, GLYPHS, GUN, GUN_PALETTE, HEN, spritePixels, type Palette } from './sprites';
+import {
+  BANDED_GOOSE, COOT, COOT_DOWN, COOT_UP, DOG, DOG_PALETTE, DUCK_DOWN, DUCK_UP, FLOCK_SPECIES, GLYPHS, GOOSE, GOOSE_DOWN,
+  GOOSE_UP, GUN, GUN_PALETTE, SHELL, SHELL_PALETTE, spritePixels, SWAN, SWAN_DOWN, SWAN_UP, type Grid, type Palette,
+} from './sprites';
 
 /** Sprites recorded once as Skia pictures; the frame loop only translates and stamps them. */
 
-function picture(rows: string[], palette: Palette, scale = PIXEL): SkPicture {
+function picture(rows: Grid, palette: Palette, scale = PIXEL): SkPicture {
   const pixels = spritePixels(rows, palette);
   return createPicture((canvas) => {
     const paint = Skia.Paint();
@@ -17,33 +20,51 @@ function picture(rows: string[], palette: Palette, scale = PIXEL): SkPicture {
   });
 }
 
-let cache: GamePictures | null = null;
+const mirror = (rows: Grid, width: number): Grid => rows.map((r) => r.padEnd(width, '.').split('').reverse().join(''));
+
+export type Flap = { up: SkPicture; down: SkPicture };
 
 export type GamePictures = {
-  drakeUp: SkPicture;
-  drakeDown: SkPicture;
-  henUp: SkPicture;
-  henDown: SkPicture;
+  /** Per FLOCK_SPECIES index. */
+  ducks: { drake: Flap; hen: Flap }[];
+  goose: Flap;
+  bandedGoose: Flap;
+  swan: Flap;
+  coot: Flap;
+  dog: SkPicture;
+  dogFlipped: SkPicture;
   gun: SkPicture;
+  shell: SkPicture;
   glyphs: Record<string, SkPicture>;
 };
 
+let cache: GamePictures | null = null;
+
 export function gamePictures(): GamePictures {
   if (cache) return cache;
+  const flap = (up: Grid, down: Grid, pal: Palette): Flap => ({ up: picture(up, pal), down: picture(down, pal) });
   const glyphs: Record<string, SkPicture> = {};
   for (const [ch, rows] of Object.entries(GLYPHS)) glyphs[ch] = picture(rows, { '#': '#FFFFFF' }, 4);
   cache = {
-    drakeUp: picture(DUCK_UP, DRAKE),
-    drakeDown: picture(DUCK_DOWN, DRAKE),
-    henUp: picture(DUCK_UP, HEN),
-    henDown: picture(DUCK_DOWN, HEN),
+    ducks: FLOCK_SPECIES.map((f) => ({ drake: flap(DUCK_UP, DUCK_DOWN, f.drake), hen: flap(DUCK_UP, DUCK_DOWN, f.hen) })),
+    goose: flap(GOOSE_UP, GOOSE_DOWN, GOOSE),
+    bandedGoose: flap(GOOSE_UP, GOOSE_DOWN, BANDED_GOOSE),
+    swan: flap(SWAN_UP, SWAN_DOWN, SWAN),
+    coot: flap(COOT_UP, COOT_DOWN, COOT),
+    dog: picture(DOG, DOG_PALETTE),
+    dogFlipped: picture(mirror(DOG, 16), DOG_PALETTE),
     gun: picture(GUN, GUN_PALETTE),
+    shell: picture(SHELL, SHELL_PALETTE, 4),
     glyphs,
   };
   return cache;
 }
 
-/** Dawn sky in pixel bands, a blocky sun, and a reed line along the bottom. */
+function seeded(seed: number) {
+  return () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+}
+
+/** Dawn sky in pixel bands, a blocky sun, water, and the back row of reeds. */
 export function backgroundPicture(width: number, height: number, reedTop: number): SkPicture {
   return createPicture((canvas) => {
     const paint = Skia.Paint();
@@ -53,7 +74,6 @@ export function backgroundPicture(width: number, height: number, reedTop: number
       paint.setColor(Skia.Color(c));
       canvas.drawRect(Skia.XYWHRect(0, i * bandH, width, bandH + 1), paint);
     });
-    // Sun, a stepped circle.
     paint.setColor(Skia.Color('#FFE29A'));
     const sx = width * 0.78;
     const sy = reedTop - 30;
@@ -62,22 +82,33 @@ export function backgroundPicture(width: number, height: number, reedTop: number
       const half = Math.floor(Math.sqrt(r * r - y * y));
       canvas.drawRect(Skia.XYWHRect(sx - half * 4, sy + y * 4, half * 8, 4), paint);
     }
-    // Water.
     paint.setColor(Skia.Color('#30507E'));
     canvas.drawRect(Skia.XYWHRect(0, reedTop, width, height - reedTop), paint);
-    // Reeds and cattails.
     const reed = Skia.Paint();
     reed.setColor(Skia.Color('#22381F'));
     const tail = Skia.Paint();
     tail.setColor(Skia.Color('#5A3A1E'));
-    let seed = 7;
-    const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    const rand = seeded(7);
     for (let x = 0; x < width; x += 6) {
       const h = 30 + rand() * 70;
       canvas.drawRect(Skia.XYWHRect(x, reedTop - h + 40, 4, h + height), reed);
       if (rand() < 0.18) canvas.drawRect(Skia.XYWHRect(x - 2, reedTop - h + 30, 8, 18), tail);
     }
-    paint.setColor(Skia.Color('#1A2A18'));
-    canvas.drawRect(Skia.XYWHRect(0, reedTop + 60, width, height), paint);
+  });
+}
+
+/** The front row of reeds and the mud, drawn over the dogs so they come up out of cover. */
+export function foregroundPicture(width: number, height: number, groundY: number): SkPicture {
+  return createPicture((canvas) => {
+    const reed = Skia.Paint();
+    reed.setColor(Skia.Color('#2C4A27'));
+    const rand = seeded(31);
+    for (let x = -2; x < width; x += 5) {
+      const h = 10 + rand() * 26;
+      canvas.drawRect(Skia.XYWHRect(x, groundY - h, 4, h + height), reed);
+    }
+    const mud = Skia.Paint();
+    mud.setColor(Skia.Color('#1A2A18'));
+    canvas.drawRect(Skia.XYWHRect(0, groundY + 6, width, height), mud);
   });
 }

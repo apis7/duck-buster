@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -138,6 +138,17 @@ function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () 
   const insets = useSafeAreaInsets();
   const [initials, setInitials] = useState('');
   const [saved, setSaved] = useState(false);
+  // You're probably still mid-shot when the buzzer goes: hold the keyboard and the
+  // buttons for a second so a late tap doesn't land on them.
+  const [armed, setArmed] = useState(false);
+  const input = useRef<ComponentRef<typeof TextInput>>(null);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setArmed(true);
+      input.current?.focus();
+    }, 1000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Ties go to whoever got there first, so a new score must beat the third-place score.
   const rank = result.score > 0 ? highScores.filter((s) => s.score >= result.score).length : 99;
@@ -151,7 +162,7 @@ function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () 
   };
 
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,31,61,0.94)', paddingTop: insets.top + 70, paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }]}>
+    <View pointerEvents={armed ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,31,61,0.94)', paddingTop: insets.top + 70, paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }]}>
       <View style={{ alignItems: 'center', gap: 10 }}>
         <Pixel size={12} color={C.orange}>
           GAME OVER
@@ -160,8 +171,17 @@ function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () 
           {`${result.score}`}
         </Pixel>
         <Pixel size={9} color={C.navySoft}>
-          {`HITS ${result.hits}  VITAL ${result.vitals}  ACC ${accuracy}%`}
+          {`HITS ${result.hits}  KO ${result.kos}  ACC ${accuracy}%`}
         </Pixel>
+        {result.geese + result.swans + result.coots > 0 ? (
+          <Pixel size={9} color={C.navySoft}>
+            {[
+              result.geese ? `GEESE ${result.geese}` : '',
+              result.swans ? `SWANS ${result.swans}` : '',
+              result.coots ? `COOTS ${result.coots} (SHAME)` : '',
+            ].filter(Boolean).join('  ')}
+          </Pixel>
+        ) : null}
       </View>
 
       {qualifies ? (
@@ -170,7 +190,7 @@ function Summary({ result, onAgain, onDone }: { result: GameResult; onAgain: () 
             {['NEW HIGH SCORE! GOLD', 'SILVER! ENTER INITIALS', 'BRONZE! ENTER INITIALS'][rank]}
           </Pixel>
           <TextInput
-            autoFocus
+            ref={input}
             value={initials}
             onChangeText={(t) => setInitials(t.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3))}
             maxLength={3}

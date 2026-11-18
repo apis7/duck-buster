@@ -16,6 +16,10 @@ const SOURCES = {
   correct: require('../../assets/sfx/correct.wav'),
   wrong: require('../../assets/sfx/wrong.wav'),
   quack: require('../../assets/sfx/quack.mp3'),
+  dry: require('../../assets/sfx/dry.wav'),
+  reload: require('../../assets/sfx/reload.wav'),
+  woof: require('../../assets/sfx/woof.wav'),
+  celebrate: require('../../assets/sfx/celebrate.wav'),
 } as const;
 
 export type Sfx = keyof typeof SOURCES;
@@ -53,7 +57,7 @@ export function play(name: Sfx) {
 
 /** Warm the players used in the first second of the game. */
 export function preload() {
-  for (const n of ['shot', 'hit', 'vital', 'beep', 'go'] as Sfx[]) {
+  for (const n of ['shot', 'hit', 'vital', 'beep', 'go', 'reload', 'dry'] as Sfx[]) {
     if (!pools.has(n)) {
       const size = n === 'shot' || n === 'hit' ? POOL : 1;
       pools.set(n, { players: Array.from({ length: size }, () => createAudioPlayer(SOURCES[n])), next: 0 });

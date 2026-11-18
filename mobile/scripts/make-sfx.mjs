@@ -66,32 +66,29 @@ function sweep(f0, f1, dur, vol = 0.5) {
   return s;
 }
 
-/** A nasal two-note "quack": a falling buzzy tone with a formant bump. Fallback if no recording. */
-function quack() {
+/** Short metallic clicks, e.g. pump action: chk-chk. */
+function clicks(times, vol = 0.8) {
   const s = [];
-  for (const [start, dur] of [[0, 0.16], [0.24, 0.2]]) {
-    const n = Math.floor(dur * RATE);
-    while (s.length < Math.floor(start * RATE)) s.push(0);
-    let phase = 0;
-    for (let i = 0; i < n; i++) {
-      const t = i / n;
-      const f = 360 - 120 * t;
-      phase += f / RATE;
-      let v = 0;
-      for (let k = 1; k <= 12; k++) {
-        const hf = f * k;
-        const formant = Math.exp(-(((hf - 1200) / 500) ** 2)) + 0.4 * Math.exp(-(((hf - 2600) / 600) ** 2));
-        v += (Math.sin(2 * Math.PI * k * phase) / k) * (0.2 + formant);
-      }
-      const env = Math.min(1, i / 200) * (1 - t) ** 0.5;
-      s.push(v * env * 0.5);
-    }
+  for (const at of times) {
+    while (s.length < Math.floor(at * RATE)) s.push(0);
+    const n = Math.floor(0.035 * RATE);
+    for (let i = 0; i < n; i++) s.push((Math.random() * 2 - 1) * vol * Math.exp((-8 * i) / n) + Math.sin(i * 0.9) * 0.3 * Math.exp((-10 * i) / n));
   }
   return s;
 }
 
+/** A gruff 8-bit "woof": a falling square burst with a little noise. */
+function woof() {
+  const s = sweep(320, 140, 0.16, 0.5);
+  return s.map((v, i) => v * 0.8 + (Math.random() * 2 - 1) * 0.15 * (1 - i / s.length));
+}
+
 const files = {
-  'quack.wav': quack(),
+  'dry.wav': clicks([0], 0.5),
+  'reload.wav': clicks([0, 0.16], 0.9),
+  'woof.wav': [...woof(), ...new Array(Math.floor(0.08 * RATE)).fill(0), ...woof()],
+  'celebrate.wav': tune([[523, 0.09], [659, 0.09], [784, 0.09], [1047, 0.12], [0, 0.04], [784, 0.08], [1047, 0.35]], 0.42),
+  
   'shot.wav': noise(0.16, 0.9, 5),
   'hit.wav': sweep(700, 180, 0.14, 0.45),
   'vital.wav': tune([[988, 0.06], [1319, 0.12]], 0.4),
