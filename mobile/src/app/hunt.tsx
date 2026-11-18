@@ -141,6 +141,8 @@ export default function LogHunt() {
   const [query, setQuery] = useState('');
   const [newName, setNewName] = useState<string | null>(null);
   const creating = useRef(false);
+  /** The name being typed for a new hunter; consumed by the first create call. */
+  const pendingName = useRef<string | null>(null);
   const [parade, setParade] = useState<NewBadge[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -295,9 +297,12 @@ export default function LogHunt() {
   }
 
   async function createHunter() {
-    // Enter and losing focus both land here; only the first one creates.
+    // Enter and losing focus both land here. The first call takes the typed name
+    // and clears it at once, so the second finds nothing left to create — no
+    // matter how the two events are timed.
     if (creating.current) return;
-    const n = newName?.trim();
+    const n = pendingName.current?.trim();
+    pendingName.current = null;
     if (!n) {
       setNewName(null);
       return;
@@ -362,7 +367,10 @@ export default function LogHunt() {
               <TextInput
                 autoFocus
                 value={newName}
-                onChangeText={setNewName}
+                onChangeText={(t) => {
+                  setNewName(t);
+                  pendingName.current = t;
+                }}
                 onSubmitEditing={createHunter}
                 onBlur={createHunter}
                 submitBehavior="blurAndSubmit"
