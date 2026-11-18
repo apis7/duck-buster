@@ -15,7 +15,7 @@ const SOURCES = {
   badge: require('../../assets/sfx/badge.wav'),
   correct: require('../../assets/sfx/correct.wav'),
   wrong: require('../../assets/sfx/wrong.wav'),
-  quack: require('../../assets/sfx/quack.mp3'),
+  quack: require('../../assets/sfx/quack.wav'),
 } as const;
 
 export type Sfx = keyof typeof SOURCES;

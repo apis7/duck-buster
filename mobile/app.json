@@ -30,6 +30,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/with-long-path-cmake",
       "expo-status-bar",
       "expo-sqlite",
       "expo-audio",
@@ -57,7 +58,8 @@
           "iosAppId": "ca-app-pub-3940256099942544~1458002511",
           "delayAppMeasurementInit": true
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
