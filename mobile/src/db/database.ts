@@ -1,0 +1,193 @@
+import * as SQLite from 'expo-sqlite';
+
+import type { Data, Harvest, Hunt, HuntHunter, Hunter } from '@/domain/types';
+
+/**
+ * The phone's only copy of the season. Hand-written, append-only migrations on
+ * `PRAGMA user_version`: never edit a shipped one, add a new one.
+ *
+ * The whole dataset is small (a family's hunts for years is a few thousand rows),
+ * so the app reads everything into memory at start-up and the rules engine works
+ * on plain arrays. This file only persists.
+ */
+
+const db = SQLite.openDatabaseSync('duckbuster.db');
+
+const MIGRATIONS: string[][] = [
+  [
+    `CREATE TABLE IF NOT EXISTS hunters (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      color TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );`,
+    `CREATE TABLE IF NOT EXISTS hunts (
+      id TEXT PRIMARY KEY NOT NULL,
+      date TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );`,
+    `CREATE TABLE IF NOT EXISTS hunt_hunters (
+      hunt_id TEXT NOT NULL,
+      hunter_id TEXT NOT NULL,
+      PRIMARY KEY (hunt_id, hunter_id)
+    );`,
+    `CREATE TABLE IF NOT EXISTS harvests (
+      id TEXT PRIMARY KEY NOT NULL,
+      hunt_id TEXT NOT NULL,
+      hunter_id TEXT NOT NULL,
+      species_id TEXT NOT NULL,
+      sex TEXT NOT NULL,
+      count INTEGER NOT NULL,
+      banded INTEGER NOT NULL DEFAULT 0
+    );`,
+    `CREATE INDEX IF NOT EXISTS idx_harvests_hunt ON harvests (hunt_id);`,
+    `CREATE TABLE IF NOT EXISTS celebrated_badges (
+      hunter_id TEXT NOT NULL,
+      badge_id TEXT NOT NULL,
+      at INTEGER NOT NULL,
+      PRIMARY KEY (hunter_id, badge_id)
+    );`,
+    `CREATE TABLE IF NOT EXISTS high_scores (
+      id TEXT PRIMARY KEY NOT NULL,
+      initials TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );`,
+    `CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT NOT NULL
+    );`,
+  ],
+];
+
+export async function migrate(): Promise<void> {
+  await db.execAsync('PRAGMA journal_mode = WAL;');
+  const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version;');
+  let version = row?.user_version ?? 0;
+  while (version < MIGRATIONS.length) {
+    const statements = MIGRATIONS[version];
+    await db.withTransactionAsync(async () => {
+      for (const sql of statements) await db.execAsync(sql);
+    });
+    version++;
+    await db.execAsync(`PRAGMA user_version = ${version};`);
+  }
+}
+
+export type HighScore = { id: string; initials: string; score: number; createdAt: number };
+
+export type Loaded = {
+  data: Data;
+  celebrated: Set<string>;
+  highScores: HighScore[];
+  settings: Record<string, string>;
+};
+
+export const celebratedKey = (hunterId: string, badgeId: string) => `${hunterId}:${badgeId}`;
+
+export async function loadAll(): Promise<Loaded> {
+  const [hunters, hunts, huntHunters, harvests, celebrated, highScores, settings] = await Promise.all([
+    db.getAllAsync<{ id: string; name: string; color: string; created_at: number }>('SELECT * FROM hunters ORDER BY created_at'),
+    db.getAllAsync<{ id: string; date: string; created_at: number }>('SELECT * FROM hunts'),
+    db.getAllAsync<{ hunt_id: string; hunter_id: string }>('SELECT * FROM hunt_hunters'),
+    db.getAllAsync<{ id: string; hunt_id: string; hunter_id: string; species_id: string; sex: string; count: number; banded: number }>(
+      'SELECT * FROM harvests',
+    ),
+    db.getAllAsync<{ hunter_id: string; badge_id: string }>('SELECT hunter_id, badge_id FROM celebrated_badges'),
+    db.getAllAsync<{ id: string; initials: string; score: number; created_at: number }>(
+      'SELECT * FROM high_scores ORDER BY score DESC, created_at ASC LIMIT 10',
+    ),
+    db.getAllAsync<{ key: string; value: string }>('SELECT * FROM settings'),
+  ]);
+  return {
+    data: {
+      hunters: hunters.map((h) => ({ id: h.id, name: h.name, color: h.color, createdAt: h.created_at })),
+      hunts: hunts.map((h) => ({ id: h.id, date: h.date, createdAt: h.created_at })),
+      huntHunters: huntHunters.map((h) => ({ huntId: h.hunt_id, hunterId: h.hunter_id })),
+      harvests: harvests.map((r) => ({
+        id: r.id,
+        huntId: r.hunt_id,
+        hunterId: r.hunter_id,
+        speciesId: r.species_id,
+        sex: r.sex as Harvest['sex'],
+        count: r.count,
+        banded: r.banded,
+      })),
+    },
+    celebrated: new Set(celebrated.map((c) => celebratedKey(c.hunter_id, c.badge_id))),
+    highScores: highScores.map((s) => ({ id: s.id, initials: s.initials, score: s.score, createdAt: s.created_at })),
+    settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
+  };
+}
+
+export async function insertHunter(h: Hunter): Promise<void> {
+  await db.runAsync('INSERT OR REPLACE INTO hunters (id, name, color, created_at) VALUES (?, ?, ?, ?)', h.id, h.name, h.color, h.createdAt);
+}
+
+export async function deleteHunterRows(id: string): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM harvests WHERE hunter_id = ?', id);
+    await db.runAsync('DELETE FROM hunt_hunters WHERE hunter_id = ?', id);
+    await db.runAsync('DELETE FROM celebrated_badges WHERE hunter_id = ?', id);
+    await db.runAsync('DELETE FROM hunters WHERE id = ?', id);
+    // A hunt with nobody left on it is gone too.
+    await db.runAsync('DELETE FROM hunts WHERE id NOT IN (SELECT hunt_id FROM hunt_hunters)');
+  });
+}
+
+async function writeHuntRows(hunt: Hunt, party: HuntHunter[], harvests: Harvest[]): Promise<void> {
+  await db.runAsync('INSERT OR REPLACE INTO hunts (id, date, created_at) VALUES (?, ?, ?)', hunt.id, hunt.date, hunt.createdAt);
+  await db.runAsync('DELETE FROM hunt_hunters WHERE hunt_id = ?', hunt.id);
+  await db.runAsync('DELETE FROM harvests WHERE hunt_id = ?', hunt.id);
+  for (const p of party) await db.runAsync('INSERT OR IGNORE INTO hunt_hunters (hunt_id, hunter_id) VALUES (?, ?)', p.huntId, p.hunterId);
+  for (const r of harvests)
+    await db.runAsync(
+      'INSERT INTO harvests (id, hunt_id, hunter_id, species_id, sex, count, banded) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      r.id, r.huntId, r.hunterId, r.speciesId, r.sex, r.count, r.banded,
+    );
+}
+
+export async function saveHuntRows(hunt: Hunt, party: HuntHunter[], harvests: Harvest[]): Promise<void> {
+  await db.withTransactionAsync(() => writeHuntRows(hunt, party, harvests));
+}
+
+export async function deleteHuntRows(id: string): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM harvests WHERE hunt_id = ?', id);
+    await db.runAsync('DELETE FROM hunt_hunters WHERE hunt_id = ?', id);
+    await db.runAsync('DELETE FROM hunts WHERE id = ?', id);
+  });
+}
+
+export async function markCelebrated(pairs: { hunterId: string; badgeId: string }[]): Promise<void> {
+  const at = Date.now();
+  for (const p of pairs)
+    await db.runAsync('INSERT OR IGNORE INTO celebrated_badges (hunter_id, badge_id, at) VALUES (?, ?, ?)', p.hunterId, p.badgeId, at);
+}
+
+export async function insertHighScore(s: HighScore): Promise<void> {
+  await db.runAsync('INSERT INTO high_scores (id, initials, score, created_at) VALUES (?, ?, ?, ?)', s.id, s.initials, s.score, s.createdAt);
+}
+
+export async function writeSetting(key: string, value: string): Promise<void> {
+  await db.runAsync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', key, value);
+}
+
+/** Replace everything (mode 'replace') or upsert by id (mode 'merge'). */
+export async function importRows(incoming: Data, mode: 'merge' | 'replace'): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    if (mode === 'replace') {
+      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'celebrated_badges'])
+        await db.execAsync(`DELETE FROM ${t};`);
+    }
+    for (const h of incoming.hunters)
+      await db.runAsync('INSERT OR REPLACE INTO hunters (id, name, color, created_at) VALUES (?, ?, ?, ?)', h.id, h.name, h.color, h.createdAt);
+    for (const hunt of incoming.hunts) {
+      await writeHuntRows(
+        hunt,
+        incoming.huntHunters.filter((p) => p.huntId === hunt.id),
+        incoming.harvests.filter((r) => r.huntId === hunt.id),
+      );
+    }
+  });
+}
