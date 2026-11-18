@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { formatMeat } from '@/domain/meat';
 import { partyMembers, partyStats } from '@/domain/stats';
 import { PARTY_COLORS, useStore } from '@/state/store';
+import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Card, Chip, Dot, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
@@ -15,6 +16,7 @@ export default function Parties() {
   const [name, setName] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const ask = useDialog();
 
   const create = async () => {
     if (!name.trim()) return;
@@ -24,11 +26,18 @@ export default function Parties() {
     setDraft(p.name);
   };
 
-  const confirmDelete = (id: string, n: string) =>
-    Alert.alert(`Delete ${n}?`, 'Its hunters stay — they just won’t be in a party.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteParty(id) },
-    ]);
+  const confirmDelete = async (id: string, n: string) => {
+    const yes = await ask({
+      icon: '🗑️',
+      title: `Delete ${n}?`,
+      message: 'Its hunters stay — they just won’t be in a party.',
+      buttons: [
+        { label: 'Delete', value: 'yes', kind: 'danger' },
+        { label: 'Keep', value: 'no' },
+      ],
+    });
+    if (yes === 'yes') await deleteParty(id);
+  };
 
   return (
     <SubScreen title="PARTIES">

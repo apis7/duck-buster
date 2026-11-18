@@ -112,7 +112,7 @@ export function Dot({ color, size = 12 }: { color: string; size?: number }) {
   return <View style={{ width: size, height: size, backgroundColor: color, borderWidth: 1.5, borderColor: C.navy }} />;
 }
 
-export function Stepper({ value, onChange, min = 0, label }: { value: number; onChange: (n: number) => void; min?: number; label?: string }) {
+export function Stepper({ value, onChange, min = 0, max = Infinity, label }: { value: number; onChange: (n: number) => void; min?: number; max?: number; label?: string }) {
   return (
     <View style={{ alignItems: 'center', gap: 2 }}>
       {label ? <Text style={{ fontSize: 11, color: C.muted, fontWeight: '700' }}>{label}</Text> : null}
@@ -123,7 +123,7 @@ export function Stepper({ value, onChange, min = 0, label }: { value: number; on
         <Pixel size={12} style={{ minWidth: 26, textAlign: 'center' }}>
           {value}
         </Pixel>
-        <Pressable hitSlop={6} onPress={() => onChange(value + 1)} style={styles.stepBtn}>
+        <Pressable hitSlop={6} onPress={() => onChange(Math.min(max, value + 1))} style={[styles.stepBtn, value >= max && { opacity: 0.35 }]}>
           <Text style={styles.stepTxt}>+</Text>
         </Pressable>
       </View>

@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 
 import { hunterStats } from '@/domain/stats';
 import { useStore } from '@/state/store';
+import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Card, Chip, Dot, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
@@ -13,6 +14,7 @@ const inputStyle = { borderWidth: 2, borderColor: C.navy, padding: 10, fontSize:
 export default function Hunters() {
   const { data, addHunter, renameHunter, deleteHunter, titleOf, setHunterParty } = useStore();
   const [partyFor, setPartyFor] = useState<string | null>(null);
+  const ask = useDialog();
   const [name, setName] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -23,11 +25,18 @@ export default function Hunters() {
     setName('');
   };
 
-  const confirmDelete = (id: string, who: string) =>
-    Alert.alert(`Remove ${who}?`, `${who}'s birds, badges and spot on the board go too. Hunts they shared stay for everyone else.`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => deleteHunter(id) },
-    ]);
+  const confirmDelete = async (id: string, who: string) => {
+    const yes = await ask({
+      icon: '🗑️',
+      title: `Remove ${who}?`,
+      message: `${who}'s birds, badges and spot on the board go too. Hunts they shared stay for everyone else.`,
+      buttons: [
+        { label: 'Remove', value: 'yes', kind: 'danger' },
+        { label: 'Keep', value: 'no' },
+      ],
+    });
+    if (yes === 'yes') await deleteHunter(id);
+  };
 
   return (
     <SubScreen title="HUNTERS">

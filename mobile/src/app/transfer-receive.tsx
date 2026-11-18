@@ -3,13 +3,14 @@ import * as Haptics from 'expo-haptics';
 import { useKeepAwake } from 'expo-keep-awake';
 import { router } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Data } from '@/domain/types';
 import { useStore } from '@/state/store';
 import { parseFrame, TransferAssembler, type TransferProgress } from '@/transfer/frames';
 import { describe, SNAPSHOT_FORMAT, snapshotFromBytes } from '@/transfer/snapshot';
+import { useDialog } from '@/ui/Dialog';
 import { Bar, Body, Btn, Card, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
@@ -22,6 +23,7 @@ export default function TransferReceive() {
   useKeepAwake();
   const insets = useSafeAreaInsets();
   const { data, importData } = useStore();
+  const ask = useDialog();
   const [permission, requestPermission] = useCameraPermissions();
   const [assembler] = useState(() => new TransferAssembler());
   const done = useRef(false);
@@ -75,12 +77,18 @@ export default function TransferReceive() {
         setBusy(false);
       }
     };
-    if (mode === 'replace' && data.hunts.length > 0)
-      Alert.alert('Replace everything?', `This phone's ${describe(data)} will be erased and replaced.`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Replace', style: 'destructive', onPress: go },
-      ]);
-    else await go();
+    if (mode === 'replace' && data.hunts.length > 0) {
+      const yes = await ask({
+        icon: '⚠️',
+        title: 'Replace everything?',
+        message: `This phone's ${describe(data)} will be erased and replaced.`,
+        buttons: [
+          { label: 'Replace', value: 'yes', kind: 'danger' },
+          { label: 'Cancel', value: 'no' },
+        ],
+      });
+      if (yes === 'yes') await go();
+    } else await go();
   }
 
   if (incoming || failed) {

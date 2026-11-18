@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { startAds } from '@/ads/ads';
 import { initAudio, setMuted } from '@/audio/sfx';
 import { StoreProvider, useStore } from '@/state/store';
+import { DialogProvider } from '@/ui/Dialog';
 import { C } from '@/ui/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -44,8 +45,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StoreProvider>
-          <StatusBar style="dark" />
-          <Gate />
+          <DialogProvider>
+            <StatusBar style="dark" />
+            <Gate />
+          </DialogProvider>
         </StoreProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

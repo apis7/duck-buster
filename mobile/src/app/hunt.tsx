@@ -1,62 +1,124 @@
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import Animated, { FadeInDown, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { maybeShowInterstitial } from '@/ads/ads';
 import { play } from '@/audio/sfx';
 import { searchSpecies } from '@/domain/search';
 import { prettyDate, shiftDate, todayISO } from '@/domain/season';
+import { pickSkunkLine, SKUNK_LINES } from '@/domain/skunk';
 import { SPECIES_BY_ID } from '@/domain/species';
 import type { Harvest } from '@/domain/types';
 import { useStore, type NewBadge } from '@/state/store';
 import { BadgeParade } from '@/ui/BadgeParade';
 import { BirdPicker } from '@/ui/BirdPicker';
 import { DatePicker } from '@/ui/DatePicker';
+import { useDialog } from '@/ui/Dialog';
 import { Btn, Chip, Pixel, Stepper } from '@/ui/kit';
+import { SkunkSplash } from '@/ui/SkunkSplash';
 import { C } from '@/ui/theme';
 
-/** One line in the bag: a hunter's take of one species. */
-type Line = { key: string; hunterId: string; speciesId: string; drakes: number; hens: number; count: number; banded: number };
+/**
+ * Logging a hunt, one hunter at a time, one question at a time:
+ *   1. How many birds did they get?  (SKUNKED = zero, with a zinger)
+ *   2. What kinds?  Each kind gets a count; a live total shows "4 of 6".
+ *   3. Drakes or hens?  Everything starts as hens; each drake moves one over.
+ * Then on to the next hunter. One hunt per day.
+ */
 
-const total = (l: Line) => (SPECIES_BY_ID[l.speciesId]?.sexed ? l.drakes + l.hens : l.count);
+type Line = { speciesId: string; count: number; drakes: number; banded: number };
+type Step = 'count' | 'kinds' | 'sex' | 'done';
+type Entry = { target: number | null; skunked: boolean; step: Step; lines: Line[] };
 
-function linesFrom(rows: Harvest[]): Line[] {
-  const map = new Map<string, Line>();
-  for (const r of rows) {
-    const key = `${r.hunterId}:${r.speciesId}`;
-    const l = map.get(key) ?? { key, hunterId: r.hunterId, speciesId: r.speciesId, drakes: 0, hens: 0, count: 0, banded: 0 };
-    if (r.sex === 'D') l.drakes += r.count;
-    else if (r.sex === 'H') l.hens += r.count;
-    else l.count += r.count;
-    l.banded += r.banded;
-    map.set(key, l);
-  }
-  return Array.from(map.values());
-}
+/** A bird can carry more than one band (a leg band plus a second one now and then). */
+const MAX_BANDS_PER_BIRD = 2;
 
-function rowsFrom(lines: Line[]): Omit<Harvest, 'id' | 'huntId'>[] {
-  const out: Omit<Harvest, 'id' | 'huntId'>[] = [];
-  for (const l of lines) {
-    let bands = Math.min(l.banded, total(l));
-    const push = (sex: Harvest['sex'], count: number) => {
-      if (count <= 0) return;
-      const b = Math.min(bands, count);
-      bands -= b;
-      out.push({ hunterId: l.hunterId, speciesId: l.speciesId, sex, count, banded: b });
-    };
-    if (SPECIES_BY_ID[l.speciesId]?.sexed) {
-      push('D', l.drakes);
-      push('H', l.hens);
-    } else push('U', l.count);
+const isSexed = (id: string) => !!SPECIES_BY_ID[id]?.sexed;
+const totalOf = (lines: Line[]) => lines.reduce((n, l) => n + l.count, 0);
+const newEntry = (): Entry => ({ target: null, skunked: false, step: 'count', lines: [] });
+
+function entriesFrom(rows: Harvest[], party: string[]): Record<string, Entry> {
+  const out: Record<string, Entry> = {};
+  for (const hid of party) {
+    const byKind = new Map<string, Line>();
+    for (const r of rows.filter((x) => x.hunterId === hid)) {
+      const l = byKind.get(r.speciesId) ?? { speciesId: r.speciesId, count: 0, drakes: 0, banded: 0 };
+      l.count += r.count;
+      if (r.sex === 'D') l.drakes += r.count;
+      l.banded += r.banded;
+      byKind.set(r.speciesId, l);
+    }
+    const lines = Array.from(byKind.values());
+    out[hid] = { target: totalOf(lines), skunked: lines.length === 0, step: 'done', lines };
   }
   return out;
 }
 
+function rowsFrom(entries: Record<string, Entry>, party: string[]): Omit<Harvest, 'id' | 'huntId'>[] {
+  const out: Omit<Harvest, 'id' | 'huntId'>[] = [];
+  for (const hid of party) {
+    const e = entries[hid];
+    if (!e || e.skunked) continue;
+    for (const l of e.lines) {
+      if (l.count <= 0) continue;
+      let bands = Math.min(l.banded, l.count * MAX_BANDS_PER_BIRD);
+      const push = (sex: Harvest['sex'], count: number) => {
+        if (count <= 0) return;
+        const b = Math.min(bands, count * MAX_BANDS_PER_BIRD);
+        bands -= b;
+        out.push({ hunterId: hid, speciesId: l.speciesId, sex, count, banded: b });
+      };
+      if (isSexed(l.speciesId)) {
+        push('D', l.drakes);
+        push('H', l.count - l.drakes);
+      } else push('U', l.count);
+    }
+  }
+  return out;
+}
+
+/** A bird chip that pops and flashes when tapped, so you see the tap register. */
+function BirdChip({ label, onPress, highlight }: { label: string; onPress: () => void; highlight?: boolean }) {
+  const scale = useSharedValue(1);
+  const flash = useSharedValue(0);
+  const box = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    backgroundColor: flash.value > 0.5 ? C.orange : highlight ? C.navy : C.white,
+  }));
+  const txt = useAnimatedStyle(() => ({ color: flash.value > 0.5 || highlight ? C.white : C.navy }));
+  return (
+    <Pressable
+      hitSlop={4}
+      onPress={() => {
+        scale.set(withSequence(withTiming(1.15, { duration: 80 }), withTiming(1, { duration: 140 })));
+        flash.set(withSequence(withTiming(1, { duration: 10 }), withTiming(1, { duration: 260 }), withTiming(0, { duration: 10 })));
+        onPress();
+      }}
+    >
+      <Animated.View style={[styles.birdChip, box]}>
+        <Animated.Text style={[styles.birdChipTxt, txt]}>{label}</Animated.Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+function StepCard({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+  return (
+    <Animated.View entering={SlideInRight.springify().damping(18)} style={styles.step}>
+      <Pixel size={8} color={C.muted}>{`STEP ${n} OF 3`}</Pixel>
+      <Pixel size={12} style={{ lineHeight: 20 }}>{title}</Pixel>
+      {children}
+    </Animated.View>
+  );
+}
+
 export default function LogHunt() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const { data, usage, saveHunt, deleteHunt, addHunter } = useStore();
+  const { data, usage, saveHunt, deleteHunt, addHunter, settings, setSetting } = useStore();
+  const ask = useDialog();
   const insets = useSafeAreaInsets();
   const existing = id ? data.hunts.find((h) => h.id === id) : undefined;
 
@@ -67,71 +129,123 @@ export default function LogHunt() {
   }, [data]);
 
   const [date, setDate] = useState(existing?.date ?? todayISO());
-  const [party, setParty] = useState<string[]>(
+  const [party, setParty] = useState<string[]>(() =>
     existing ? data.huntHunters.filter((p) => p.huntId === existing.id).map((p) => p.hunterId) : lastParty,
   );
-  const [shooter, setShooter] = useState<string>(party[0] ?? data.hunters[0]?.id ?? '');
-  const [lines, setLines] = useState<Line[]>(() => (existing ? linesFrom(data.harvests.filter((r) => r.huntId === existing.id)) : []));
+  const [entries, setEntries] = useState<Record<string, Entry>>(() =>
+    existing
+      ? entriesFrom(data.harvests.filter((r) => r.huntId === existing.id), party)
+      : Object.fromEntries(party.map((hid) => [hid, newEntry()])),
+  );
+  const [active, setActive] = useState<string | null>(() => (existing ? null : (party[0] ?? null)));
   const [query, setQuery] = useState('');
   const [newName, setNewName] = useState<string | null>(null);
+  const creating = useRef(false);
   const [parade, setParade] = useState<NewBadge[] | null>(null);
   const [saving, setSaving] = useState(false);
-  // An existing hunt with no birds was a skunk.
-  const [skunked, setSkunked] = useState(!!existing && !data.harvests.some((r) => r.huntId === existing.id));
   const [picking, setPicking] = useState(false);
-  const [pickerName, setPickerName] = useState<string | undefined>(undefined);
-  const [birdPicker, setBirdPicker] = useState(false);
+  const [birdPicker, setBirdPicker] = useState<{ name?: string } | null>(null);
+  const [splash, setSplash] = useState<{ hunterId: string; line: number } | null>(null);
+  // Re-tapping SKUNKED for the same hunter shows the same zinger — no cycling for laughs.
+  const zingerFor = useRef(new Map<string, number>());
 
-  // One hunt per day.
   const huntDays = useMemo(() => new Set(data.hunts.filter((h) => h.id !== existing?.id).map((h) => h.date)), [data.hunts, existing]);
-  const clash = data.hunts.find((h) => h.date === date && h.id !== existing?.id);
-
-  const results = useMemo(() => searchSpecies(query, usage, 8), [query, usage]);
   const hunterById = new Map(data.hunters.map((h) => [h.id, h]));
-  const activeShooter = party.includes(shooter) ? shooter : party[0];
+  const results = useMemo(() => searchSpecies(query, usage, 8), [query, usage]);
+  const entry = active ? entries[active] : null;
+  const activeName = active ? (hunterById.get(active)?.name ?? '') : '';
+  const pending = party.filter((hid) => entries[hid]?.step !== 'done');
+  const total = entry ? totalOf(entry.lines) : 0;
+  const dismissSplash = useCallback(() => setSplash(null), []);
+
+  const patch = useCallback((hid: string, p: Partial<Entry> | ((e: Entry) => Partial<Entry>)) => {
+    setEntries((es) => {
+      const cur = es[hid] ?? newEntry();
+      return { ...es, [hid]: { ...cur, ...(typeof p === 'function' ? p(cur) : p) } };
+    });
+  }, []);
+
+  const patchLine = (hid: string, speciesId: string, p: Partial<Line>) =>
+    patch(hid, (e) => ({ lines: e.lines.map((l) => (l.speciesId === speciesId ? { ...l, ...p } : l)) }));
 
   function toggleParty(hid: string) {
-    setParty((p) => (p.includes(hid) ? p.filter((x) => x !== hid) : [...p, hid]));
-    if (!party.includes(hid)) setShooter(hid);
+    if (party.includes(hid)) {
+      setParty((p) => p.filter((x) => x !== hid));
+      if (active === hid) setActive(null);
+    } else {
+      setParty((p) => [...p, hid]);
+      if (!entries[hid]) patch(hid, newEntry());
+      setActive(hid);
+    }
   }
 
-  function addBird(speciesId: string) {
-    if (!activeShooter) return;
+  function nextHunter(after: string) {
+    const rest = party.filter((hid) => hid !== after && entries[hid]?.step !== 'done');
+    setActive(rest[0] ?? null);
+  }
+
+  // ── Step 1 ───────────────────────────────────────────────────────────────
+  function setCount(hid: string, n: number) {
     Haptics.selectionAsync().catch(() => {});
-    // Logging a bird un-skunks the hunt.
-    setSkunked(false);
-    const sexed = SPECIES_BY_ID[speciesId]?.sexed;
-    setLines((ls) => {
-      const key = `${activeShooter}:${speciesId}`;
-      const found = ls.find((l) => l.key === key);
-      if (found) return ls.map((l) => (l.key === key ? { ...l, drakes: sexed ? l.drakes + 1 : 0, count: sexed ? 0 : l.count + 1 } : l));
-      return [...ls, { key, hunterId: activeShooter, speciesId, drakes: sexed ? 1 : 0, hens: 0, count: sexed ? 0 : 1, banded: 0 }];
+    patch(hid, { target: n, skunked: false, step: 'kinds' });
+    setQuery('');
+  }
+
+  async function markSkunked(hid: string) {
+    const name = hunterById.get(hid)?.name ?? '';
+    if (entries[hid]?.lines.length) {
+      const ok = await ask({
+        icon: '🦨',
+        title: `Skunk ${name}?`,
+        message: `That clears the birds you entered for ${name} on this hunt.`,
+        buttons: [
+          { label: 'Yes, skunked', value: 'yes', kind: 'danger' },
+          { label: 'Keep the birds', value: 'no' },
+        ],
+      });
+      if (ok !== 'yes') return;
+    }
+    patch(hid, { target: 0, skunked: true, step: 'done', lines: [] });
+    let line = zingerFor.current.get(hid);
+    if (line == null) {
+      const last = settings.skunkLast != null ? Number(settings.skunkLast) : null;
+      line = pickSkunkLine(last);
+      zingerFor.current.set(hid, line);
+      setSetting('skunkLast', String(line));
+    }
+    play('wrong');
+    setSplash({ hunterId: hid, line });
+    nextHunter(hid);
+  }
+
+  // ── Step 2 ───────────────────────────────────────────────────────────────
+  function addKind(hid: string, speciesId: string) {
+    Haptics.selectionAsync().catch(() => {});
+    patch(hid, (e) => {
+      const found = e.lines.find((l) => l.speciesId === speciesId);
+      if (found) return { lines: e.lines.map((l) => (l.speciesId === speciesId ? { ...l, count: l.count + 1 } : l)) };
+      // A new kind starts at whatever's left to account for — usually it's all one kind.
+      const left = Math.max(1, (e.target ?? 0) - totalOf(e.lines));
+      return { lines: [...e.lines, { speciesId, count: left, drakes: 0, banded: 0 }] };
     });
     setQuery('');
   }
 
-  const update = (key: string, patch: Partial<Line>) =>
-    setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
-  const remove = (key: string) => setLines((ls) => ls.filter((l) => l.key !== key));
-
-  function toggleSkunk() {
-    if (skunked) return setSkunked(false);
-    if (lines.length) {
-      Alert.alert('Skunked?', 'That clears the birds you entered for this hunt.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Skunked 🦨', style: 'destructive', onPress: () => { setLines([]); setSkunked(true); } },
-      ]);
-    } else setSkunked(true);
-  }
-
-  function pickDate(d: string) {
+  // ── Date, save, delete ───────────────────────────────────────────────────
+  async function pickDate(d: string) {
     setPicking(false);
     const other = data.hunts.find((h) => h.date === d && h.id !== existing?.id);
     if (other) {
-      Alert.alert('Already logged', `There's already a hunt on ${prettyDate(d)}. One hunt per day — open that one?`, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Open it', onPress: () => router.replace({ pathname: '/hunt', params: { id: other.id } }) },
-      ]);
+      const go = await ask({
+        icon: '📅',
+        title: 'Already logged',
+        message: `There's already a hunt on ${prettyDate(d)}. One hunt per day — open that one?`,
+        buttons: [
+          { label: 'Open it', value: 'open', kind: 'primary' },
+          { label: 'Cancel', value: 'cancel' },
+        ],
+      });
+      if (go === 'open') router.replace({ pathname: '/hunt', params: { id: other.id } });
       return;
     }
     setDate(d);
@@ -139,29 +253,17 @@ export default function LogHunt() {
 
   async function save() {
     if (party.length === 0) {
-      Alert.alert('Who went?', 'Pick at least one hunter.');
+      await ask({ icon: '🦆', title: 'Who went?', message: 'Pick at least one hunter.', buttons: [{ label: 'OK', value: 'ok' }] });
       return;
     }
-    if (clash) {
-      pickDate(date);
+    if (pending.length) {
+      setActive(pending[0]);
       return;
     }
-    const counted = lines.filter((l) => party.includes(l.hunterId) && total(l) > 0);
-    if (!counted.length && !skunked) {
-      Alert.alert('No birds?', 'Log some birds, or mark this hunt SKUNKED.', [
-        { text: 'Back', style: 'cancel' },
-        { text: 'Skunked 🦨', onPress: () => setSkunked(true) },
-      ]);
-      return;
-    }
+    if (data.hunts.some((h) => h.date === date && h.id !== existing?.id)) return pickDate(date);
     setSaving(true);
     try {
-      const { newBadges } = await saveHunt({
-        id: existing?.id,
-        date,
-        party,
-        rows: skunked ? [] : rowsFrom(lines.filter((l) => party.includes(l.hunterId))),
-      });
+      const { newBadges } = await saveHunt({ id: existing?.id, date, party, rows: rowsFrom(entries, party) });
       play('quack');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       if (newBadges.length) setParade(newBadges);
@@ -176,24 +278,47 @@ export default function LogHunt() {
     maybeShowInterstitial();
   }
 
-  function confirmDelete() {
+  async function confirmDelete() {
     if (!existing) return;
-    Alert.alert('Delete this hunt?', 'Its birds come off the board too.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await deleteHunt(existing.id); router.back(); } },
-    ]);
+    const yes = await ask({
+      icon: '🗑️',
+      title: 'Delete this hunt?',
+      message: 'Its birds come off the board too.',
+      buttons: [
+        { label: 'Delete', value: 'yes', kind: 'danger' },
+        { label: 'Keep it', value: 'no' },
+      ],
+    });
+    if (yes !== 'yes') return;
+    await deleteHunt(existing.id);
+    router.back();
   }
 
   async function createHunter() {
+    // Enter and losing focus both land here; only the first one creates.
+    if (creating.current) return;
     const n = newName?.trim();
-    if (!n) { setNewName(null); return; }
-    const h = await addHunter(n);
-    setParty((p) => [...p, h.id]);
-    setShooter(h.id);
-    setNewName(null);
+    if (!n) {
+      setNewName(null);
+      return;
+    }
+    creating.current = true;
+    try {
+      const h = await addHunter(n);
+      setParty((p) => [...p, h.id]);
+      patch(h.id, newEntry());
+      setActive(h.id);
+      setNewName(null);
+    } finally {
+      creating.current = false;
+    }
   }
 
-  const birdsBy = (hid: string) => lines.filter((l) => l.hunterId === hid).reduce((n, l) => n + total(l), 0);
+  const status = (hid: string) => {
+    const e = entries[hid];
+    if (!e || e.step !== 'done') return '…';
+    return e.skunked ? '🦨' : `✓ ${totalOf(e.lines)}`;
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.paper }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -206,11 +331,12 @@ export default function LogHunt() {
           <Pressable onPress={confirmDelete} hitSlop={10}>
             <Pixel size={10} color={C.red}>DEL</Pixel>
           </Pressable>
-        ) : <View style={{ width: 40 }} />}
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 120 }}>
-        {/* Date */}
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 130 }}>
         <View style={styles.dateRow}>
           <Pressable onPress={() => pickDate(shiftDate(date, -1))} hitSlop={10} style={styles.arrow}>
             <Pixel size={14}>{'<'}</Pixel>
@@ -224,7 +350,6 @@ export default function LogHunt() {
           </Pressable>
         </View>
 
-        {/* Party */}
         <View style={{ gap: 6 }}>
           <Pixel size={9} color={C.muted}>WHO WENT</Pixel>
           <View style={styles.wrap}>
@@ -240,125 +365,200 @@ export default function LogHunt() {
                 onChangeText={setNewName}
                 onSubmitEditing={createHunter}
                 onBlur={createHunter}
+                submitBehavior="blurAndSubmit"
                 placeholder="Name"
-                style={[styles.chipInput]}
+                style={styles.chipInput}
               />
             )}
           </View>
         </View>
 
-        {/* Shooter */}
-        {party.length > 1 ? (
+        {party.length ? (
           <View style={{ gap: 6 }}>
-            <Pixel size={9} color={C.muted}>WHOSE BIRD?</Pixel>
+            <Pixel size={9} color={C.muted}>TAP A HUNTER</Pixel>
             <View style={styles.wrap}>
               {party.map((hid) => {
                 const h = hunterById.get(hid);
                 if (!h) return null;
-                return <Chip key={hid} label={`${h.name} · ${birdsBy(hid)}`} on={activeShooter === hid} color={h.color} onPress={() => setShooter(hid)} />;
+                const on = active === hid;
+                return (
+                  <Pressable key={hid} onPress={() => setActive(on ? null : hid)} style={[styles.hunterTab, { borderColor: h.color }, on && { backgroundColor: h.color }]}>
+                    <Text style={[styles.hunterTabTxt, on && { color: C.white }]}>{h.name}</Text>
+                    <Text style={[styles.hunterTabStatus, on && { color: C.white }]}>{status(hid)}</Text>
+                  </Pressable>
+                );
               })}
             </View>
           </View>
         ) : null}
 
-        {/* Skunked: a hunt with no birds, for the whole party. */}
-        <Pressable onPress={toggleSkunk} style={[styles.skunk, skunked && styles.skunkOn]}>
-          <Text style={{ fontSize: 26 }}>🦨</Text>
-          <View style={{ flex: 1 }}>
-            <Pixel size={11} color={skunked ? C.white : C.navy}>SKUNKED</Pixel>
-            <Text style={{ color: skunked ? C.white : C.muted, fontSize: 12 }}>
-              {skunked ? 'No birds this hunt. Tap a bird to undo.' : 'Nobody got a bird'}
-            </Text>
-          </View>
-          <View style={[styles.check, skunked && { backgroundColor: C.white }]}>{skunked ? <Text style={{ fontWeight: '900', color: C.navy }}>✓</Text> : null}</View>
-        </Pressable>
+        {active && entry ? (
+          <View key={active} style={{ gap: 12 }}>
+            {/* Step 1: how many */}
+            {entry.step === 'count' ? (
+              <StepCard n={1} title={`How many birds did ${activeName} get today?`}>
+                <View style={styles.numGrid}>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                    <Pressable key={n} onPress={() => setCount(active, n)} style={[styles.num, entry.target === n && styles.numOn]}>
+                      <Pixel size={14} color={entry.target === n ? C.white : C.navy}>{`${n}`}</Pixel>
+                    </Pressable>
+                  ))}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={{ color: C.muted, flex: 1 }}>More than 12?</Text>
+                  <Stepper value={Math.max(13, entry.target ?? 13)} min={13} onChange={(n) => patch(active, { target: n })} />
+                  <Btn label="NEXT ›" small onPress={() => setCount(active, Math.max(13, entry.target ?? 13))} />
+                </View>
+                <Pressable onPress={() => markSkunked(active)} style={styles.skunk}>
+                  <Text style={{ fontSize: 26 }}>🦨</Text>
+                  <View style={{ flex: 1 }}>
+                    <Pixel size={11}>SKUNKED</Pixel>
+                    <Text style={{ color: C.muted, fontSize: 12 }}>{`${activeName} got zero birds`}</Text>
+                  </View>
+                </Pressable>
+              </StepCard>
+            ) : (
+              <Pressable onPress={() => patch(active, { step: 'count' })} style={styles.doneRow}>
+                <Text style={styles.doneTxt}>
+                  {entry.skunked ? `🦨 ${activeName} got skunked` : `${entry.target} ${entry.target === 1 ? 'bird' : 'birds'}`}
+                </Text>
+                <Pixel size={8} color={C.muted}>CHANGE</Pixel>
+              </Pressable>
+            )}
 
-        {/* Search */}
-        <View style={{ gap: 8, opacity: skunked ? 0.45 : 1 }}>
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Type a bird: gwt, greenhead, can…"
-            autoCorrect={false}
-            autoCapitalize="none"
-            returnKeyType="done"
-            onSubmitEditing={() => results[0] && addBird(results[0].id)}
-            style={styles.search}
-          />
-          <View style={styles.wrap}>
-            {results.map((s, i) => (
-              <Chip key={s.id} label={s.name} on={!!query && i === 0} color={C.navy} onPress={() => addBird(s.id)} />
-            ))}
-            {query.trim() && !results.some((r) => r.name.toLowerCase() === query.trim().toLowerCase()) ? (
-              <Chip label={`+ Add "${query.trim()}"`} color={C.orange} onPress={() => { setPickerName(query.trim()); setBirdPicker(true); }} />
-            ) : null}
-            <Chip label="ALL BIRDS ▸" color={C.marsh} onPress={() => { setPickerName(undefined); setBirdPicker(true); }} />
-          </View>
-        </View>
+            {/* Step 2: what kinds */}
+            {entry.step === 'kinds' ? (
+              <StepCard n={2} title="What kinds?">
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Type a bird: gwt, greenhead, can…"
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  returnKeyType="done"
+                  onSubmitEditing={() => results[0] && addKind(active, results[0].id)}
+                  style={styles.search}
+                />
+                <View style={styles.wrap}>
+                  {results.map((s, i) => (
+                    <BirdChip key={s.id} label={s.name} highlight={!!query && i === 0} onPress={() => addKind(active, s.id)} />
+                  ))}
+                  {query.trim() && !results.some((r) => r.name.toLowerCase() === query.trim().toLowerCase()) ? (
+                    <Chip label={`+ Add "${query.trim()}"`} color={C.orange} onPress={() => setBirdPicker({ name: query.trim() })} />
+                  ) : null}
+                  <Chip label="ALL BIRDS ▸" color={C.marsh} onPress={() => setBirdPicker({})} />
+                </View>
 
-        {/* Bag */}
-        {party.map((hid) => {
-          const mine = lines.filter((l) => l.hunterId === hid);
-          if (mine.length === 0) return null;
-          const h = hunterById.get(hid);
-          return (
-            <View key={hid} style={{ gap: 8 }}>
-              <Pixel size={10} color={h?.color ?? C.navy}>{`${h?.name.toUpperCase()} · ${birdsBy(hid)}`}</Pixel>
-              {mine.map((l) => {
-                const sp = SPECIES_BY_ID[l.speciesId];
-                return (
-                  <View key={l.key} style={styles.line}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 16, fontWeight: '800', color: C.navy, flex: 1 }}>{sp?.name ?? l.speciesId}</Text>
-                      <Pressable onPress={() => remove(l.key)} hitSlop={10}>
-                        <Text style={{ fontSize: 18, color: C.muted, fontWeight: '800' }}>×</Text>
+                {entry.lines.map((l) => (
+                  <Animated.View key={l.speciesId} entering={FadeInDown} style={styles.kindRow}>
+                    <Text style={styles.kindName}>{SPECIES_BY_ID[l.speciesId]?.name ?? l.speciesId}</Text>
+                    <Stepper
+                      value={l.count}
+                      min={1}
+                      onChange={(n) => patchLine(active, l.speciesId, { count: n, drakes: Math.min(l.drakes, n), banded: Math.min(l.banded, n * MAX_BANDS_PER_BIRD) })}
+                    />
+                    <Pressable onPress={() => patch(active, (e) => ({ lines: e.lines.filter((x) => x.speciesId !== l.speciesId) }))} hitSlop={10}>
+                      <Text style={{ fontSize: 20, color: C.muted, fontWeight: '800' }}>×</Text>
+                    </Pressable>
+                  </Animated.View>
+                ))}
+
+                <View style={styles.totalRow}>
+                  <View style={{ flex: 1 }}>
+                    <Pixel size={14} color={total === entry.target ? C.marsh : total > (entry.target ?? 0) ? C.red : C.navy}>
+                      {`${total} of ${entry.target}`}
+                    </Pixel>
+                    {total !== entry.target && total > 0 ? (
+                      <Pressable onPress={() => patch(active, { target: total })} hitSlop={6}>
+                        <Text style={{ color: C.orange, fontWeight: '700', marginTop: 4 }}>{`Actually ${total}? Tap to use ${total}`}</Text>
                       </Pressable>
-                    </View>
+                    ) : null}
+                  </View>
+                  <Btn label="COMPLETE ›" small onPress={() => patch(active, { step: 'sex' })} disabled={total === 0 || total !== entry.target} />
+                </View>
+              </StepCard>
+            ) : (entry.step === 'sex' || entry.step === 'done') && !entry.skunked ? (
+              <Pressable onPress={() => patch(active, { step: 'kinds' })} style={styles.doneRow}>
+                <Text style={styles.doneTxt} numberOfLines={2}>
+                  {entry.lines.map((l) => `${l.count} ${SPECIES_BY_ID[l.speciesId]?.name ?? l.speciesId}`).join(', ')}
+                </Text>
+                <Pixel size={8} color={C.muted}>CHANGE</Pixel>
+              </Pressable>
+            ) : null}
+
+            {/* Step 3: drakes or hens */}
+            {entry.step === 'sex' ? (
+              <StepCard n={3} title="Drakes or hens?">
+                <Text style={{ color: C.muted }}>Everything starts as hens — add the drakes. Banded? Up to 2 bands per bird.</Text>
+                {entry.lines.map((l) => (
+                  <View key={l.speciesId} style={styles.sexRow}>
+                    <Text style={styles.kindName}>{`${l.count} × ${SPECIES_BY_ID[l.speciesId]?.name ?? l.speciesId}`}</Text>
                     <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                      {sp?.sexed ? (
+                      {isSexed(l.speciesId) ? (
                         <>
-                          <Stepper label="DRAKES" value={l.drakes} onChange={(n) => update(l.key, { drakes: n })} />
-                          <Stepper label="HENS" value={l.hens} onChange={(n) => update(l.key, { hens: n })} />
+                          <Stepper label="DRAKES" value={l.drakes} max={l.count} onChange={(n) => patchLine(active, l.speciesId, { drakes: n })} />
+                          <View style={{ alignItems: 'center', gap: 2 }}>
+                            <Text style={{ fontSize: 11, color: C.muted, fontWeight: '700' }}>HENS</Text>
+                            <View style={styles.hens}>
+                              <Pixel size={12}>{`${l.count - l.drakes}`}</Pixel>
+                            </View>
+                          </View>
                         </>
                       ) : (
-                        <Stepper label="COUNT" value={l.count} onChange={(n) => update(l.key, { count: n })} />
+                        <Text style={{ color: C.muted, fontSize: 12, paddingBottom: 8 }}>No drake/hen for this one</Text>
                       )}
-                      <Stepper label="💍 BANDED" value={l.banded} onChange={(n) => update(l.key, { banded: Math.min(n, total(l)) })} />
+                      <Stepper label="💍 BANDS" value={l.banded} max={l.count * MAX_BANDS_PER_BIRD} onChange={(n) => patchLine(active, l.speciesId, { banded: n })} />
                     </View>
                   </View>
-                );
-              })}
-            </View>
-          );
-        })}
-
-        {lines.length === 0 ? (
-          <Text style={{ color: C.muted, textAlign: 'center', marginTop: 8 }}>
-            No birds? Tap SKUNKED above — skunks count too. 🦨
-          </Text>
+                ))}
+                <Btn
+                  label={`DONE WITH ${activeName.toUpperCase()} ›`}
+                  onPress={() => {
+                    patch(active, { step: 'done' });
+                    nextHunter(active);
+                  }}
+                />
+              </StepCard>
+            ) : null}
+          </View>
+        ) : party.length && !pending.length ? (
+          <Text style={{ color: C.marsh, textAlign: 'center', fontWeight: '700' }}>Everyone's logged. Tap a hunter to change anything.</Text>
         ) : null}
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <Btn label={saving ? 'SAVING…' : 'SAVE HUNT'} onPress={save} disabled={saving} />
+        <Btn
+          label={saving ? 'SAVING…' : pending.length ? `${pending.length} ${pending.length === 1 ? 'HUNTER' : 'HUNTERS'} LEFT ›` : 'SAVE HUNT'}
+          kind={pending.length ? 'secondary' : 'primary'}
+          onPress={save}
+          disabled={saving}
+        />
       </View>
 
-      {picking ? (
-        <DatePicker visible value={date} huntDays={huntDays} onPick={pickDate} onClose={() => setPicking(false)} />
-      ) : null}
-      {birdPicker ? (
+      {picking ? <DatePicker visible value={date} huntDays={huntDays} onPick={pickDate} onClose={() => setPicking(false)} /> : null}
+      {birdPicker && active ? (
         <BirdPicker
           visible
-          initialName={pickerName}
-          onPick={(id) => { setBirdPicker(false); addBird(id); }}
-          onClose={() => setBirdPicker(false)}
+          initialName={birdPicker.name}
+          onPick={(sid) => {
+            setBirdPicker(null);
+            addKind(active, sid);
+          }}
+          onClose={() => setBirdPicker(null)}
         />
+      ) : null}
+
+      {splash ? (
+        <SkunkSplash name={hunterById.get(splash.hunterId)?.name ?? ''} message={SKUNK_LINES[splash.line]} onDismiss={dismissSplash} />
       ) : null}
 
       {parade ? (
         <BadgeParade
           items={parade.map((b) => ({ badge: b.badge, hunterName: hunterById.get(b.hunterId)?.name ?? '' }))}
-          onDone={() => { setParade(null); finish(); }}
+          onDone={() => {
+            setParade(null);
+            finish();
+          }}
         />
       ) : null}
     </KeyboardAvoidingView>
@@ -371,10 +571,23 @@ const styles = StyleSheet.create({
   arrow: { padding: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipInput: { borderWidth: 2, borderColor: C.orange, paddingVertical: 5, paddingHorizontal: 10, minWidth: 110, fontSize: 14, backgroundColor: C.white },
-  search: { borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, padding: 14, fontSize: 17 },
-  line: { backgroundColor: C.white, borderWidth: 2, borderColor: C.navy, padding: 10, gap: 8 },
-  skunk: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, padding: 10 },
-  skunkOn: { backgroundColor: C.navy },
-  check: { width: 26, height: 26, borderWidth: 2.5, borderColor: C.navy, alignItems: 'center', justifyContent: 'center' },
+  hunterTab: { borderWidth: 2.5, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: C.white, alignItems: 'center', minWidth: 74 },
+  hunterTabTxt: { fontWeight: '800', fontSize: 15, color: C.navy },
+  hunterTabStatus: { fontSize: 12, color: C.muted, fontWeight: '700' },
+  step: { backgroundColor: C.white, borderWidth: 2.5, borderColor: C.navy, borderBottomWidth: 5, borderRightWidth: 5, padding: 14, gap: 12 },
+  numGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  num: { width: '22%', aspectRatio: 1.4, borderWidth: 2.5, borderColor: C.navy, alignItems: 'center', justifyContent: 'center', backgroundColor: C.white },
+  numOn: { backgroundColor: C.orange, borderColor: C.orange },
+  skunk: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 2.5, borderColor: C.navy, borderStyle: 'dashed', padding: 10 },
+  search: { borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, padding: 12, fontSize: 17 },
+  birdChip: { borderWidth: 2, borderColor: C.navy, paddingVertical: 7, paddingHorizontal: 12 },
+  birdChipTxt: { fontWeight: '700', fontSize: 14 },
+  kindRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1.5, borderColor: C.line, paddingTop: 10 },
+  kindName: { flex: 1, fontSize: 16, fontWeight: '800', color: C.navy },
+  totalRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 2.5, borderColor: C.navy, paddingTop: 12 },
+  sexRow: { gap: 8, borderTopWidth: 1.5, borderColor: C.line, paddingTop: 10 },
+  hens: { borderWidth: 2, borderColor: C.line, minWidth: 54, height: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: C.paper },
+  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.navySoft, borderWidth: 2, borderColor: C.navy, paddingVertical: 10, paddingHorizontal: 12 },
+  doneTxt: { flex: 1, fontSize: 15, fontWeight: '700', color: C.navy },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, backgroundColor: C.paper, borderTopWidth: 2.5, borderColor: C.navy },
 });
