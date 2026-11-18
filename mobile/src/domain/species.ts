@@ -13,6 +13,7 @@
  */
 
 export type SpeciesGroup =
+  | 'other'
   | 'dabbler'
   | 'diver'
   | 'sea'
@@ -201,6 +202,27 @@ export const SPECIES_BY_ID: Record<string, Species> = Object.fromEntries(
   SPECIES.map((s) => [s.id, s]),
 );
 
+/** Birds the user added. Searchable and loggable; they don't get a Duck-dex card. */
+export let CUSTOM_SPECIES: Species[] = [];
+/** Bumped whenever the custom list changes, so search can rebuild its index. */
+export let speciesVersion = 0;
+
+export function registerCustomSpecies(list: { id: string; name: string; sexed: boolean }[]): void {
+  for (const s of CUSTOM_SPECIES) delete SPECIES_BY_ID[s.id];
+  CUSTOM_SPECIES = list.map((c) => ({
+    id: c.id,
+    name: c.name,
+    group: 'other' as const,
+    aliases: [],
+    sexed: c.sexed,
+    rarity: 'common' as const,
+    shape: 'duck' as const,
+    colors: { head: '#8A8478', bill: '#4A4A4A', breast: '#9A9488', body: '#A8A296', wing: '#6E6A62', tail: '#3A3A3A', accent: '#C8C2B4' },
+  }));
+  for (const s of CUSTOM_SPECIES) SPECIES_BY_ID[s.id] = s;
+  speciesVersion++;
+}
+
 export function speciesById(id: string): Species | undefined {
   return SPECIES_BY_ID[id];
 }
@@ -214,6 +236,7 @@ export const isCoot = (id: string) => id === 'amco';
 export const isDuck = (id: string) => !isGoose(id) && !isCoot(id);
 
 export const GROUP_LABEL: Record<SpeciesGroup, string> = {
+  other: 'Your birds',
   dabbler: 'Puddle ducks',
   diver: 'Divers',
   sea: 'Sea ducks',

@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { BADGE_BY_ID, BADGES } from '@/domain/badges';
+import { formatMeat } from '@/domain/meat';
 import { currentSeason, prettyDate, seasonLabel } from '@/domain/season';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { hunterStats } from '@/domain/stats';
@@ -23,6 +24,7 @@ export default function HunterProfile() {
   const title = titleOf(hunter.id);
   const badges = badgesFor(hunter.id);
   const species = Object.entries(s.bySpecies).sort((a, b) => b[1] - a[1]);
+  const party = hunter.partyId ? data.parties.find((p) => p.id === hunter.partyId) : null;
 
   const stat = (label: string, value: string | number) => (
     <View style={{ width: '33.33%', alignItems: 'center', paddingVertical: 8 }}>
@@ -59,6 +61,12 @@ export default function HunterProfile() {
         {stat('SKUNKS', s.skunks)}
       </Card>
 
+      <Body>{`🧊 Freezer: ${formatMeat(s.meatOz)} of meat (estimate)`}</Body>
+      {party ? (
+        <Pressable onPress={() => router.push({ pathname: '/party/[id]', params: { id: party.id } })}>
+          <Body muted>{`Party: ${party.name} ›`}</Body>
+        </Pressable>
+      ) : null}
       {s.biggestDay ? (
         <Body muted>{`Biggest day: ${s.biggestDay.birds} birds on ${prettyDate(s.biggestDay.hunt.date)}`}</Body>
       ) : null}

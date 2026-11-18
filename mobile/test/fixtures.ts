@@ -8,10 +8,15 @@ export function makeData(): Data & {
 } {
   const data: Data = {
     hunters: [
-      { id: 'dad', name: 'Dad', color: '#000', createdAt: 0 },
-      { id: 'kid', name: 'Kid', color: '#000', createdAt: 0 },
-      { id: 'unc', name: 'Uncle', color: '#000', createdAt: 0 },
+      { id: 'dad', name: 'Dad', color: '#000', partyId: 'home', createdAt: 0 },
+      { id: 'kid', name: 'Kid', color: '#000', partyId: 'home', createdAt: 0 },
+      { id: 'unc', name: 'Uncle', color: '#000', partyId: 'away', createdAt: 0 },
     ],
+    parties: [
+      { id: 'home', name: 'Home Team', color: '#F00', createdAt: 0 },
+      { id: 'away', name: 'Uncle Gang', color: '#00F', createdAt: 0 },
+    ],
+    customSpecies: [],
     hunts: [],
     huntHunters: [],
     harvests: [],

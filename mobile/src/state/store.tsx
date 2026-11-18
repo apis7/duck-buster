@@ -5,7 +5,12 @@ import * as db from '@/db/database';
 import { BADGE_BY_ID, earnedBadges, type Badge } from '@/domain/badges';
 import { hunterStats } from '@/domain/stats';
 import { titleFor, xpFor } from '@/domain/titles';
-import { EMPTY_DATA, type Data, type Harvest, type Hunter } from '@/domain/types';
+import { registerCustomSpecies } from '@/domain/species';
+import { EMPTY_DATA, type CustomSpecies, type Data, type Harvest, type Hunter, type Party } from '@/domain/types';
+
+import { pickPartyColor } from './partyColors';
+
+export { PARTY_COLORS, pickPartyColor } from './partyColors';
 
 /**
  * App state: everything on the phone, in memory, written through to SQLite.
@@ -13,6 +18,8 @@ import { EMPTY_DATA, type Data, type Harvest, type Hunter } from '@/domain/types
  */
 
 export const HUNTER_COLORS = ['#F26B1D', '#2E7DD7', '#2EA043', '#C8342A', '#8E44AD', '#D4A017', '#16A3A3', '#E05297', '#6B4F2A', '#4A5568'];
+
+export type NewHunterInput = { name: string; partyId: string | null };
 
 export type NewBadge = { hunterId: string; badge: Badge };
 
@@ -29,8 +36,17 @@ type Store = {
   highScores: db.HighScore[];
   settings: Record<string, string>;
   usage: Record<string, number>;
-  addHunter: (name: string) => Promise<Hunter>;
+  addHunter: (name: string, partyId?: string | null) => Promise<Hunter>;
+  /** Several at once (first-run setup), with any new parties they belong to. */
+  addHunters: (list: NewHunterInput[], newParties: Party[]) => Promise<void>;
   renameHunter: (id: string, name: string) => Promise<void>;
+  setHunterParty: (id: string, partyId: string | null) => Promise<void>;
+  /** A party with a fresh id and an unused color; not saved until passed to addHunters. */
+  draftParty: (name: string, taken?: string[]) => Party;
+  addParty: (name: string) => Promise<Party>;
+  updateParty: (id: string, patch: Partial<Pick<Party, 'name' | 'color'>>) => Promise<void>;
+  deleteParty: (id: string) => Promise<void>;
+  addCustomSpecies: (name: string, sexed: boolean) => Promise<CustomSpecies>;
   deleteHunter: (id: string) => Promise<void>;
   saveHunt: (draft: HuntDraft) => Promise<{ huntId: string; newBadges: NewBadge[] }>;
   deleteHunt: (id: string) => Promise<void>;
@@ -52,6 +68,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const reload = useCallback(async () => {
     const loaded = await db.loadAll();
+    registerCustomSpecies(loaded.data.customSpecies);
     setData(loaded.data);
     setCelebrated(loaded.celebrated);
     setHighScores(loaded.highScores);
@@ -79,11 +96,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const addHunter = useCallback(
-    async (name: string) => {
+    async (name: string, partyId: string | null = null) => {
       const h: Hunter = {
         id: randomUUID(),
         name: name.trim(),
         color: HUNTER_COLORS[data.hunters.length % HUNTER_COLORS.length],
+        partyId,
         createdAt: Date.now(),
       };
       await db.insertHunter(h);
@@ -91,6 +109,88 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return h;
     },
     [data.hunters.length],
+  );
+
+  const addHunters = useCallback(
+    async (list: NewHunterInput[], newParties: Party[]) => {
+      const now = Date.now();
+      const hunters: Hunter[] = list
+        .filter((x) => x.name.trim())
+        .map((x, i) => ({
+          id: randomUUID(),
+          name: x.name.trim(),
+          color: HUNTER_COLORS[(data.hunters.length + i) % HUNTER_COLORS.length],
+          partyId: x.partyId,
+          createdAt: now + i,
+        }));
+      const parties = newParties.filter((p) => p.name.trim());
+      await db.insertHunters(hunters, parties);
+      setData((d) => ({ ...d, parties: [...d.parties, ...parties], hunters: [...d.hunters, ...hunters] }));
+    },
+    [data.hunters.length],
+  );
+
+  const setHunterParty = useCallback(
+    async (id: string, partyId: string | null) => {
+      const h = data.hunters.find((x) => x.id === id);
+      if (!h) return;
+      const next = { ...h, partyId };
+      await db.insertHunter(next);
+      setData((d) => ({ ...d, hunters: d.hunters.map((x) => (x.id === id ? next : x)) }));
+    },
+    [data.hunters],
+  );
+
+  const draftParty = useCallback(
+    (name: string, taken: string[] = []): Party => ({
+      id: randomUUID(),
+      name: name.trim(),
+      color: pickPartyColor([...data.parties.map((p) => p.color), ...taken]),
+      createdAt: Date.now(),
+    }),
+    [data.parties],
+  );
+
+  const addParty = useCallback(
+    async (name: string) => {
+      const p = draftParty(name);
+      await db.insertParty(p);
+      setData((d) => ({ ...d, parties: [...d.parties, p] }));
+      return p;
+    },
+    [draftParty],
+  );
+
+  const updateParty = useCallback(
+    async (id: string, patch: Partial<Pick<Party, 'name' | 'color'>>) => {
+      const p = data.parties.find((x) => x.id === id);
+      if (!p) return;
+      const next = { ...p, ...patch, name: (patch.name ?? p.name).trim() || p.name };
+      await db.insertParty(next);
+      setData((d) => ({ ...d, parties: d.parties.map((x) => (x.id === id ? next : x)) }));
+    },
+    [data.parties],
+  );
+
+  const deleteParty = useCallback(async (id: string) => {
+    await db.deletePartyRow(id);
+    setData((d) => ({
+      ...d,
+      parties: d.parties.filter((p) => p.id !== id),
+      hunters: d.hunters.map((h) => (h.partyId === id ? { ...h, partyId: null } : h)),
+    }));
+  }, []);
+
+  const addCustomSpecies = useCallback(
+    async (name: string, sexed: boolean) => {
+      const c: CustomSpecies = { id: `c_${randomUUID().slice(0, 8)}`, name: name.trim(), sexed, createdAt: Date.now() };
+      await db.insertCustomSpecies(c);
+      const list = [...data.customSpecies, c];
+      registerCustomSpecies(list);
+      setData((d) => ({ ...d, customSpecies: list }));
+      return c;
+    },
+    [data.customSpecies],
   );
 
   const renameHunter = useCallback(
@@ -115,6 +215,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const saveHunt = useCallback(
     async (draft: HuntDraft) => {
       const existing = draft.id ? data.hunts.find((h) => h.id === draft.id) : undefined;
+      if (data.hunts.some((h) => h.date === draft.date && h.id !== draft.id)) {
+        throw new Error('There is already a hunt on that day. One hunt per day.');
+      }
       const hunt = { id: draft.id ?? randomUUID(), date: draft.date, createdAt: existing?.createdAt ?? Date.now() };
       const party = draft.party.map((hunterId) => ({ huntId: hunt.id, hunterId }));
       const harvests: Harvest[] = draft.rows
@@ -178,10 +281,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Store>(
     () => ({
       ready, data, highScores, settings, usage,
-      addHunter, renameHunter, deleteHunter, saveHunt, deleteHunt, addHighScore, setSetting, importData,
+      addHunter, addHunters, renameHunter, setHunterParty, deleteHunter,
+      draftParty, addParty, updateParty, deleteParty, addCustomSpecies,
+      saveHunt, deleteHunt, addHighScore, setSetting, importData,
       badgesFor, titleOf,
     }),
-    [ready, data, highScores, settings, usage, addHunter, renameHunter, deleteHunter, saveHunt, deleteHunt, addHighScore, setSetting, importData, badgesFor, titleOf],
+    [
+      ready, data, highScores, settings, usage,
+      addHunter, addHunters, renameHunter, setHunterParty, deleteHunter,
+      draftParty, addParty, updateParty, deleteParty, addCustomSpecies,
+      saveHunt, deleteHunt, addHighScore, setSetting, importData,
+      badgesFor, titleOf,
+    ],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

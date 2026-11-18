@@ -1,5 +1,5 @@
 import { partyBirdsFor } from './badges';
-import { hunterDays, statsFromDays, type Scope } from './stats';
+import { groupDays, statsFromDays, type Scope } from './stats';
 import type { Data } from './types';
 
 /** Tale of the tape: two hunters side by side, plus who outshot whom when they hunted together. */
@@ -14,9 +14,19 @@ export type Rivalry = {
   ties: number;
 };
 
+/** Hunter vs hunter. */
 export function rivalry(data: Data, a: string, b: string, scope: Scope = {}): Rivalry {
-  const sa = statsFromDays(hunterDays(data, a, scope));
-  const sb = statsFromDays(hunterDays(data, b, scope));
+  return groupRivalry(data, [a], [b], scope);
+}
+
+/**
+ * Side vs side, where a side is one hunter or a whole party. "Together" counts
+ * hunts where both sides had someone in the blind; the side whose people shot
+ * more that day takes it.
+ */
+export function groupRivalry(data: Data, a: string[], b: string[], scope: Scope = {}): Rivalry {
+  const sa = statsFromDays(groupDays(data, a, scope));
+  const sb = statsFromDays(groupDays(data, b, scope));
   const rows: TapeRow[] = [
     { label: 'Birds', a: sa.birds, b: sb.birds },
     { label: 'Hunts', a: sa.hunts, b: sb.hunts },
@@ -25,6 +35,7 @@ export function rivalry(data: Data, a: string, b: string, scope: Scope = {}): Ri
     { label: 'Greenheads', a: sa.greenheads, b: sb.greenheads },
     { label: 'Bands', a: sa.banded, b: sb.banded },
     { label: 'Geese', a: sa.geese, b: sb.geese },
+    { label: 'Meat (lb)', a: Math.round(sa.meatOz / 16), b: Math.round(sb.meatOz / 16) },
     { label: 'Skunks', a: sa.skunks, b: sb.skunks, lowerWins: true },
   ];
 
@@ -33,12 +44,13 @@ export function rivalry(data: Data, a: string, b: string, scope: Scope = {}): Ri
   let aWins = 0;
   let bWins = 0;
   let ties = 0;
-  for (const d of hunterDays(data, a, scope)) {
-    if (!d.party.includes(b)) continue;
+  const total = (birds: Map<string, number>, side: string[]) => side.reduce((n, id) => n + (birds.get(id) ?? 0), 0);
+  for (const d of groupDays(data, a, scope)) {
+    if (!d.party.some((p) => b.includes(p))) continue;
     together++;
     const birds = party(d.hunt.id);
-    const na = birds.get(a) ?? 0;
-    const nb = birds.get(b) ?? 0;
+    const na = total(birds, a);
+    const nb = total(birds, b);
     if (na > nb) aWins++;
     else if (nb > na) bWins++;
     else ties++;

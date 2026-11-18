@@ -7,18 +7,21 @@ import Animated, { Easing, useAnimatedStyle, useDerivedValue, useSharedValue, wi
 
 import { play } from '@/audio/sfx';
 import { Pixel } from '@/ui/kit';
+
+import { SHARD_CELL, SHARDS } from './introShards';
 import { C } from '@/ui/theme';
 
 /**
  * Launch animation: dawn over the marsh, reeds swaying, the Duck Buster logo
  * flaps up out of the reeds, takes three shots (real holes, punched through
- * with dstOut), tumbles and fades — then the countdown starts.
+ * with dstOut), then explodes — chunks of the logo fly outward and get blockier,
+ * more pixelated, the further they go. Then the countdown starts.
  *
  * The logo is one image; the wing is cut out of it with a clip path and hinged
  * at the shoulder, so the silhouette is exactly the icon's.
  */
 
-export const INTRO_MS = 3600;
+export const INTRO_MS = 3900;
 
 /** Logo cut-out size (assets/intro/duck.png). */
 const IMG_W = 427;
@@ -63,7 +66,11 @@ function jaggedHole(cx: number, cy: number, seed: number) {
   }
   return b.build();
 }
-const FALL_AT = 2.8;
+/** The logo blows apart here (seconds), and the pieces fly for EXPLODE_FOR. */
+const EXPLODE_AT = 2.85;
+const EXPLODE_FOR = 1.0;
+/** Shards fly out from about the middle of the bird. */
+const BLAST = { x: 220, y: 215 };
 const END = INTRO_MS / 1000;
 
 const SKY = ['#2B3F73', '#3E5A94', '#5F7DB3', '#8EA3C8', '#D9A98A', '#F0C38E'];
@@ -86,7 +93,7 @@ export function IntroScene({ width, height, scale = 1 }: { width: number; height
   useEffect(() => {
     t.value = withTiming(END, { duration: INTRO_MS, easing: Easing.linear });
     const timers = SHOTS.map((s) => setTimeout(() => play('shot'), s.at * 1000));
-    timers.push(setTimeout(() => play('hit'), (SHOTS[2].at + 0.12) * 1000));
+    timers.push(setTimeout(() => play('boom'), EXPLODE_AT * 1000));
     return () => timers.forEach(clearTimeout);
   }, [t]);
 
@@ -127,11 +134,6 @@ export function IntroScene({ width, height, scale = 1 }: { width: number; height
         x += Math.sin(d * 60) * 4;
       }
     }
-    if (s > FALL_AT) {
-      const f = s - FALL_AT;
-      y += 260 * f * f;
-      rot += 1.4 * f;
-    }
     return [
       { translateX: x + dispW / 2 },
       { translateY: y + dispH / 2 },
@@ -142,10 +144,65 @@ export function IntroScene({ width, height, scale = 1 }: { width: number; height
     ];
   });
 
-  const duckOpacity = useDerivedValue(() => {
-    const s = t.value;
-    if (s < FALL_AT + 0.1) return 1;
-    return Math.max(0, 1 - (s - FALL_AT - 0.1) / 0.6);
+  const duckOpacity = useDerivedValue(() => (t.value < EXPLODE_AT ? 1 : 0));
+
+  // The explosion: every inked cell of the logo flies out from the middle. Early on
+  // it's a crisp chunk of the real logo; the further it flies the coarser it gets —
+  // 3×3 fine pixels, then 2×2, then one big block — fading as it goes.
+  const explosion = useDerivedValue(() => {
+    const e = t.value - EXPLODE_AT;
+    return createPicture((canvas) => {
+      if (e <= 0 || e > EXPLODE_FOR) return;
+      const p = e / EXPLODE_FOR;
+      const paint = Skia.Paint();
+      // Flash.
+      if (e < 0.18) {
+        paint.setColor(Skia.Color('#FFF6D8'));
+        paint.setAlphaf(1 - e / 0.18);
+        canvas.drawCircle(BLAST.x, BLAST.y, 60 + e * 900, paint);
+      }
+      const ink = Skia.Paint();
+      ink.setColor(Skia.Color('#13315C'));
+      const half = SHARD_CELL / 2;
+      for (let i = 0; i < SHARDS.length; i++) {
+        const [sx, sy, cov] = SHARDS[i];
+        const r1 = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+        const r2 = Math.abs(Math.sin(i * 78.233) * 12345.678) % 1;
+        const cx = sx + half;
+        const cy = sy + half;
+        let dx = cx - BLAST.x;
+        let dy = cy - BLAST.y;
+        const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+        dx /= len;
+        dy /= len;
+        const speed = 300 + r1 * 520;
+        const vx = dx * speed + (r2 - 0.5) * 160;
+        const vy = dy * speed + (r1 - 0.5) * 160 - 140;
+        const px = cx + vx * e;
+        const py = cy + vy * e + 380 * e * e;
+
+        if (p < 0.3 && image) {
+          paint.setAlphaf(1 - p / 0.3);
+          canvas.drawImageRect(
+            image,
+            Skia.XYWHRect(sx, sy, SHARD_CELL, SHARD_CELL),
+            Skia.XYWHRect(px - half, py - half, SHARD_CELL, SHARD_CELL),
+            paint,
+          );
+        }
+        // Pixel phase: fewer, bigger blocks the further out, snapped to a 4px grid.
+        const n = Math.max(1, 3 - Math.floor(p * 3));
+        const block = (SHARD_CELL / n) * (1 + p * 0.7);
+        const spread = block + p * 14;
+        ink.setAlphaf(Math.min(1, p / 0.2) * Math.pow(1 - p, 0.8) * Math.min(1, cov * 1.4));
+        for (let gx = 0; gx < n; gx++)
+          for (let gy = 0; gy < n; gy++) {
+            const bx = Math.round((px - (spread * n) / 2 + gx * spread) / 4) * 4;
+            const by = Math.round((py - (spread * n) / 2 + gy * spread) / 4) * 4;
+            canvas.drawRect(Skia.XYWHRect(bx, by, block, block), ink);
+          }
+      }
+    });
   });
 
   // Wingbeat, both wings together: beat 1 = wings up, −1 = wings down. Once the
@@ -232,7 +289,7 @@ export function IntroScene({ width, height, scale = 1 }: { width: number; height
   const titleStyle = useAnimatedStyle(() => {
     const s = t.value;
     const inA = Math.min(1, Math.max(0, (s - 1.3) / 0.5));
-    const outA = s > FALL_AT + 0.2 ? Math.max(0, 1 - (s - FALL_AT - 0.2) / 0.5) : 1;
+    const outA = s > EXPLODE_AT ? Math.max(0, 1 - (s - EXPLODE_AT) / 0.5) : 1;
     return { opacity: inA * outA, transform: [{ translateY: 12 * (1 - inA) }] };
   });
 
@@ -267,6 +324,9 @@ export function IntroScene({ width, height, scale = 1 }: { width: number; height
             <Picture picture={debris} />
           </Group>
         ) : null}
+        <Group transform={duckTransform}>
+          <Picture picture={explosion} />
+        </Group>
         <Picture picture={reedPicture} />
         </Group>
       </Canvas>

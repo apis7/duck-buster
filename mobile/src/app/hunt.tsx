@@ -12,6 +12,8 @@ import { SPECIES_BY_ID } from '@/domain/species';
 import type { Harvest } from '@/domain/types';
 import { useStore, type NewBadge } from '@/state/store';
 import { BadgeParade } from '@/ui/BadgeParade';
+import { BirdPicker } from '@/ui/BirdPicker';
+import { DatePicker } from '@/ui/DatePicker';
 import { Btn, Chip, Pixel, Stepper } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
@@ -74,6 +76,15 @@ export default function LogHunt() {
   const [newName, setNewName] = useState<string | null>(null);
   const [parade, setParade] = useState<NewBadge[] | null>(null);
   const [saving, setSaving] = useState(false);
+  // An existing hunt with no birds was a skunk.
+  const [skunked, setSkunked] = useState(!!existing && !data.harvests.some((r) => r.huntId === existing.id));
+  const [picking, setPicking] = useState(false);
+  const [pickerName, setPickerName] = useState<string | undefined>(undefined);
+  const [birdPicker, setBirdPicker] = useState(false);
+
+  // One hunt per day.
+  const huntDays = useMemo(() => new Set(data.hunts.filter((h) => h.id !== existing?.id).map((h) => h.date)), [data.hunts, existing]);
+  const clash = data.hunts.find((h) => h.date === date && h.id !== existing?.id);
 
   const results = useMemo(() => searchSpecies(query, usage, 8), [query, usage]);
   const hunterById = new Map(data.hunters.map((h) => [h.id, h]));
@@ -87,6 +98,8 @@ export default function LogHunt() {
   function addBird(speciesId: string) {
     if (!activeShooter) return;
     Haptics.selectionAsync().catch(() => {});
+    // Logging a bird un-skunks the hunt.
+    setSkunked(false);
     const sexed = SPECIES_BY_ID[speciesId]?.sexed;
     setLines((ls) => {
       const key = `${activeShooter}:${speciesId}`;
@@ -101,9 +114,44 @@ export default function LogHunt() {
     setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const remove = (key: string) => setLines((ls) => ls.filter((l) => l.key !== key));
 
+  function toggleSkunk() {
+    if (skunked) return setSkunked(false);
+    if (lines.length) {
+      Alert.alert('Skunked?', 'That clears the birds you entered for this hunt.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Skunked 🦨', style: 'destructive', onPress: () => { setLines([]); setSkunked(true); } },
+      ]);
+    } else setSkunked(true);
+  }
+
+  function pickDate(d: string) {
+    setPicking(false);
+    const other = data.hunts.find((h) => h.date === d && h.id !== existing?.id);
+    if (other) {
+      Alert.alert('Already logged', `There's already a hunt on ${prettyDate(d)}. One hunt per day — open that one?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open it', onPress: () => router.replace({ pathname: '/hunt', params: { id: other.id } }) },
+      ]);
+      return;
+    }
+    setDate(d);
+  }
+
   async function save() {
     if (party.length === 0) {
       Alert.alert('Who went?', 'Pick at least one hunter.');
+      return;
+    }
+    if (clash) {
+      pickDate(date);
+      return;
+    }
+    const counted = lines.filter((l) => party.includes(l.hunterId) && total(l) > 0);
+    if (!counted.length && !skunked) {
+      Alert.alert('No birds?', 'Log some birds, or mark this hunt SKUNKED.', [
+        { text: 'Back', style: 'cancel' },
+        { text: 'Skunked 🦨', onPress: () => setSkunked(true) },
+      ]);
       return;
     }
     setSaving(true);
@@ -112,7 +160,7 @@ export default function LogHunt() {
         id: existing?.id,
         date,
         party,
-        rows: rowsFrom(lines.filter((l) => party.includes(l.hunterId))),
+        rows: skunked ? [] : rowsFrom(lines.filter((l) => party.includes(l.hunterId))),
       });
       play('quack');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -164,14 +212,14 @@ export default function LogHunt() {
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 120 }}>
         {/* Date */}
         <View style={styles.dateRow}>
-          <Pressable onPress={() => setDate((d) => shiftDate(d, -1))} hitSlop={10} style={styles.arrow}>
+          <Pressable onPress={() => pickDate(shiftDate(date, -1))} hitSlop={10} style={styles.arrow}>
             <Pixel size={14}>{'<'}</Pixel>
           </Pressable>
-          <Pressable onPress={() => setDate(todayISO())} style={{ alignItems: 'center' }}>
+          <Pressable onPress={() => setPicking(true)} style={{ alignItems: 'center', flex: 1 }}>
             <Pixel size={12}>{prettyDate(date).toUpperCase()}</Pixel>
-            {date !== todayISO() ? <Text style={{ color: C.muted, fontSize: 11 }}>tap for today</Text> : null}
+            <Text style={{ color: C.muted, fontSize: 11 }}>📅 tap to pick a date</Text>
           </Pressable>
-          <Pressable onPress={() => setDate((d) => (d < todayISO() ? shiftDate(d, 1) : d))} hitSlop={10} style={styles.arrow}>
+          <Pressable onPress={() => date < todayISO() && pickDate(shiftDate(date, 1))} hitSlop={10} style={styles.arrow}>
             <Pixel size={14} color={date < todayISO() ? C.navy : C.locked}>{'>'}</Pixel>
           </Pressable>
         </View>
@@ -213,8 +261,20 @@ export default function LogHunt() {
           </View>
         ) : null}
 
+        {/* Skunked: a hunt with no birds, for the whole party. */}
+        <Pressable onPress={toggleSkunk} style={[styles.skunk, skunked && styles.skunkOn]}>
+          <Text style={{ fontSize: 26 }}>🦨</Text>
+          <View style={{ flex: 1 }}>
+            <Pixel size={11} color={skunked ? C.white : C.navy}>SKUNKED</Pixel>
+            <Text style={{ color: skunked ? C.white : C.muted, fontSize: 12 }}>
+              {skunked ? 'No birds this hunt. Tap a bird to undo.' : 'Nobody got a bird'}
+            </Text>
+          </View>
+          <View style={[styles.check, skunked && { backgroundColor: C.white }]}>{skunked ? <Text style={{ fontWeight: '900', color: C.navy }}>✓</Text> : null}</View>
+        </Pressable>
+
         {/* Search */}
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: 8, opacity: skunked ? 0.45 : 1 }}>
           <TextInput
             value={query}
             onChangeText={setQuery}
@@ -229,6 +289,10 @@ export default function LogHunt() {
             {results.map((s, i) => (
               <Chip key={s.id} label={s.name} on={!!query && i === 0} color={C.navy} onPress={() => addBird(s.id)} />
             ))}
+            {query.trim() && !results.some((r) => r.name.toLowerCase() === query.trim().toLowerCase()) ? (
+              <Chip label={`+ Add "${query.trim()}"`} color={C.orange} onPress={() => { setPickerName(query.trim()); setBirdPicker(true); }} />
+            ) : null}
+            <Chip label="ALL BIRDS ▸" color={C.marsh} onPress={() => { setPickerName(undefined); setBirdPicker(true); }} />
           </View>
         </View>
 
@@ -279,6 +343,18 @@ export default function LogHunt() {
         <Btn label={saving ? 'SAVING…' : 'SAVE HUNT'} onPress={save} disabled={saving} />
       </View>
 
+      {picking ? (
+        <DatePicker visible value={date} huntDays={huntDays} onPick={pickDate} onClose={() => setPicking(false)} />
+      ) : null}
+      {birdPicker ? (
+        <BirdPicker
+          visible
+          initialName={pickerName}
+          onPick={(id) => { setBirdPicker(false); addBird(id); }}
+          onClose={() => setBirdPicker(false)}
+        />
+      ) : null}
+
       {parade ? (
         <BadgeParade
           items={parade.map((b) => ({ badge: b.badge, hunterName: hunterById.get(b.hunterId)?.name ?? '' }))}
@@ -297,5 +373,8 @@ const styles = StyleSheet.create({
   chipInput: { borderWidth: 2, borderColor: C.orange, paddingVertical: 5, paddingHorizontal: 10, minWidth: 110, fontSize: 14, backgroundColor: C.white },
   search: { borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, padding: 14, fontSize: 17 },
   line: { backgroundColor: C.white, borderWidth: 2, borderColor: C.navy, padding: 10, gap: 8 },
+  skunk: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, padding: 10 },
+  skunkOn: { backgroundColor: C.navy },
+  check: { width: 26, height: 26, borderWidth: 2.5, borderColor: C.navy, alignItems: 'center', justifyContent: 'center' },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, backgroundColor: C.paper, borderTopWidth: 2.5, borderColor: C.navy },
 });

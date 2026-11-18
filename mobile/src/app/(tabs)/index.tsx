@@ -1,17 +1,17 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
-import { currentSeason, prettyDate, seasonLabel, seasonOf } from '@/domain/season';
+import { currentSeason, prettyDate, seasonLabel, seasonOf, todayISO } from '@/domain/season';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { useStore } from '@/state/store';
 import { Body, Btn, Card, Dot, Pixel, Screen, Section } from '@/ui/kit';
+import { HunterSetup } from '@/ui/HunterSetup';
 import { C } from '@/ui/theme';
 
 export default function Hunts() {
-  const { data, addHunter } = useStore();
+  const { data } = useStore();
   const season = currentSeason();
-  const [name, setName] = useState('');
 
   const hunts = useMemo(
     () => [...data.hunts].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
@@ -23,32 +23,29 @@ export default function Hunts() {
   const hunterById = new Map(data.hunters.map((h) => [h.id, h]));
 
   if (data.hunters.length === 0) {
-    const add = async () => {
-      if (!name.trim()) return;
-      await addHunter(name);
-      setName('');
-    };
     return (
       <Screen title="DUCK BUSTER">
-        <Card style={{ gap: 12 }}>
-          <Pixel size={12}>WHO HUNTS?</Pixel>
-          <Body>Add the hunters in your crew. You can add more any time.</Body>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Name"
-            onSubmitEditing={add}
-            returnKeyType="done"
-            style={{ borderWidth: 2, borderColor: C.navy, padding: 12, fontSize: 17, backgroundColor: C.white }}
-          />
-          <Btn label="ADD HUNTER" onPress={add} disabled={!name.trim()} />
-        </Card>
+        <HunterSetup firstRun onDone={() => {}} />
       </Screen>
     );
   }
 
+  // One hunt per day: if today's is already logged, the button opens it.
+  const today = todayISO();
+  const todays = data.hunts.find((h) => h.date === today);
+
   return (
-    <Screen title="DUCK BUSTER" right={<Pixel size={9} color={C.muted}>{seasonLabel(season)}</Pixel>}>
+    <Screen
+      title="DUCK BUSTER"
+      right={
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <Pixel size={9} color={C.muted}>{seasonLabel(season)}</Pixel>
+          <Pressable onPress={() => router.navigate('/more')} hitSlop={12} accessibilityLabel="Settings">
+            <Text style={{ fontSize: 22 }}>⚙️</Text>
+          </Pressable>
+        </View>
+      }
+    >
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <Card style={{ flex: 1, alignItems: 'center' }}>
           <Pixel size={22}>{`${seasonBirds}`}</Pixel>
@@ -60,7 +57,10 @@ export default function Hunts() {
         </Card>
       </View>
 
-      <Btn label="+ LOG A HUNT" onPress={() => router.push('/hunt')} />
+      <Btn
+        label={todays ? "OPEN TODAY'S HUNT" : '+ LOG A HUNT'}
+        onPress={() => router.push(todays ? { pathname: '/hunt', params: { id: todays.id } } : '/hunt')}
+      />
 
       <Section title="Recent hunts">
         {hunts.length === 0 ? <Body muted>No hunts yet. Go get some!</Body> : null}

@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { Data, Harvest, Hunt, HuntHunter, Hunter } from '@/domain/types';
+import type { CustomSpecies, Data, Harvest, Hunt, HuntHunter, Hunter, Party } from '@/domain/types';
 
 /**
  * The phone's only copy of the season. Hand-written, append-only migrations on
@@ -58,6 +58,22 @@ const MIGRATIONS: string[][] = [
       value TEXT NOT NULL
     );`,
   ],
+  // 2: parties (teams of hunters) and user-added birds.
+  [
+    `CREATE TABLE IF NOT EXISTS parties (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      color TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );`,
+    `ALTER TABLE hunters ADD COLUMN party_id TEXT;`,
+    `CREATE TABLE IF NOT EXISTS custom_species (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      sexed INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );`,
+  ],
 ];
 
 export async function migrate(): Promise<void> {
@@ -86,8 +102,10 @@ export type Loaded = {
 export const celebratedKey = (hunterId: string, badgeId: string) => `${hunterId}:${badgeId}`;
 
 export async function loadAll(): Promise<Loaded> {
-  const [hunters, hunts, huntHunters, harvests, celebrated, highScores, settings] = await Promise.all([
-    db.getAllAsync<{ id: string; name: string; color: string; created_at: number }>('SELECT * FROM hunters ORDER BY created_at'),
+  const [hunters, parties, customSpecies, hunts, huntHunters, harvests, celebrated, highScores, settings] = await Promise.all([
+    db.getAllAsync<{ id: string; name: string; color: string; party_id: string | null; created_at: number }>('SELECT * FROM hunters ORDER BY created_at'),
+    db.getAllAsync<{ id: string; name: string; color: string; created_at: number }>('SELECT * FROM parties ORDER BY created_at'),
+    db.getAllAsync<{ id: string; name: string; sexed: number; created_at: number }>('SELECT * FROM custom_species ORDER BY name'),
     db.getAllAsync<{ id: string; date: string; created_at: number }>('SELECT * FROM hunts'),
     db.getAllAsync<{ hunt_id: string; hunter_id: string }>('SELECT * FROM hunt_hunters'),
     db.getAllAsync<{ id: string; hunt_id: string; hunter_id: string; species_id: string; sex: string; count: number; banded: number }>(
@@ -101,7 +119,9 @@ export async function loadAll(): Promise<Loaded> {
   ]);
   return {
     data: {
-      hunters: hunters.map((h) => ({ id: h.id, name: h.name, color: h.color, createdAt: h.created_at })),
+      hunters: hunters.map((h) => ({ id: h.id, name: h.name, color: h.color, partyId: h.party_id ?? null, createdAt: h.created_at })),
+      parties: parties.map((p) => ({ id: p.id, name: p.name, color: p.color, createdAt: p.created_at })),
+      customSpecies: customSpecies.map((c) => ({ id: c.id, name: c.name, sexed: !!c.sexed, createdAt: c.created_at })),
       hunts: hunts.map((h) => ({ id: h.id, date: h.date, createdAt: h.created_at })),
       huntHunters: huntHunters.map((h) => ({ huntId: h.hunt_id, hunterId: h.hunter_id })),
       harvests: harvests.map((r) => ({
@@ -121,7 +141,32 @@ export async function loadAll(): Promise<Loaded> {
 }
 
 export async function insertHunter(h: Hunter): Promise<void> {
-  await db.runAsync('INSERT OR REPLACE INTO hunters (id, name, color, created_at) VALUES (?, ?, ?, ?)', h.id, h.name, h.color, h.createdAt);
+  await db.runAsync(
+    'INSERT OR REPLACE INTO hunters (id, name, color, party_id, created_at) VALUES (?, ?, ?, ?, ?)',
+    h.id, h.name, h.color, h.partyId, h.createdAt,
+  );
+}
+
+export async function insertHunters(list: Hunter[], parties: Party[]): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    for (const p of parties) await insertParty(p);
+    for (const h of list) await insertHunter(h);
+  });
+}
+
+export async function insertParty(p: Party): Promise<void> {
+  await db.runAsync('INSERT OR REPLACE INTO parties (id, name, color, created_at) VALUES (?, ?, ?, ?)', p.id, p.name, p.color, p.createdAt);
+}
+
+export async function deletePartyRow(id: string): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE hunters SET party_id = NULL WHERE party_id = ?', id);
+    await db.runAsync('DELETE FROM parties WHERE id = ?', id);
+  });
+}
+
+export async function insertCustomSpecies(c: CustomSpecies): Promise<void> {
+  await db.runAsync('INSERT OR REPLACE INTO custom_species (id, name, sexed, created_at) VALUES (?, ?, ?, ?)', c.id, c.name, c.sexed ? 1 : 0, c.createdAt);
 }
 
 export async function deleteHunterRows(id: string): Promise<void> {
@@ -177,11 +222,12 @@ export async function writeSetting(key: string, value: string): Promise<void> {
 export async function importRows(incoming: Data, mode: 'merge' | 'replace'): Promise<void> {
   await db.withTransactionAsync(async () => {
     if (mode === 'replace') {
-      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'celebrated_badges'])
+      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'parties', 'custom_species', 'celebrated_badges'])
         await db.execAsync(`DELETE FROM ${t};`);
     }
-    for (const h of incoming.hunters)
-      await db.runAsync('INSERT OR REPLACE INTO hunters (id, name, color, created_at) VALUES (?, ?, ?, ?)', h.id, h.name, h.color, h.createdAt);
+    for (const p of incoming.parties) await insertParty(p);
+    for (const c of incoming.customSpecies) await insertCustomSpecies(c);
+    for (const h of incoming.hunters) await insertHunter(h);
     for (const hunt of incoming.hunts) {
       await writeHuntRows(
         hunt,

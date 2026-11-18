@@ -43,13 +43,14 @@ function tune(notes, vol = 0.5) {
   return s;
 }
 
-function noise(dur, vol = 0.9, decay = 4) {
+function noise(dur, vol = 0.9, decay = 4, hold = 3) {
   const n = Math.floor(dur * RATE);
   const s = [];
-  let hold = 0;
+  let held = 0;
+  const holdN = hold;
   for (let i = 0; i < n; i++) {
-    if (i % 3 === 0) hold = Math.random() * 2 - 1; // crunchy, low-rate noise
-    s.push(hold * vol * Math.exp((-decay * i) / n));
+    if (i % holdN === 0) held = Math.random() * 2 - 1; // crunchy, low-rate noise
+    s.push(held * vol * Math.exp((-decay * i) / n));
   }
   return s;
 }
@@ -84,6 +85,7 @@ function woof() {
 }
 
 const files = {
+  'boom.wav': noise(0.7, 1, 3.2, 9),
   'dry.wav': clicks([0], 0.5),
   'reload.wav': clicks([0, 0.16], 0.9),
   'woof.wav': [...woof(), ...new Array(Math.floor(0.08 * RATE)).fill(0), ...woof()],

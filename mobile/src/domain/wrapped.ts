@@ -1,3 +1,4 @@
+import { formatMeat } from './meat';
 import { prettyDate, seasonLabel } from './season';
 import { SPECIES, SPECIES_BY_ID } from './species';
 import { hunterDays, hunterStats, statsFromDays } from './stats';
@@ -26,6 +27,14 @@ export function seasonWrapped(data: Data, hunterId: string, season: number, titl
     big: `${s.birds}`,
     caption: s.birds === 0 ? 'Zero. But what a sunrise.' : s.birds >= 50 ? 'The ducks are filing a complaint.' : 'Every one of them earned.',
   });
+
+  if (s.meatOz > 0) {
+    cards.push({
+      kicker: 'In the freezer',
+      big: formatMeat(s.meatOz).replace('≈ ', ''),
+      caption: s.meatOz >= 16 * 20 ? 'of meat (roughly). Time for a bigger freezer.' : 'of meat, give or take. Fire up the grill.',
+    });
+  }
 
   const fav = Object.entries(s.bySpecies).sort((a, b) => b[1] - a[1])[0];
   if (fav) {

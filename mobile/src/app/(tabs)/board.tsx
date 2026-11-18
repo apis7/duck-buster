@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 
 import { AdBanner } from '@/ads/ads';
 import { currentSeason, seasonLabel } from '@/domain/season';
-import { hunterStats, raceSeries, seasonsIn } from '@/domain/stats';
+import { formatMeat } from '@/domain/meat';
+import { hunterStats, partyMembers, partyRaceSeries, partyStats, raceSeries, seasonsIn } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { Bar, Body, Btn, Card, Chip, Dot, Pixel, Screen, Section } from '@/ui/kit';
 import { RaceChart } from '@/ui/RaceChart';
@@ -18,6 +19,7 @@ export default function Board() {
     return s.includes(currentSeason()) ? s : [currentSeason(), ...s];
   }, [data]);
   const [season, setSeason] = useState<number | null>(currentSeason());
+  const [byParty, setByParty] = useState(false);
   const scope = season == null ? {} : { season };
 
   const rows = useMemo(
@@ -33,7 +35,21 @@ export default function Board() {
     { birds: 0, bands: 0, greenheads: 0, hens: 0 },
   );
   const max = Math.max(1, ...rows.map((r) => r.s.birds));
-  const race = season == null ? [] : data.hunters.map((h) => ({ color: h.color, points: raceSeries(data, h.id, season) }));
+  const partyRows = useMemo(
+    () =>
+      data.parties
+        .map((p) => ({ p, s: partyStats(data, p.id, scope), members: partyMembers(data, p.id).length }))
+        .sort((a, b) => b.s.birds - a.s.birds || b.s.hunts - a.s.hunts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, season],
+  );
+  const partyMax = Math.max(1, ...partyRows.map((r) => r.s.birds));
+  const race =
+    season == null
+      ? []
+      : byParty
+        ? data.parties.map((p) => ({ color: p.color, points: partyRaceSeries(data, p.id, season) }))
+        : data.hunters.map((h) => ({ color: h.color, points: raceSeries(data, h.id, season) }));
   const club = [...rows].sort((a, b) => b.s.greenheads - a.s.greenheads).filter((r) => r.s.greenheads > 0);
   const henHouse = [...rows].sort((a, b) => b.s.hens - a.s.hens).filter((r) => r.s.hens > 0);
 
@@ -49,6 +65,40 @@ export default function Board() {
 
         {data.hunters.length === 0 ? <Body muted>Add hunters and log a hunt to get on the board.</Body> : null}
 
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Chip label="HUNTERS" on={!byParty} onPress={() => setByParty(false)} />
+          <Chip label="PARTIES" on={byParty} onPress={() => setByParty(true)} />
+        </View>
+
+        {byParty ? (
+          <Card style={{ gap: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Pixel size={10} color={C.muted}>THE PARTIES</Pixel>
+              <Pixel size={10}>{`${totals.birds} BIRDS`}</Pixel>
+            </View>
+            {partyRows.length === 0 ? (
+              <Body muted>No parties yet. Make some in More › Hunters › Parties.</Body>
+            ) : null}
+            {partyRows.map((r, i) => (
+              <Pressable key={r.p.id} onPress={() => router.push({ pathname: '/party/[id]', params: { id: r.p.id } })} style={{ gap: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Pixel size={11} color={MEDALS[i] && r.s.birds > 0 ? MEDALS[i] : C.muted} style={{ width: 26 }}>{`${i + 1}`}</Pixel>
+                  <Dot color={r.p.color} />
+                  <Body style={{ fontWeight: '800', flex: 1 }}>{r.p.name}</Body>
+                  <Pixel size={11}>{`${r.s.birds}`}</Pixel>
+                </View>
+                <View style={{ paddingLeft: 34 }}>
+                  <Bar value={r.s.birds} max={partyMax} color={r.p.color} />
+                </View>
+                <Body muted style={{ fontSize: 12, paddingLeft: 34 }}>
+                  {`${r.members} hunters · ${r.s.hunts} hunts · ${r.s.species.size} species · ${formatMeat(r.s.meatOz)}`}
+                </Body>
+              </Pressable>
+            ))}
+          </Card>
+        ) : null}
+
+        {!byParty ? (
         <Card style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Pixel size={10} color={C.muted}>THE CREW</Pixel>
@@ -66,11 +116,12 @@ export default function Board() {
                 <Bar value={r.s.birds} max={max} color={r.h.color} />
               </View>
               <Body muted style={{ fontSize: 12, paddingLeft: 34 }}>
-                {`${titleOf(r.h.id).name} · ${r.s.hunts} hunts · ${r.s.species.size} species${r.s.banded ? ` · ${r.s.banded}💍` : ''}`}
+                {`${titleOf(r.h.id).name} · ${r.s.hunts} hunts · ${r.s.species.size} species · ${formatMeat(r.s.meatOz)}${r.s.banded ? ` · ${r.s.banded}💍` : ''}`}
               </Body>
             </View>
           ))}
         </Card>
+        ) : null}
 
         {season != null && totals.birds > 0 ? (
           <Section title="The race">
@@ -104,7 +155,12 @@ export default function Board() {
         </Section>
 
         <View style={{ gap: 12 }}>
-          <Btn label="🥊 RIVALRY" kind="secondary" onPress={() => router.push('/rivalry')} disabled={data.hunters.length < 2} />
+          <Btn
+            label={byParty ? '🥊 PARTY RIVALRY' : '🥊 RIVALRY'}
+            kind="secondary"
+            onPress={() => router.push({ pathname: '/rivalry', params: { mode: byParty ? 'parties' : 'hunters' } })}
+            disabled={byParty ? data.parties.length < 2 : data.hunters.length < 2}
+          />
           <Btn label="🏆 AWARDS NIGHT" kind="secondary" onPress={() => router.push({ pathname: '/awards', params: { season: String(season ?? currentSeason()) } })} />
           <Btn label="🎁 SEASON WRAPPED" kind="secondary" onPress={() => router.push({ pathname: '/wrapped', params: { season: String(season ?? currentSeason()) } })} />
         </View>

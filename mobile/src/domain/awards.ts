@@ -1,3 +1,4 @@
+import { formatMeat } from './meat';
 import { seasonOf } from './season';
 import { SPECIES_BY_ID } from './species';
 import { hunterStats, type HunterStats } from './stats';
@@ -47,6 +48,8 @@ export const AWARDS: AwardDef[] = [
     metric: (s) => s.teal, describe: (v) => n(v, 'teal', 'teal') },
   { id: 'goose_whisperer', title: 'Goose Whisperer', icon: '🪿', min: 1,
     metric: (s) => s.geese, describe: (v) => n(v, 'goose', 'geese') },
+  { id: 'freezer_filler', title: 'Freezer Filler', icon: '🧊', min: 1,
+    metric: (s) => Math.round(s.meatOz), describe: (v) => `${formatMeat(v)} of meat in the freezer` },
   { id: 'bird_nerd', title: 'Bird Nerd of the Year', icon: '📚', min: 2,
     metric: (s) => s.species.size, describe: (v) => n(v, 'species', 'species') },
 

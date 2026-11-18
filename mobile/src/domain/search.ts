@@ -1,4 +1,4 @@
-import { SPECIES, type Species } from './species';
+import { CUSTOM_SPECIES, SPECIES, speciesVersion, type Species } from './species';
 
 /**
  * Species search for the hunt log. The goal is one or two keystrokes per bird:
@@ -20,12 +20,21 @@ const norm = (s: string) =>
 
 type Indexed = { species: Species; names: string[]; words: string[]; initials: string[] };
 
-const INDEX: Indexed[] = SPECIES.map((species) => {
+function indexOf(species: Species): Indexed {
   const names = [species.name, ...species.aliases].map(norm);
   const words = Array.from(new Set(names.flatMap((n) => n.split(' '))));
   const initials = names.map((n) => n.split(' ').map((w) => w[0]).join(''));
   return { species, names, words, initials };
-});
+}
+
+const BUILT_IN = SPECIES.map(indexOf);
+let cache: { version: number; index: Indexed[] } | null = null;
+
+/** Built-in birds plus the ones the user added; rebuilt when that list changes. */
+function index(): Indexed[] {
+  if (!cache || cache.version !== speciesVersion) cache = { version: speciesVersion, index: [...BUILT_IN, ...CUSTOM_SPECIES.map(indexOf)] };
+  return cache.index;
+}
 
 /** Levenshtein distance capped at 2 — anything further is "no match". */
 function closeEnough(a: string, b: string): boolean {
@@ -74,7 +83,7 @@ export function searchSpecies(query: string, usage: UsageCounts = {}, limit = 8)
   const q = norm(query);
   if (!q) return topByUsage(usage, limit);
   const tokens = q.split(' ');
-  return INDEX.map((e) => ({ e, s: score(e, q, tokens) }))
+  return index().map((e) => ({ e, s: score(e, q, tokens) }))
     .filter((r) => r.s > 0)
     .map((r) => ({ ...r, s: r.s + Math.min(usage[r.e.species.id] ?? 0, 40) }))
     .sort((a, b) => b.s - a.s || a.e.species.name.localeCompare(b.e.species.name))
@@ -90,5 +99,5 @@ export function topByUsage(usage: UsageCounts, limit = 8): Species[] {
     .sort((a, b) => b[1] - a[1])
     .map(([id]) => id);
   const ids = Array.from(new Set([...ranked, ...defaults])).slice(0, limit);
-  return ids.map((id) => SPECIES.find((s) => s.id === id)!).filter(Boolean);
+  return ids.map((id) => index().find((e) => e.species.id === id)?.species).filter((s): s is Species => !!s);
 }

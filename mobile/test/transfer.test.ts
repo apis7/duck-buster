@@ -12,7 +12,7 @@ function bigLog() {
     d.bird(h, 'dad', 'mall', 3, 'D', i % 10 === 0 ? 1 : 0);
     d.bird(h, 'kid', 'gwte', 2, 'H');
   }
-  return { hunters: d.hunters, hunts: d.hunts, huntHunters: d.huntHunters, harvests: d.harvests };
+  return { hunters: d.hunters, parties: d.parties, customSpecies: [{ id: 'c1', name: 'Mystery Duck', sexed: true, createdAt: 1 }], hunts: d.hunts, huntHunters: d.huntHunters, harvests: d.harvests };
 }
 
 describe('QR transfer', () => {

@@ -1,8 +1,10 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { currentSeason, seasonLabel } from '@/domain/season';
-import { rivalry } from '@/domain/rivalry';
+import { groupRivalry } from '@/domain/rivalry';
+import { partyMembers } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { Body, Card, Chip, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
@@ -10,28 +12,40 @@ import { C } from '@/ui/theme';
 
 /** Tale of the tape between two hunters. */
 export default function Rivalry() {
+  const params = useLocalSearchParams<{ mode?: string }>();
   const { data, titleOf } = useStore();
-  const [a, setA] = useState(data.hunters[0]?.id);
-  const [b, setB] = useState(data.hunters[1]?.id);
+  const [parties, setParties] = useState(params.mode === 'parties');
+  // Either side is a hunter or a party; both use the same tale of the tape.
+  const sides = parties
+    ? data.parties.map((p) => ({ id: p.id, name: p.name, color: p.color, members: partyMembers(data, p.id), sub: `${partyMembers(data, p.id).length} hunters` }))
+    : data.hunters.map((h) => ({ id: h.id, name: h.name, color: h.color, members: [h.id], sub: titleOf(h.id).name }));
+  const [aId, setA] = useState<string | undefined>(undefined);
+  const [bId, setB] = useState<string | undefined>(undefined);
+  const a = sides.some((x) => x.id === aId) ? aId : sides[0]?.id;
+  const b = sides.some((x) => x.id === bId) && bId !== a ? bId : sides.find((x) => x.id !== a)?.id;
   const [allTime, setAllTime] = useState(false);
-  const ha = data.hunters.find((h) => h.id === a);
-  const hb = data.hunters.find((h) => h.id === b);
+  const ha = sides.find((h) => h.id === a);
+  const hb = sides.find((h) => h.id === b);
   const season = currentSeason();
 
   const picker = (value: string | undefined, set: (id: string) => void, other: string | undefined) => (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-      {data.hunters.filter((h) => h.id !== other).map((h) => (
+      {sides.filter((h) => h.id !== other).map((h) => (
         <Chip key={h.id} label={h.name} color={h.color} on={value === h.id} onPress={() => set(h.id)} />
       ))}
     </ScrollView>
   );
 
-  const r = ha && hb ? rivalry(data, ha.id, hb.id, allTime ? {} : { season }) : null;
+  const r = ha && hb ? groupRivalry(data, ha.members, hb.members, allTime ? {} : { season }) : null;
   const aScore = r ? r.rows.filter((x) => (x.lowerWins ? x.a < x.b : x.a > x.b)).length : 0;
   const bScore = r ? r.rows.filter((x) => (x.lowerWins ? x.b < x.a : x.b > x.a)).length : 0;
 
   return (
-    <SubScreen title="RIVALRY">
+    <SubScreen title={parties ? 'PARTY RIVALRY' : 'RIVALRY'}>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Chip label="HUNTERS" on={!parties} onPress={() => setParties(false)} />
+        <Chip label="PARTIES" on={parties} onPress={() => setParties(true)} />
+      </View>
       {picker(a, setA, b)}
       <Pixel size={12} style={{ textAlign: 'center' }}>VS</Pixel>
       {picker(b, setB, a)}
@@ -45,11 +59,11 @@ export default function Rivalry() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
               <Pixel size={12} color={ha.color}>{ha.name.toUpperCase()}</Pixel>
-              <Pixel size={7} color={C.navySoft}>{titleOf(ha.id).name.toUpperCase()}</Pixel>
+              <Pixel size={7} color={C.navySoft}>{ha.sub.toUpperCase()}</Pixel>
             </View>
             <View style={{ flex: 1, alignItems: 'flex-end' }}>
               <Pixel size={12} color={hb.color}>{hb.name.toUpperCase()}</Pixel>
-              <Pixel size={7} color={C.navySoft}>{titleOf(hb.id).name.toUpperCase()}</Pixel>
+              <Pixel size={7} color={C.navySoft}>{hb.sub.toUpperCase()}</Pixel>
             </View>
           </View>
           {r.rows.map((row) => {
@@ -77,7 +91,7 @@ export default function Rivalry() {
           </View>
         </Card>
       ) : (
-        <Body muted>Add at least two hunters.</Body>
+        <Body muted>{parties ? 'Make at least two parties (More › Hunters › Parties).' : 'Add at least two hunters.'}</Body>
       )}
     </SubScreen>
   );

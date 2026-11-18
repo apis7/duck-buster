@@ -32,7 +32,13 @@ export function snapshotFromBytes(bytes: Uint8Array): Snapshot {
   const s = raw as Partial<Snapshot>;
   if (!s || !isNum(s.format) || s.format > SNAPSHOT_FORMAT || !s.data) throw new Error('That transfer could not be read.');
   const d = s.data as Data;
+  // Older snapshots predate parties and custom birds.
+  d.parties ??= [];
+  d.customSpecies ??= [];
+  for (const h of d.hunters ?? []) h.partyId ??= null;
   const ok =
+    Array.isArray(d.parties) && d.parties.every((p) => isStr(p.id) && isStr(p.name) && isStr(p.color) && isNum(p.createdAt)) &&
+    Array.isArray(d.customSpecies) && d.customSpecies.every((c) => isStr(c.id) && isStr(c.name) && typeof c.sexed === 'boolean') &&
     Array.isArray(d.hunters) && d.hunters.every((h) => isStr(h.id) && isStr(h.name) && isStr(h.color) && isNum(h.createdAt)) &&
     Array.isArray(d.hunts) && d.hunts.every((h) => isStr(h.id) && /^\d{4}-\d{2}-\d{2}$/.test(h.date) && isNum(h.createdAt)) &&
     Array.isArray(d.huntHunters) && d.huntHunters.every((p) => isStr(p.huntId) && isStr(p.hunterId)) &&
@@ -48,5 +54,6 @@ export function snapshotFromBytes(bytes: Uint8Array): Snapshot {
 
 export function describe(data: Data): string {
   const birds = data.harvests.reduce((n, r) => n + r.count, 0);
-  return `${data.hunters.length} hunters · ${data.hunts.length} hunts · ${birds} birds`;
+  const parties = data.parties.length ? ` · ${data.parties.length} parties` : '';
+  return `${data.hunters.length} hunters${parties} · ${data.hunts.length} hunts · ${birds} birds`;
 }
