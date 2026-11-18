@@ -11,7 +11,7 @@ import { C, MEDALS } from '@/ui/theme';
 
 import { GameView, type GameResult } from './GameView';
 import { INTRO_MS, IntroScene } from './IntroScene';
-import { gameLayout } from './layout';
+import { gameLayout, gameScale } from './layout';
 
 type Phase = 'whirl' | 'count' | 'play' | 'summary';
 
@@ -30,7 +30,14 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
   const [round, setRound] = useState(0);
   const [taps, setTaps] = useState(0);
 
-  const layout = useMemo(() => gameLayout(width, height, insets.top, insets.bottom), [width, height, insets.top, insets.bottom]);
+  // The scene is laid out in "game units" and scaled up as one on wide screens.
+  const scale = gameScale(width);
+  const vw = width / scale;
+  const vh = height / scale;
+  const layout = useMemo(
+    () => gameLayout(vw, vh, insets.top / scale, insets.bottom / scale),
+    [vw, vh, scale, insets.top, insets.bottom],
+  );
 
   useEffect(() => {
     preload();
@@ -71,8 +78,9 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
       {phase !== 'whirl' && phase !== 'summary' ? (
         <GameView
           key={round}
-          width={width}
-          height={height}
+          width={vw}
+          height={vh}
+          scale={scale}
           layout={layout}
           running={phase === 'play'}
           onEnd={(r) => {
@@ -82,7 +90,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
         />
       ) : null}
 
-      {phase === 'whirl' ? <IntroScene width={width} height={height} /> : null}
+      {phase === 'whirl' ? <IntroScene width={vw} height={vh} scale={scale} /> : null}
 
       {phase === 'count' ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.center]}>
@@ -101,8 +109,8 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
 
       {phase !== 'summary' ? (
         <Pressable onPress={tapDuck} style={[styles.skipZone, { paddingTop: insets.top + 8 }]}>
-          <PixelBird species={SPECIES_BY_ID.mall} size={44} />
-          <Pixel size={7} color="rgba(255,255,255,0.55)">
+          <PixelBird species={SPECIES_BY_ID.mall} size={44 * scale} />
+          <Pixel size={7 * scale} color="rgba(255,255,255,0.55)">
             {taps > 0 ? `skip: ${SKIP_TAPS - taps} more` : 'tap duck 7× to skip'}
           </Pixel>
         </Pressable>

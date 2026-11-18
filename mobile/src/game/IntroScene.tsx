@@ -74,7 +74,7 @@ const ease = (x: number) => {
   return 1 - (1 - c) * (1 - c) * (1 - c);
 };
 
-export function IntroScene({ width, height }: { width: number; height: number }) {
+export function IntroScene({ width, height, scale = 1 }: { width: number; height: number; scale?: number }) {
   const image = useImage(require('../../assets/intro/duck.png'));
   const t = useSharedValue(0);
   const reedTop = height * 0.72;
@@ -240,7 +240,8 @@ export function IntroScene({ width, height }: { width: number; height: number })
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Canvas style={{ width, height }}>
+      <Canvas style={{ width: width * scale, height: height * scale }}>
+        <Group transform={[{ scale }]}>
         {SKY.map((c, i) => (
           <Rect key={c} x={0} y={i * bandH} width={width} height={bandH + 1} color={c} />
         ))}
@@ -267,9 +268,10 @@ export function IntroScene({ width, height }: { width: number; height: number })
           </Group>
         ) : null}
         <Picture picture={reedPicture} />
+        </Group>
       </Canvas>
-      <Animated.View pointerEvents="none" style={[styles.title, { top: height * 0.3 + dispH / 2 + 18 }, titleStyle]}>
-        <Pixel size={24} color={C.white} style={{ textAlign: 'center', lineHeight: 34 }}>
+      <Animated.View pointerEvents="none" style={[styles.title, { top: (height * 0.3 + dispH / 2 + 18) * scale }, titleStyle]}>
+        <Pixel size={24 * scale} color={C.white} style={{ textAlign: 'center', lineHeight: 34 * scale }}>
           DUCK BUSTER
         </Pixel>
       </Animated.View>

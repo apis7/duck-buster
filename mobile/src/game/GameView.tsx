@@ -1,4 +1,4 @@
-import { Canvas, createPicture, Picture, Skia, type SkCanvas } from '@shopify/react-native-skia';
+import { Canvas, createPicture, Group, Picture, Skia, type SkCanvas } from '@shopify/react-native-skia';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
@@ -73,8 +73,8 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
  * thread; the JS thread hears about events (sounds, banners) and the end.
  */
 export function GameView({
-  width, height, layout, running, onEnd,
-}: { width: number; height: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void }) {
+  width, height, scale, layout, running, onEnd,
+}: { width: number; height: number; scale: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void }) {
   const { gunY, skyTop } = layout;
   const pics = useMemo(() => gamePictures(), []);
   const initial = useMemo(() => newGame(width, height, layout), [width, height, layout]);
@@ -183,8 +183,8 @@ export function GameView({
       'worklet';
       const s = state.value;
       if (!live.value || s.over) return;
-      const dx = e.x - s.gunX;
-      const dy = e.y - s.gunY;
+      const dx = e.x / scale - s.gunX;
+      const dy = e.y / scale - s.gunY;
       if (dx * dx + dy * dy > GRAB_RADIUS * GRAB_RADIUS) return;
       state.modify((st) => {
         'worklet';
@@ -197,7 +197,7 @@ export function GameView({
       if (!state.value.aiming) return;
       state.modify((st) => {
         'worklet';
-        aimToward(st, e.x, e.y);
+        aimToward(st, e.x / scale, e.y / scale);
         return st;
       });
     },
@@ -313,21 +313,23 @@ export function GameView({
   });
 
   return (
-    <View style={{ width, height }}>
+    <View style={{ width: width * scale, height: height * scale }}>
       <GestureDetector gesture={pan}>
-        <Canvas style={{ width, height }}>
-          <Picture picture={bg} />
-          <Picture picture={world} />
-          <Picture picture={fg} />
-          <Picture picture={overlay} />
+        <Canvas style={{ width: width * scale, height: height * scale }}>
+          <Group transform={[{ scale }]}>
+            <Picture picture={bg} />
+            <Picture picture={world} />
+            <Picture picture={fg} />
+            <Picture picture={overlay} />
+          </Group>
         </Canvas>
       </GestureDetector>
-      <View pointerEvents="none" style={[styles.hud, { top: skyTop - 56 }]}>
-        <Pixel size={16} color={C.white}>{`${hud.score}`}</Pixel>
-        <Pixel size={11} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
+      <View pointerEvents="none" style={[styles.hud, { top: (skyTop - 56) * scale }]}>
+        <Pixel size={16 * scale} color={C.white}>{`${hud.score}`}</Pixel>
+        <Pixel size={11 * scale} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
       </View>
       {reloadingNow ? (
-        <View pointerEvents="none" style={[styles.reload, { top: gunY + 26, left: width / 2 + 52 }]}>
+        <View pointerEvents="none" style={[styles.reload, { top: (gunY + 26) * scale, left: (width / 2 + 52) * scale }]}>
           <Pixel size={8} color="#FFE29A">RELOAD</Pixel>
         </View>
       ) : null}

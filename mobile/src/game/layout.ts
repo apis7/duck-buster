@@ -13,6 +13,15 @@
 
 export type GameLayout = { gunY: number; skyTop: number; reedTop: number };
 
+/**
+ * The game is designed on a ~400 dp-wide phone. On wider screens (big phones in
+ * landscape-ish widths, tablets) the whole scene scales up as one, so ducks, gun
+ * and logo keep their proportions instead of shrinking into a corner.
+ */
+export function gameScale(width: number): number {
+  return clamp(width / 420, 1, 2);
+}
+
 /** Space for the skip duck and the score/timer row under the status bar. */
 export const HUD_BAND = 110;
 
