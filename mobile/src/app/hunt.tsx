@@ -334,7 +334,7 @@ export default function LogHunt() {
 
         {lines.length === 0 ? (
           <Text style={{ color: C.muted, textAlign: 'center', marginTop: 8 }}>
-            No birds? Save it anyway — skunks count too. 🦨
+            No birds? Tap SKUNKED above — skunks count too. 🦨
           </Text>
         ) : null}
       </ScrollView>
