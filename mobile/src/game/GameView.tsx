@@ -41,7 +41,7 @@ const SITTING_JABS = [
   'NEXT: SHOOT A DECOY?',
 ];
 
-type Banner = { key: number; text: string; color: string; big?: boolean };
+type Banner = { key: number; text: string; color: string; big?: boolean; small?: boolean };
 
 function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
   'worklet';
@@ -89,6 +89,7 @@ export function GameView({
   const [reloadingNow, setReloadingNow] = useState(false);
   const ended = useRef(false);
   const bannerKey = useRef(0);
+  const lastCry = useRef(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const later = (ms: number, fn: () => void) => {
@@ -96,10 +97,10 @@ export function GameView({
   };
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const showBanner = (text: string, color: string, big = false, ms = 1300) => {
+  const showBanner = (text: string, color: string, big = false, ms = 1300, small = false) => {
     bannerKey.current += 1;
     const key = bannerKey.current;
-    setBanner({ key, text, color, big });
+    setBanner({ key, text, color, big, small });
     later(ms, () => setBanner((b) => (b?.key === key ? null : b)));
   };
 
@@ -119,8 +120,20 @@ export function GameView({
         case 'ko': play('vital'); break;
         case 'coot':
           play('wrong');
-          showBanner(COOT_JABS[Math.floor(Math.random() * COOT_JABS.length)], '#FFB199');
+          // Marauder Mode hits a lot of coots: keep the jab small and quick.
+          if (marauder) showBanner(COOT_JABS[Math.floor(Math.random() * COOT_JABS.length)], '#FFB199', false, 650, true);
+          else showBanner(COOT_JABS[Math.floor(Math.random() * COOT_JABS.length)], '#FFB199');
           break;
+        case 'pop': {
+          // Duck cries, but not a wall of them: at most one every 140 ms.
+          const now = Date.now();
+          if (now - lastCry.current > 140) {
+            lastCry.current = now;
+            play('cry');
+          }
+          play('boom');
+          break;
+        }
         case 'dog': play('woof'); break;
         case 'sitting':
           play('wrong');
@@ -339,8 +352,13 @@ export function GameView({
       ) : null}
       {banner ? (
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bannerWrap]}>
-          <Animated.View key={banner.key} entering={ZoomIn.springify().damping(9)} exiting={FadeOut.duration(200)} style={styles.banner}>
-            <Pixel size={banner.big ? 20 : 12} color={banner.color} style={{ textAlign: 'center', lineHeight: banner.big ? 34 : 20 }}>
+          <Animated.View
+            key={banner.key}
+            entering={ZoomIn.springify().damping(9)}
+            exiting={FadeOut.duration(200)}
+            style={[styles.banner, banner.small && { paddingVertical: 5, paddingHorizontal: 8, borderWidth: 2 }]}
+          >
+            <Pixel size={banner.big ? 20 : banner.small ? 8 : 12} color={banner.color} style={{ textAlign: 'center', lineHeight: banner.big ? 34 : banner.small ? 13 : 20 }}>
               {banner.text}
             </Pixel>
           </Animated.View>

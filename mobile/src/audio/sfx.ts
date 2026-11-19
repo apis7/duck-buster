@@ -22,6 +22,7 @@ const SOURCES = {
   celebrate: require('../../assets/sfx/celebrate.wav'),
   boom: require('../../assets/sfx/boom.wav'),
   siren: require('../../assets/sfx/siren.wav'),
+  cry: require('../../assets/sfx/quack.mp3'),
 } as const;
 
 export type Sfx = keyof typeof SOURCES;
@@ -44,7 +45,7 @@ export function play(name: Sfx) {
   try {
     let pool = pools.get(name);
     if (!pool) {
-      const size = name === 'shot' || name === 'hit' ? POOL : 1;
+      const size = name === 'shot' || name === 'hit' || name === 'boom' || name === 'cry' ? POOL : 1;
       pool = { players: Array.from({ length: size }, () => createAudioPlayer(SOURCES[name])), next: 0 };
       pools.set(name, pool);
     }

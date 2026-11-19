@@ -108,6 +108,8 @@ export type GameEvent =
   | { k: 'shot' | 'dry' | 'reload' | 'dog' }
   | { k: 'hit' | 'ko'; pts: number }
   | { k: 'coot' | 'sitting' }
+  /** Marauder Mode: a bird blew apart. */
+  | { k: 'pop' }
   | { k: 'special'; kind: 'goose' | 'swan'; pts: number; banded: boolean; down: boolean };
 
 export type GameState = {
@@ -469,6 +471,14 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   if (b.kind === 'duck') b.earned += FLOCK_SPECIES[b.species].bonus ?? 0;
   if (b.sit === 2) s.events.push({ k: 'sitting' });
   s.downs++;
+  if (s.marauder) {
+    // Marauder Mode: every kill goes off like a firework.
+    const cx = b.x + b.w / 2;
+    const cy = b.y + b.h / 2;
+    burst(s, cx, cy, 22, ['#FFE29A', '#F26B1D', '#FF3B2E', '#FFFFFF'], 340);
+    burst(s, cx, cy, 10, b.hen ? ['#A8865E', '#6E5236'] : ['#F4F4F4', '#B8B2A6'], 200);
+    s.events.push({ k: 'pop' });
+  }
   knockDown(b);
   s.score += b.earned;
   popup(s, b, b.earned);
