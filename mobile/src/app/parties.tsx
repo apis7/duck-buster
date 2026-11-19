@@ -6,7 +6,7 @@ import { formatMeat } from '@/domain/meat';
 import { partyMembers, partyStats } from '@/domain/stats';
 import { PARTY_COLORS, useStore } from '@/state/store';
 import { useDialog } from '@/ui/Dialog';
-import { Body, Btn, Card, Chip, Dot, Pixel } from '@/ui/kit';
+import { Body, Btn, Card, Chip, Dot, Explainer, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
 
@@ -41,7 +41,12 @@ export default function Parties() {
 
   return (
     <SubScreen title="PARTIES">
-      <Body muted>Parties are teams of hunters. Party stats go head to head on the Bragging Board, just like hunters.</Body>
+      <Explainer>
+        Parties are teams of hunters, so you can compete as teams within your family or group — like "Dad's Blind" vs "The
+        Cousins", or each household against the others. Put each hunter on a party, and every bird they log counts for
+        their team. Party totals go head to head on the Bragging Board (tap PARTIES) and in Party Rivalry. Optional — skip
+        it if you just want hunter vs hunter.
+      </Explainer>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TextInput value={name} onChangeText={setName} placeholder="New party name" onSubmitEditing={create} style={styles.input} />
         <Btn label="ADD" small onPress={create} disabled={!name.trim()} />
