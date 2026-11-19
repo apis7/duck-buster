@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { play } from '@/audio/sfx';
-import { makeRound, quizRank, type Question } from '@/domain/quiz';
+import { makeRound, quizCorrectKey, quizRank, type Question } from '@/domain/quiz';
+import { currentSeason } from '@/domain/season';
 import { RESTRICTIONS } from '@/domain/regs';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { QUIZ_IMAGES, QUIZ_SOUNDS } from '@/quiz/media.generated';
@@ -56,6 +57,11 @@ export default function Quiz() {
     setPicked(id);
     if (id === q.speciesId) {
       setScore((s) => s + 1);
+      // Every right answer counts toward the Bragging Board's Quiz Whiz (hunters only).
+      if (player && player !== NO_HUNTER) {
+        const key = quizCorrectKey(currentSeason(), player);
+        setSetting(key, String(Number(settings[key] ?? 0) + 1));
+      }
       play('correct');
     } else play('wrong');
   }
@@ -109,7 +115,7 @@ export default function Quiz() {
 
   return (
     <Screen title="DUCK ID QUIZ" right={<Pixel size={9} color={C.muted}>{`${playerName.toUpperCase()} · ${i + 1}/${round.length} · ${score}✓`}</Pixel>}>
-      <Prompt q={q} answered={!!picked} />
+      <Prompt q={q} answered={!!picked} right={picked === q.speciesId} />
       <View style={{ gap: 8 }}>
         {q.choices.map((id) => {
           const right = picked && id === q.speciesId;
@@ -142,12 +148,22 @@ function playerHint(hunters: number) {
   return hunters === 0 ? <Body muted>Add hunters to keep a best score for each of them.</Body> : null;
 }
 
-function Prompt({ q, answered }: { q: Question; answered: boolean }) {
+/** After answering: the bird's name across the top of the photo or sound panel. */
+function NameFlag({ speciesId, sex, right }: { speciesId: string; sex?: 'drake' | 'hen'; right: boolean }) {
+  const name = SPECIES_BY_ID[speciesId]?.name ?? speciesId;
+  return (
+    <View style={[styles.name, { backgroundColor: right ? C.marsh : C.red }]}>
+      <Text style={styles.nameTxt}>{`${right ? '✓' : '✗'} ${name.toUpperCase()}${sex ? ` · ${sex === 'drake' ? 'DRAKE' : 'HEN'}` : ''}`}</Text>
+    </View>
+  );
+}
+
+function Prompt({ q, answered, right }: { q: Question; answered: boolean; right: boolean }) {
   // The regs flag shows only after answering — before, it would give the bird away.
   return q.kind === 'audio' ? (
-    <SoundPrompt key={q.speciesId} speciesId={q.speciesId} answered={answered} />
+    <SoundPrompt key={q.speciesId} speciesId={q.speciesId} answered={answered} right={right} />
   ) : (
-    <PhotoPrompt speciesId={q.speciesId} mediaId={q.mediaId ?? q.speciesId} answered={answered} />
+    <PhotoPrompt speciesId={q.speciesId} mediaId={q.mediaId ?? q.speciesId} answered={answered} right={right} />
   );
 }
 
@@ -163,7 +179,7 @@ function RegsFlag({ speciesId }: { speciesId: string }) {
 }
 
 /** The whole photo, never cropped: fitted inside a 4:3 frame that leaves room for the seven answers. */
-function PhotoPrompt({ speciesId, mediaId, answered }: { speciesId: string; mediaId: string; answered: boolean }) {
+function PhotoPrompt({ speciesId, mediaId, answered, right }: { speciesId: string; mediaId: string; answered: boolean; right: boolean }) {
   const img = QUIZ_IMAGES[mediaId];
   const { width, height } = useWindowDimensions();
   const w = width - 32 - 6;
@@ -172,7 +188,8 @@ function PhotoPrompt({ speciesId, mediaId, answered }: { speciesId: string; medi
     <View style={{ gap: 4 }}>
       <View style={[styles.frame, { backgroundColor: C.navyDark }]}>
         <Image source={img.src} style={{ width: w, height: h }} resizeMode="contain" />
-        {img.sex ? (
+        {answered ? <NameFlag speciesId={speciesId} sex={img.sex} right={right} /> : null}
+        {img.sex && !answered ? (
           <View style={[styles.sex, { backgroundColor: img.sex === 'drake' ? C.navy : '#8A5A2B' }]}>
             <Text style={styles.sexTxt}>{img.sex === 'drake' ? '♂ DRAKE' : '♀ HEN'}</Text>
           </View>
@@ -184,7 +201,7 @@ function PhotoPrompt({ speciesId, mediaId, answered }: { speciesId: string; medi
   );
 }
 
-function SoundPrompt({ speciesId, answered }: { speciesId: string; answered: boolean }) {
+function SoundPrompt({ speciesId, answered, right }: { speciesId: string; answered: boolean; right: boolean }) {
   const sound = QUIZ_SOUNDS[speciesId];
   const player = useAudioPlayer(sound.src);
   const playIt = useMemo(
@@ -203,6 +220,7 @@ function SoundPrompt({ speciesId, answered }: { speciesId: string; answered: boo
       <Pressable onPress={playIt} style={[styles.frame, { aspectRatio: 4 / 3, alignItems: 'center', justifyContent: 'center', backgroundColor: C.navyDark }]}>
         <Text style={{ fontSize: 64 }}>🔊</Text>
         <Pixel size={10} color={C.white}>WHO'S CALLING? TAP TO REPLAY</Pixel>
+        {answered ? <NameFlag speciesId={speciesId} right={right} /> : null}
         {answered ? <RegsFlag speciesId={speciesId} /> : null}
       </Pressable>
       {sound.credit ? <Text style={styles.credit}>{`Recording: ${sound.credit}`}</Text> : null}
@@ -213,6 +231,8 @@ function SoundPrompt({ speciesId, answered }: { speciesId: string; answered: boo
 const styles = StyleSheet.create({
   frame: { borderWidth: 3, borderColor: C.navy, backgroundColor: C.white, overflow: 'hidden' },
   credit: { fontSize: 10, color: C.muted },
+  name: { position: 'absolute', top: 0, left: 0, right: 0, paddingVertical: 6, paddingHorizontal: 10 },
+  nameTxt: { color: C.white, fontSize: 15, fontWeight: '900', letterSpacing: 0.5 },
   sex: { position: 'absolute', top: 6, left: 6, paddingVertical: 3, paddingHorizontal: 8 },
   sexTxt: { color: C.white, fontSize: 12, fontWeight: '800', letterSpacing: 1 },
   flag: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingVertical: 5, paddingHorizontal: 8 },

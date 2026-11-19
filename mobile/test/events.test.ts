@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyHit, fire, GAME_SECONDS, ghostShowing, makeBird, newGame, step, type GameState } from '@/game/engine';
+import { applyHit, finished, fire, GAME_SECONDS, MAX_ROUND_SECONDS, ghostShowing, makeBird, newGame, step, type GameState } from '@/game/engine';
 import { gameDay, isFullMoon, NO_FX, practiceDay, type GameFx } from '@/game/events';
 import { gameLayout } from '@/game/layout';
 
@@ -205,5 +205,45 @@ describe('practice', () => {
     expect(xmas.banners).toEqual([]);
     expect(practiceDay('2026-11-03').names).toEqual([]);
     expect(practiceDay('2026-10-20').theme.id).toBe('fall');
+  });
+});
+
+describe('round end', () => {
+  const game = (fx: Partial<GameFx> = {}): GameState => newGame(400, 800, gameLayout(400, 800, 24, 48), false, { ...NO_FX, ...fx });
+  it('no birds after the buzzer; they all leave, then it ends — well before the cap', () => {
+    for (const fx of [{}, { turkey: true }, { hubert: true }, { partridge: true }, { pheasants: true }] as Partial<GameFx>[]) {
+      const s = game(fx);
+      while (!finished(s)) step(s, 1 / 60);
+      expect(s.birds).toHaveLength(0);
+      expect(s.clock).toBeGreaterThanOrEqual(GAME_SECONDS);
+      expect(s.clock).toBeLessThanOrEqual(MAX_ROUND_SECONDS);
+    }
+  });
+
+  it('Marauder Mode swarms clear out too', () => {
+    const s = newGame(400, 800, gameLayout(400, 800, 24, 48), true, NO_FX);
+    while (!finished(s)) step(s, 1 / 60);
+    expect(s.birds).toHaveLength(0);
+    expect(s.clock).toBeLessThanOrEqual(MAX_ROUND_SECONDS);
+  });
+
+  it('sitting ducks and slow walkers get moving at the buzzer', () => {
+    const s = game({});
+    while (s.t < GAME_SECONDS - 0.5) step(s, 1 / 60);
+    const sitter = makeBird(s, 'duck', s.width / 2, s.waterY - 10, 40);
+    sitter.sit = 2;
+    s.birds.push(sitter);
+    while (!s.over) step(s, 1 / 60);
+    step(s, 1 / 60);
+    expect(sitter.sit).toBe(0);
+    expect(Math.abs(sitter.vx)).toBeGreaterThan(100);
+  });
+
+  it('hard cap: 15 seconds no matter what', () => {
+    const s = game({});
+    s.dogs.push({ x: 0, t: -1000, flip: false, birdId: -1, lead: false });
+    let n = 0;
+    while (!finished(s) && n++ < 60 * 30) step(s, 1 / 60);
+    expect(s.clock).toBeLessThanOrEqual(MAX_ROUND_SECONDS + 0.05);
   });
 });

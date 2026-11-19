@@ -6,6 +6,7 @@ import { AdBanner } from '@/ads/ads';
 import { awardsOpen, hasPastSeasons } from '@/domain/archive';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { gameLeaders } from '@/domain/gameStats';
+import { quizLeaders } from '@/domain/quiz';
 import { formatMeat } from '@/domain/meat';
 import { hunterStats, partyMembers, partyRaceSeries, partyStats, raceSeries, seasonsIn } from '@/domain/stats';
 import { useStore } from '@/state/store';
@@ -50,6 +51,7 @@ export default function Board() {
   const partyMax = Math.max(1, ...partyRows.map((r) => r.s.birds));
   const shoot = gameLeaders(data, scope);
   const names = new Map(data.hunters.map((h) => [h.id, h.name]));
+  const quiz = quizLeaders(settings, season ?? undefined).filter((r) => names.has(r.hunterId)).slice(0, 3);
   const race =
     season == null
       ? []
@@ -180,6 +182,21 @@ export default function Board() {
             <RaceChart width={width - 32} start={raceStart(season, race)} series={race} />
           </Section>
         ) : null}
+
+        <Section title="Duck ID quiz">
+          <Card style={{ gap: 8 }}>
+            {quiz.length === 0 ? (
+              <Body muted style={{ fontSize: 13 }}>Take the quiz as a hunter: every right answer counts toward Quiz Whiz.</Body>
+            ) : null}
+            {quiz.map((r, i) => (
+              <View key={r.hunterId} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 18 }}>{['🧠', '🥈', '🥉'][i]}</Text>
+                <Body style={{ flex: 1 }}>{i === 0 ? 'Quiz Whiz' : `#${i + 1}`}</Body>
+                <Body style={{ fontWeight: '800' }}>{`${names.get(r.hunterId) ?? '?'} · ${r.correct} right`}</Body>
+              </View>
+            ))}
+          </Card>
+        </Section>
 
         <Section title="Duck shoot">
           <Card style={{ gap: 8 }}>

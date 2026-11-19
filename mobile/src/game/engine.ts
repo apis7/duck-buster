@@ -32,6 +32,8 @@ import type { GameLayout } from './layout';
 import { STAG_H, STAG_W, EAGLE_H, EAGLE_W, PHEASANT_H, PHEASANT_W, TURKEY_H, TURKEY_W, PARTRIDGE_H, PARTRIDGE_W, COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
 
 export const GAME_SECONDS = 12;
+/** Hard cap on a round, flyout and dogs included: nothing keeps the game going past this. */
+export const MAX_ROUND_SECONDS = 15;
 export const PIXEL = 3;
 export const DUCK_PX_W = DUCK_W * PIXEL;
 export const DUCK_PX_H = DUCK_H * PIXEL;
@@ -199,6 +201,10 @@ export type GameState = {
   misses: number;
   /** End-of-round bonuses have been added. */
   finalized: boolean;
+  /** Real seconds since the round started (keeps running after the buzzer, unclamped). */
+  clock: number;
+  /** After the buzzer, the birds still in the air have been sent off the screen. */
+  flushed: boolean;
   /** Per bird type: knockout hits, other hits, points — for the summary. */
   tally: Record<string, { ko: number; hits: number; pts: number }>;
   /** Holiday and seasonal bonus points by source (negative for penalties). */
@@ -257,6 +263,8 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     blessed: false,
     misses: 0,
     finalized: false,
+    clock: 0,
+    flushed: false,
     tally: {},
     bonuses: {},
     over: false,
@@ -743,8 +751,29 @@ function sendDogs(s: GameState, b: Bird): void {
   s.events.push({ k: 'dog' });
 }
 
+/**
+ * Buzzer: no more birds come, and every bird still up leaves — sitting ducks flush,
+ * slow walkers (turkey, stag) and dawdlers hurry off — so the round ends promptly.
+ */
+function flushBirds(s: GameState): void {
+  'worklet';
+  s.flushed = true;
+  const fast = 220 * Math.max(0.85, s.width / 400);
+  for (const b of s.birds) {
+    if (!b.alive) continue;
+    if (b.sit > 0) {
+      b.sit = 0;
+      b.baseY = b.y - 60;
+    }
+    b.landX = Infinity;
+    const dir = b.vx < 0 ? -1 : 1;
+    if (Math.abs(b.vx) < fast) b.vx = dir * fast;
+  }
+}
+
 export function step(s: GameState, dt: number): void {
   'worklet';
+  s.clock += dt;
   dt = Math.min(dt, 0.05);
   // The dogs and falling birds finish their show even after the buzzer.
   if (!s.over) {
@@ -805,6 +834,8 @@ export function step(s: GameState, dt: number): void {
       s.nextFlock = s.t + (s.marauder ? 0.3 + Math.random() * 0.35 : (1.5 + Math.random() * 0.9) * (s.fx.night ? 1.4 : 1));
     }
   }
+
+  if (s.over && !s.flushed) flushBirds(s);
 
   for (const b of s.birds) {
     if (b.flash > 0) b.flash -= dt;
@@ -876,7 +907,9 @@ export function step(s: GameState, dt: number): void {
     if (d.t >= DOG_SECONDS) b.gone = true;
   }
   s.dogs = s.dogs.filter((d) => d.t < DOG_SECONDS);
-  s.birds = s.birds.filter((b) => !b.gone && b.x < s.width + 40 && b.x > -s.width * 0.6 && b.y < s.height + 40);
+  s.birds = s.birds.filter(
+    (b) => !b.gone && b.x < s.width + 40 && b.x > -s.width * 0.6 && b.y < s.height + 40 && !(s.flushed && b.vx < 0 && b.x + b.w < -10),
+  );
 
   const keep: Bullet[] = [];
   for (const bl of s.bullets) {
@@ -927,10 +960,14 @@ export function step(s: GameState, dt: number): void {
   s.popups = s.popups.filter((p) => p.life > 0);
 }
 
-/** True once the clock is out and the last dog has gone back into the reeds. */
+/**
+ * True once the clock is out, every bird has left the screen and the last dog has
+ * gone back into the reeds — or at the hard cap, whatever is still going on.
+ */
 export function finished(s: GameState): boolean {
   'worklet';
-  return s.over && s.dogs.length === 0 && !s.birds.some((b) => !b.alive && !b.landed && (b.kind === 'goose' || b.kind === 'swan'));
+  if (s.clock >= MAX_ROUND_SECONDS) return true;
+  return s.over && s.finalized && s.dogs.length === 0 && s.birds.length === 0;
 }
 
 export function wingsUp(b: Bird, t: number): boolean {

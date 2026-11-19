@@ -72,3 +72,21 @@ export function quizRank(score: number, of: number): string {
   if (pct >= 0.4) return 'Squints a Lot';
   return 'Shoots Gadwall';
 }
+
+/** Settings key for a hunter's correct quiz answers in a season. */
+export function quizCorrectKey(season: number, hunterId: string): string {
+  return `quizCorrect:${season}:${hunterId}`;
+}
+
+/** Correct quiz answers per hunter, for one season or (no season) all time, most first. */
+export function quizLeaders(settings: Record<string, string>, season?: number): { hunterId: string; correct: number }[] {
+  const totals = new Map<string, number>();
+  for (const [key, value] of Object.entries(settings)) {
+    const m = /^quizCorrect:(\d+):(.+)$/.exec(key);
+    if (!m || (season != null && Number(m[1]) !== season)) continue;
+    totals.set(m[2], (totals.get(m[2]) ?? 0) + Number(value || 0));
+  }
+  return Array.from(totals, ([hunterId, correct]) => ({ hunterId, correct }))
+    .filter((r) => r.correct > 0)
+    .sort((a, b) => b.correct - a.correct);
+}

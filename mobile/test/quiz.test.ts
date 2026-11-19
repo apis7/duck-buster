@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CHOICES, makeChoices, makeRound } from '@/domain/quiz';
+import { CHOICES, makeChoices, makeRound, quizCorrectKey, quizLeaders } from '@/domain/quiz';
 import { QUIZ_WEIGHT } from '@/domain/regs';
 import { SPECIES, SPECIES_BY_ID } from '@/domain/species';
 
@@ -43,5 +43,13 @@ describe('quiz weighting', () => {
 
   it('every quizzed species has a weight', () => {
     expect(SPECIES.map((s) => s.id).filter((id) => QUIZ_WEIGHT[id] == null)).toEqual([]);
+  });
+});
+
+describe('quiz whiz', () => {
+  it('totals correct answers per hunter, by season or all time', () => {
+    const settings = { [quizCorrectKey(2025, 'a')]: '5', [quizCorrectKey(2026, 'a')]: '2', [quizCorrectKey(2026, 'b')]: '4', quizBest: '9' };
+    expect(quizLeaders(settings, 2026)).toEqual([{ hunterId: 'b', correct: 4 }, { hunterId: 'a', correct: 2 }]);
+    expect(quizLeaders(settings)[0]).toEqual({ hunterId: 'a', correct: 7 });
   });
 });
