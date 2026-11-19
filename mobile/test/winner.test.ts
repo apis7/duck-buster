@@ -58,7 +58,8 @@ describe('duck shoot stats', () => {
   });
 
   it('badges and the Arcade Champion award', () => {
-    expect(earnedBadges(d, 'dad')).toEqual(expect.arrayContaining(['winner_winner', 'arcade_ace']));
+    expect(earnedBadges(d, 'dad')).toContain('arcade_ace');
+    expect(earnedBadges(d, 'dad')).not.toContain('winner_winner'); // two rounds; it takes three
     expect(earnedBadges(d, 'kid')).toContain('coot_clown');
     const champ = seasonAwards(d, 2026).find((r) => r.award.id === 'arcade_champ');
     expect(champ?.winners).toEqual(['dad']);

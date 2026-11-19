@@ -8,7 +8,7 @@ import { gameLeaders } from '@/domain/gameStats';
 import { formatMeat } from '@/domain/meat';
 import { hunterStats, partyMembers, partyRaceSeries, partyStats, raceSeries, seasonsIn } from '@/domain/stats';
 import { useStore } from '@/state/store';
-import { Bar, Body, Btn, Card, Chip, Dot, Pixel, Screen, Section } from '@/ui/kit';
+import { Bar, Body, Btn, Card, Chip, Dot, Explainer, Pixel, Screen, Section } from '@/ui/kit';
 import { RaceChart } from '@/ui/RaceChart';
 import { C, MEDALS } from '@/ui/theme';
 
@@ -72,6 +72,10 @@ export default function Board() {
           <Chip label="HUNTERS" on={!byParty} onPress={() => setByParty(false)} />
           <Chip label="PARTIES" on={byParty} onPress={() => setByParty(true)} />
         </View>
+
+        <Explainer>
+          {`Showing ${byParty ? 'parties (teams)' : 'every hunter'} for ${season == null ? 'all time' : `the ${seasonLabel(season)} season`}, ranked by birds. Tap a season or HUNTERS / PARTIES above to switch; tap a name for their page.`}
+        </Explainer>
 
         {byParty ? (
           <Card style={{ gap: 12 }}>

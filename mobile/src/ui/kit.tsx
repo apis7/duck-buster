@@ -157,3 +157,15 @@ export const styles = StyleSheet.create({
   stepBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center', backgroundColor: C.navySoft },
   stepTxt: { fontSize: 20, fontWeight: '800', color: C.navy },
 });
+
+/** A one-line "here's what you're looking at" that updates as things are tapped. */
+export function Explainer({ children }: { children: ReactNode }) {
+  return (
+    <View style={{ flexDirection: 'row', gap: 8, backgroundColor: C.navySoft, borderLeftWidth: 4, borderColor: C.navy, paddingVertical: 8, paddingHorizontal: 10 }}>
+      <Text style={{ fontSize: 14 }}>ℹ️</Text>
+      <Text maxFontSizeMultiplier={1.5} style={{ flex: 1, fontSize: 13, lineHeight: 18, color: C.navy }}>
+        {children}
+      </Text>
+    </View>
+  );
+}

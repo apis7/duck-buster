@@ -110,7 +110,7 @@ export function Busted({ result, onAgain, onDone }: { result: GameResult; onAgai
 
       {/* Mug shot, right above the squad car. */}
       {arrived ? (
-        <Animated.View entering={ZoomIn.springify().damping(9)} style={[styles.perp, { top: perpTop }]}>
+        <Animated.View entering={ZoomIn.duration(200)} style={[styles.perp, { top: perpTop }]}>
           <PixelSprite rows={PERP} palette={PERP_PALETTE} pixel={pixel} />
           <Animated.View style={[styles.bubble, groanStyle]}>
             <Pixel size={11} color={C.ink}>UUGGGGGHHHH</Pixel>
@@ -120,7 +120,7 @@ export function Busted({ result, onAgain, onDone }: { result: GameResult; onAgai
 
       {arrived ? (
         <Animated.ScrollView
-          entering={ZoomIn.springify().damping(10)}
+          entering={ZoomIn.duration(200)}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: perpTop - 8 }}
           contentContainerStyle={{ paddingTop: insets.top + Math.min(60, height * 0.05), paddingHorizontal: 24, alignItems: 'center', gap: 12, paddingBottom: 8 }}
         >

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import { useEffect } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import { play } from '@/audio/sfx';
 import type { Badge } from '@/domain/badges';
@@ -8,42 +8,62 @@ import type { Badge } from '@/domain/badges';
 import { Btn, Pixel } from './kit';
 import { C } from './theme';
 
-/** Pops newly earned badges one at a time. Nobody knew they existed until now. */
+/**
+ * Newly earned badges, all on one card — grouped by hunter, one tap to close.
+ * Nobody knew they existed until now.
+ */
 export function BadgeParade({ items, onDone }: { items: { badge: Badge; hunterName: string }[]; onDone: () => void }) {
-  const [i, setI] = useState(0);
-  const scale = useSharedValue(0);
-  const wobble = useSharedValue(0);
-
   useEffect(() => {
     play('badge');
-    scale.value = 0;
-    scale.value = withSpring(1, { damping: 7, stiffness: 160 });
-    wobble.value = withSequence(withTiming(-10, { duration: 90 }), withTiming(10, { duration: 120 }), withTiming(0, { duration: 90 }));
-  }, [i, scale, wobble]);
+  }, []);
+  if (!items.length) return null;
 
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }, { rotate: `${wobble.value}deg` }] }));
-  const item = items[i];
-  if (!item) return null;
-
-  const next = () => (i + 1 < items.length ? setI(i + 1) : onDone());
+  const byHunter = new Map<string, Badge[]>();
+  for (const { badge, hunterName } of items) byHunter.set(hunterName, [...(byHunter.get(hunterName) ?? []), badge]);
+  const single = items.length === 1 ? items[0] : null;
 
   return (
-    <Modal transparent animationType="fade" onRequestClose={next}>
-      <View style={styles.backdrop}>
-        <Animated.View style={[styles.card, style]}>
-          <Pixel size={9} color={C.orange}>{items.length > 1 ? `BADGE UNLOCKED ${i + 1}/${items.length}` : 'BADGE UNLOCKED'}</Pixel>
-          <Text style={{ fontSize: 72, marginVertical: 8 }}>{item.badge.icon}</Text>
-          <Pixel size={14} style={{ textAlign: 'center' }}>{item.badge.name.toUpperCase()}</Pixel>
-          <Pixel size={9} color={C.muted}>{item.hunterName.toUpperCase()}</Pixel>
-          <Text style={{ fontSize: 16, textAlign: 'center', color: C.ink, marginVertical: 10 }}>{item.badge.blurb}</Text>
-          <Btn label={i + 1 < items.length ? 'NEXT!' : 'NICE!'} onPress={next} style={{ alignSelf: 'stretch' }} />
+    <Modal transparent animationType="fade" onRequestClose={onDone}>
+      <Animated.View entering={FadeIn.duration(150)} style={styles.backdrop}>
+        <Animated.View entering={ZoomIn.duration(180)} style={styles.card}>
+          <Pixel size={9} color={C.orange}>{single ? 'BADGE UNLOCKED' : `${items.length} BADGES UNLOCKED`}</Pixel>
+          {single ? (
+            <>
+              <Text style={{ fontSize: 64, marginVertical: 6 }}>{single.badge.icon}</Text>
+              <Pixel size={14} style={{ textAlign: 'center' }}>{single.badge.name.toUpperCase()}</Pixel>
+              <Pixel size={9} color={C.muted}>{single.hunterName.toUpperCase()}</Pixel>
+              <Text style={styles.blurb}>{single.badge.blurb}</Text>
+            </>
+          ) : (
+            <ScrollView style={{ maxHeight: 360, alignSelf: 'stretch' }} contentContainerStyle={{ gap: 12, paddingVertical: 6 }}>
+              {Array.from(byHunter.entries()).map(([name, badges]) => (
+                <View key={name} style={{ gap: 6 }}>
+                  <Pixel size={9} color={C.muted}>{name.toUpperCase()}</Pixel>
+                  {badges.map((b) => (
+                    <View key={b.id} style={styles.row}>
+                      <Text style={{ fontSize: 28 }}>{b.icon}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.name}>{b.name}</Text>
+                        <Text style={styles.small}>{b.blurb}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
+          )}
+          <Btn label="NICE!" onPress={onDone} style={{ alignSelf: 'stretch', marginTop: 8 }} />
         </Animated.View>
-      </View>
+      </Animated.View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(11,31,61,0.8)', alignItems: 'center', justifyContent: 'center', padding: 28 },
-  card: { backgroundColor: C.white, borderWidth: 3, borderColor: C.navy, borderBottomWidth: 7, borderRightWidth: 7, padding: 22, alignItems: 'center', gap: 4, width: '100%' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(11,31,61,0.8)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  card: { backgroundColor: C.white, borderWidth: 3, borderColor: C.navy, borderBottomWidth: 7, borderRightWidth: 7, padding: 20, alignItems: 'center', gap: 4, width: '100%' },
+  blurb: { fontSize: 16, textAlign: 'center', color: C.ink, marginVertical: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, borderBottomWidth: 1.5, borderColor: C.line, paddingBottom: 8 },
+  name: { fontSize: 15, fontWeight: '800', color: C.navy },
+  small: { fontSize: 13, color: C.muted },
 });

@@ -17,7 +17,7 @@ import { BadgeParade } from '@/ui/BadgeParade';
 import { BirdPicker } from '@/ui/BirdPicker';
 import { DatePicker } from '@/ui/DatePicker';
 import { useDialog } from '@/ui/Dialog';
-import { Btn, Chip, Pixel, Stepper } from '@/ui/kit';
+import { Btn, Chip, Explainer, Pixel, Stepper } from '@/ui/kit';
 import { SkunkSplash } from '@/ui/SkunkSplash';
 import { C } from '@/ui/theme';
 
@@ -107,7 +107,7 @@ function BirdChip({ label, onPress, highlight }: { label: string; onPress: () =>
 
 function StepCard({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
-    <Animated.View entering={SlideInRight.springify().damping(18)} style={styles.step}>
+    <Animated.View entering={SlideInRight.duration(200)} style={styles.step}>
       <Pixel size={8} color={C.muted}>{`STEP ${n} OF 3`}</Pixel>
       <Pixel size={12} style={{ lineHeight: 20 }}>{title}</Pixel>
       {children}
@@ -333,6 +333,24 @@ export default function LogHunt() {
     }
   }
 
+  // Plain-words status of the whole screen, updated with every tap.
+  const names = (ids: string[]) => ids.map((h) => hunterById.get(h)?.name ?? '?').join(', ');
+  const stepWords: Record<Step, string> = {
+    count: 'how many birds they got',
+    kinds: `which kinds (${total} of ${entry?.target ?? 0} entered)`,
+    sex: 'drakes or hens',
+    done: 'done — tap CHANGE to edit',
+  };
+  const explain = !party.length
+    ? 'Tap the hunters who went under WHO WENT (filled in = went).'
+    : `${party.length} went: ${names(party)}. ` +
+      (active && entry
+        ? `Now logging ${activeName}: ${stepWords[entry.step]}.`
+        : pending.length
+          ? 'Tap a hunter under TAP A HUNTER to log their birds.'
+          : 'Everyone is logged — tap FINALIZE HUNT.') +
+      (pending.length ? ` Still to log: ${names(pending)}.` : '');
+
   const status = (hid: string) => {
     const e = entries[hid];
     if (!e || e.step !== 'done') return '…';
@@ -374,6 +392,8 @@ export default function LogHunt() {
             <Pixel size={14} color={date < todayISO() ? C.navy : C.locked}>{'>'}</Pixel>
           </Pressable>
         </View>
+
+        {!locked ? <Explainer>{explain}</Explainer> : null}
 
         <View style={{ gap: 6 }}>
           <Pixel size={9} color={C.muted}>WHO WENT</Pixel>

@@ -6,7 +6,7 @@ import { currentSeason, seasonLabel } from '@/domain/season';
 import { groupRivalry } from '@/domain/rivalry';
 import { partyMembers } from '@/domain/stats';
 import { useStore } from '@/state/store';
-import { Body, Card, Chip, Pixel } from '@/ui/kit';
+import { Body, Card, Chip, Explainer, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
 
@@ -46,6 +46,13 @@ export default function Rivalry() {
         <Chip label="HUNTERS" on={!parties} onPress={() => setParties(false)} />
         <Chip label="PARTIES" on={parties} onPress={() => setParties(true)} />
       </View>
+      <Explainer>
+        {ha && hb
+          ? `Comparing ${ha.name} vs ${hb.name}, ${allTime ? 'all time' : `${seasonLabel(season)} season`}. Tap a name in the top row to change the left side, the bottom row for the right side.`
+          : parties
+            ? 'Make at least two parties to compare them.'
+            : 'Add at least two hunters to compare them.'}
+      </Explainer>
       {picker(a, setA, b)}
       <Pixel size={12} style={{ textAlign: 'center' }}>VS</Pixel>
       {picker(b, setB, a)}

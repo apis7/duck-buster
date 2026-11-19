@@ -43,7 +43,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
       <Modal visible={!!open} transparent animationType="fade" onRequestClose={() => close(null)}>
         <Pressable style={styles.backdrop} onPress={() => close(null)}>
           {open ? (
-            <Animated.View entering={ZoomIn.springify().damping(14)}>
+            <Animated.View entering={ZoomIn.duration(200)}>
               <Pressable style={styles.card} onPress={() => {}}>
                 {open.icon ? <Text style={{ fontSize: 44, textAlign: 'center' }}>{open.icon}</Text> : null}
                 <Pixel size={13} style={{ textAlign: 'center' }}>{open.title.toUpperCase()}</Pixel>

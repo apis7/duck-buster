@@ -9,7 +9,7 @@ import { currentSeason, prettyDate, seasonLabel, seasonOf } from '@/domain/seaso
 import { boardStatus, buildCard, combinedBoard, slugfestTitles, type SlugfestCard } from '@/domain/slugfest';
 import { useStore } from '@/state/store';
 import { useDialog } from '@/ui/Dialog';
-import { Body, Btn, Card, Chip, Pixel, Section } from '@/ui/kit';
+import { Body, Btn, Card, Chip, Explainer, Pixel, Section } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C, MEDALS } from '@/ui/theme';
 
@@ -132,6 +132,18 @@ export default function Slugfest() {
           <Chip key={s} label={seasonLabel(s)} on={season === s} onPress={() => setSeason(s)} />
         ))}
       </ScrollView>
+
+      <Explainer>
+        {!crew.name
+          ? 'First, name your crew.'
+          : compared.length < 2
+            ? `${seasonLabel(season)}: only ${compared.length ? 'your crew is' : 'nobody is'} in so far. Add another crew's season below (scan their QR or open their file) to compare.`
+            : `${seasonLabel(season)}: comparing ${compared.map((c) => c.crewName + (c.crewId === crew.id ? ' (you)' : '')).join(' vs ')} — ${board.length} hunters on one board.` +
+              (others.some((c) => unticked.has(c.crewId))
+                ? ` Left out: ${others.filter((c) => unticked.has(c.crewId)).map((c) => c.crewName).join(', ')}.`
+                : '') +
+              ' Tap a crew to add it or leave it out.'}
+      </Explainer>
 
       {mine ? (
         <Section title="Send your season">

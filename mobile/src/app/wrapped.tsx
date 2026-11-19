@@ -36,7 +36,7 @@ export default function Wrapped() {
         <Pressable style={{ flex: 1, padding: 16 }} onPress={() => setI((n) => (n + 1) % cards.length)}>
           <Animated.View
             key={`${hunterId}-${i}`}
-            entering={ZoomIn.springify().damping(14)}
+            entering={ZoomIn.duration(200)}
             style={{ flex: 1, backgroundColor: BACKS[i % BACKS.length], borderWidth: 3, borderColor: C.navyDark, borderBottomWidth: 8, borderRightWidth: 8, padding: 24, justifyContent: 'center', gap: 18 }}
           >
             <Pixel size={11} color={C.white}>{card.kicker.toUpperCase()}</Pixel>

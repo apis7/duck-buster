@@ -39,7 +39,7 @@ export default function Winner() {
   return (
     <View style={{ flex: 1, backgroundColor: C.navyDark, paddingTop: insets.top + 50, paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }}>
       {winner ? (
-        <Animated.View entering={ZoomIn.springify().damping(10)} style={{ alignItems: 'center', gap: 12 }}>
+        <Animated.View entering={ZoomIn.duration(200)} style={{ alignItems: 'center', gap: 12 }}>
           <Text style={{ fontSize: 70 }}>🏆</Text>
           <Pixel size={22} color={C.gold} style={{ textAlign: 'center', lineHeight: 34 }}>{name.toUpperCase()}</Pixel>
           <Pixel size={11} color={C.white} style={{ textAlign: 'center', lineHeight: 20 }}>{'IS THE WINNER OF\nTODAY’S HUNT!'}</Pixel>

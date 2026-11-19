@@ -49,7 +49,7 @@ export default function Awards() {
       ) : null}
 
       {results.slice(0, shown).map((r, i) => (
-        <Animated.View key={r.key} entering={FadeInDown.springify().damping(12)}>
+        <Animated.View key={r.key} entering={FadeInDown.duration(200)}>
           {i === firstRoast ? (
             <Pixel size={10} color={C.orange} style={{ textAlign: 'center', marginVertical: 10 }}>
               ~ AND NOW, THE ROAST ~

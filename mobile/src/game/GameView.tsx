@@ -627,7 +627,7 @@ export function GameView({
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.bannerWrap]}>
           <Animated.View
             key={banner.key}
-            entering={ZoomIn.springify().damping(9)}
+            entering={ZoomIn.duration(200)}
             exiting={FadeOut.duration(200)}
             style={[styles.banner, banner.small && { paddingVertical: 5, paddingHorizontal: 8, borderWidth: 2 }]}
           >

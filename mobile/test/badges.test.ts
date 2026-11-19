@@ -15,15 +15,30 @@ describe('badges', () => {
     expect(b).not.toContain('first_bird');
   });
 
-  it('teal deal, greenhead, gentleman, top gun', () => {
+  it('teal deal, greenhead, gentleman, top gun (the harder versions)', () => {
     const d = makeData();
-    const h = d.hunt('2026-10-10', ['dad', 'kid']);
-    d.bird(h, 'dad', 'gwte', 3);
-    d.bird(h, 'dad', 'bwte', 2);
-    d.bird(h, 'kid', 'mall', 1, 'D');
+    for (let i = 0; i < 3; i++) {
+      const h = d.hunt(`2026-10-1${i}`, ['dad', 'kid']);
+      d.bird(h, 'dad', 'gwte', 4);
+      d.bird(h, 'dad', 'bwte', 2);
+      d.bird(h, 'kid', 'mall', 2, 'D');
+    }
     expect(earnedBadges(d, 'dad')).toEqual(expect.arrayContaining(['teal_deal', 'gentlemans_limit', 'top_gun']));
     expect(earnedBadges(d, 'kid')).toContain('greenhead');
     expect(earnedBadges(d, 'kid')).not.toContain('top_gun');
+  });
+
+  it('day one is a badge or two, not a pile', () => {
+    const d = makeData();
+    const h = d.hunt('2026-10-04', ['dad', 'kid']);
+    d.bird(h, 'dad', 'mall', 3, 'D');
+    d.bird(h, 'dad', 'mall', 2, 'H');
+    d.bird(h, 'dad', 'wodu', 1, 'D');
+    d.bird(h, 'dad', 'nsho', 1, 'D');
+    d.bird(h, 'dad', 'gadw', 1, 'H');
+    d.bird(h, 'kid', 'gwte', 2, 'D');
+    expect(earnedBadges(d, 'dad').length).toBeLessThanOrEqual(2);
+    expect(earnedBadges(d, 'kid').length).toBeLessThanOrEqual(2);
   });
 
   it('got carried and bands', () => {

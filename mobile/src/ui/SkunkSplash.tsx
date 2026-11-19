@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import Animated, { FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { Pixel } from './kit';
 import { C } from './theme';
@@ -10,7 +10,7 @@ export function SkunkSplash({ name, message, onDismiss }: { name: string; messag
   const hop = useSharedValue(0);
 
   useEffect(() => {
-    hop.value = withRepeat(withSequence(withSpring(-14, { damping: 6 }), withTiming(0, { duration: 260 })), 4);
+    hop.set(withRepeat(withSequence(withTiming(-6, { duration: 160 }), withTiming(0, { duration: 160 })), 2));
     const t = setTimeout(onDismiss, 6000);
     return () => clearTimeout(t);
   }, [hop, onDismiss]);
@@ -18,7 +18,7 @@ export function SkunkSplash({ name, message, onDismiss }: { name: string; messag
   const skunk = useAnimatedStyle(() => ({ transform: [{ translateY: hop.value }] }));
 
   return (
-    <Animated.View entering={ZoomIn.springify().damping(11)} exiting={FadeOut.duration(250)} style={styles.wrap} pointerEvents="box-none">
+    <Animated.View entering={ZoomIn.duration(200)} exiting={FadeOut.duration(250)} style={styles.wrap} pointerEvents="box-none">
       <Pressable onPress={onDismiss} style={styles.card}>
         <Animated.Text style={[{ fontSize: 46, textAlign: 'center' }, skunk]}>🦨</Animated.Text>
         <Pixel size={10} color={C.orange} style={{ textAlign: 'center' }}>{`${name.toUpperCase()} GOT SKUNKED`}</Pixel>
