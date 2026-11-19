@@ -29,7 +29,16 @@ export default function Quiz() {
   const start = (who = player) => {
     if (!who) return;
     setPlayer(who);
-    setRound(makeRound(Object.keys(QUIZ_IMAGES), Object.keys(QUIZ_SOUNDS)));
+    // Photo questions pick the drake or the hen photo at random when there are both.
+    const photos = Object.entries(QUIZ_IMAGES);
+    const species = Array.from(new Set(photos.map(([, m]) => m.species)));
+    setRound(
+      makeRound(species, Object.keys(QUIZ_SOUNDS)).map((q) => {
+        if (q.kind !== 'image') return q;
+        const options = photos.filter(([, m]) => m.species === q.speciesId).map(([id]) => id);
+        return { ...q, mediaId: options[Math.floor(Math.random() * options.length)] };
+      }),
+    );
     setI(0);
     setScore(0);
     setPicked(null);
@@ -138,7 +147,7 @@ function Prompt({ q, answered }: { q: Question; answered: boolean }) {
   return q.kind === 'audio' ? (
     <SoundPrompt key={q.speciesId} speciesId={q.speciesId} answered={answered} />
   ) : (
-    <PhotoPrompt speciesId={q.speciesId} answered={answered} />
+    <PhotoPrompt speciesId={q.speciesId} mediaId={q.mediaId ?? q.speciesId} answered={answered} />
   );
 }
 
@@ -154,8 +163,8 @@ function RegsFlag({ speciesId }: { speciesId: string }) {
 }
 
 /** The whole photo, never cropped: fitted inside a 4:3 frame that leaves room for the seven answers. */
-function PhotoPrompt({ speciesId, answered }: { speciesId: string; answered: boolean }) {
-  const img = QUIZ_IMAGES[speciesId];
+function PhotoPrompt({ speciesId, mediaId, answered }: { speciesId: string; mediaId: string; answered: boolean }) {
+  const img = QUIZ_IMAGES[mediaId];
   const { width, height } = useWindowDimensions();
   const w = width - 32 - 6;
   const h = Math.min(w * 0.75, height * 0.36);
@@ -163,6 +172,11 @@ function PhotoPrompt({ speciesId, answered }: { speciesId: string; answered: boo
     <View style={{ gap: 4 }}>
       <View style={[styles.frame, { backgroundColor: C.navyDark }]}>
         <Image source={img.src} style={{ width: w, height: h }} resizeMode="contain" />
+        {img.sex ? (
+          <View style={[styles.sex, { backgroundColor: img.sex === 'drake' ? C.navy : '#8A5A2B' }]}>
+            <Text style={styles.sexTxt}>{img.sex === 'drake' ? '♂ DRAKE' : '♀ HEN'}</Text>
+          </View>
+        ) : null}
         {answered ? <RegsFlag speciesId={speciesId} /> : null}
       </View>
       {img.credit ? <Text style={styles.credit}>{`Photo: ${img.credit}`}</Text> : null}
@@ -199,6 +213,8 @@ function SoundPrompt({ speciesId, answered }: { speciesId: string; answered: boo
 const styles = StyleSheet.create({
   frame: { borderWidth: 3, borderColor: C.navy, backgroundColor: C.white, overflow: 'hidden' },
   credit: { fontSize: 10, color: C.muted },
+  sex: { position: 'absolute', top: 6, left: 6, paddingVertical: 3, paddingHorizontal: 8 },
+  sexTxt: { color: C.white, fontSize: 12, fontWeight: '800', letterSpacing: 1 },
   flag: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingVertical: 5, paddingHorizontal: 8 },
   flagTxt: { color: C.white, fontSize: 12, fontWeight: '800' },
   choice: { borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, paddingVertical: 12, paddingHorizontal: 14 },

@@ -11,7 +11,8 @@ export const CHOICES = 7;
 export const ROUND = 10;
 
 export type QuizKind = 'image' | 'audio';
-export type Question = { speciesId: string; kind: QuizKind; choices: string[] };
+/** `mediaId`: which photo (a species can have a drake and a hen photo). */
+export type Question = { speciesId: string; kind: QuizKind; choices: string[]; mediaId?: string };
 
 type Rng = () => number;
 
