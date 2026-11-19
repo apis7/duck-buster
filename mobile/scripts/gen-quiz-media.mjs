@@ -57,7 +57,7 @@ body{font-family:system-ui,sans-serif;background:#0B1F3D;color:#fff;margin:0;pad
 h1{margin:0 0 4px}.sub{color:#9fb3d1;margin:0 0 18px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .card{background:#13315C;border:2px solid #2B3F73;padding:10px}
-.card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.card img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#081629;display:block}
 .snd{font-size:60px;text-align:center;background:#0B1F3D;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
 audio{width:100%;margin-top:6px}h3{margin:8px 0 2px;font-size:16px}small{color:#9fb3d1;font-weight:400}
 .cr{font-size:11px;color:#9fb3d1;margin:0 0 6px}.cr a{color:#F2A65A}

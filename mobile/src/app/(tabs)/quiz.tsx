@@ -1,6 +1,6 @@
 import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { play } from '@/audio/sfx';
 import { makeRound, quizRank, type Question } from '@/domain/quiz';
@@ -134,11 +134,19 @@ function playerHint(hunters: number) {
 
 function Prompt({ q }: { q: Question }) {
   if (q.kind === 'audio') return <SoundPrompt key={q.speciesId} speciesId={q.speciesId} />;
-  const img = QUIZ_IMAGES[q.speciesId];
+  return <PhotoPrompt speciesId={q.speciesId} />;
+}
+
+/** The whole photo, never cropped: fitted inside a 4:3 frame that leaves room for the seven answers. */
+function PhotoPrompt({ speciesId }: { speciesId: string }) {
+  const img = QUIZ_IMAGES[speciesId];
+  const { width, height } = useWindowDimensions();
+  const w = width - 32 - 6;
+  const h = Math.min(w * 0.75, height * 0.36);
   return (
     <View style={{ gap: 4 }}>
-      <View style={styles.frame}>
-        <Image source={img.src} style={{ width: '100%', aspectRatio: 4 / 3 }} resizeMode="cover" />
+      <View style={[styles.frame, { backgroundColor: C.navyDark }]}>
+        <Image source={img.src} style={{ width: w, height: h }} resizeMode="contain" />
       </View>
       {img.credit ? <Text style={styles.credit}>{`Photo: ${img.credit}`}</Text> : null}
     </View>
