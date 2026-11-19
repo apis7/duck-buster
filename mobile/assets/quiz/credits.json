@@ -5,7 +5,8 @@
     "file": "assets/quiz/img/mall.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mallard_Drake_on_Seedskadee_National_Wildlife_Refuge_(22721823154).jpg",
     "author": "USFWS Mountain-Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "abdu",
@@ -13,7 +14,8 @@
     "file": "assets/quiz/img/abdu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:028_-_AMERICAN_BLACK_DUCK_(2-19-11)_Quidi_Vidi_Lake,_St_John%27s,_Newfoundland_(8710694225).jpg",
     "author": "ALAN SCHMIERER",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "modu",
@@ -21,7 +23,8 @@
     "file": "assets/quiz/img/modu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mottled_Duck,_drake,_Florida_1.jpg",
     "author": "DuckQuacker9",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "medu",
@@ -29,7 +32,8 @@
     "file": "assets/quiz/img/medu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:029_-_MEXICAN_MALLARD_(1-21-2017)_male,_patagonia_lake,_santa_cruz_co,_az_-01_(32360928371).jpg",
     "author": "ALAN SCHMIERER",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "gadw",
@@ -37,7 +41,8 @@
     "file": "assets/quiz/img/gadw.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gadwall_Drake_-_DPLA_-_3a0518ab1519a6044a5182c72add2cba.jpg",
     "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "amwi",
@@ -45,7 +50,8 @@
     "file": "assets/quiz/img/amwi.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:American_Wigeon_Drake_-_DPLA_-_3cafc0e26b35f6bf390f658d2f378608.jpg",
     "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "euwi",
@@ -53,7 +59,8 @@
     "file": "assets/quiz/img/euwi.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mareca_penelope_Oulu_20110515_01.jpg",
     "author": "Estormiz",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "nopi",
@@ -61,7 +68,8 @@
     "file": "assets/quiz/img/nopi.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Northern_pintail_drake_(51102248085).jpg",
     "author": "USFWSAlaska",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "nsho",
@@ -69,15 +77,8 @@
     "file": "assets/quiz/img/nsho.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Drake_Northern_Shoveler_at_J_Clark_Salyer_NWR_(42589430525).jpg",
     "author": "USFWS Mountain Prairie",
-    "license": "Public domain"
-  },
-  {
-    "code": "bwte",
-    "kind": "image",
-    "file": "assets/quiz/img/bwte.jpg",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Blue-winged_Teal_Drake_J._Clark_Salyer_National_Wildlife_Refuge_(53169398934).jpg",
-    "author": "USFWS Mountain-Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "gwte",
@@ -85,7 +86,8 @@
     "file": "assets/quiz/img/gwte.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anas_carolinensis.jpg",
     "author": "ALAN SCHMIERER",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "cite",
@@ -93,7 +95,8 @@
     "file": "assets/quiz/img/cite.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cinnamon_Teal_(male),_Scott_Somershoe_(49717524972).jpg",
     "author": "USFWS Mountain Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "wodu",
@@ -101,7 +104,8 @@
     "file": "assets/quiz/img/wodu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:023_-_WOOD_DUCK_(12-05-2015)_bernalillo_co,_nm_-09_(23696086716).jpg",
     "author": "ALAN SCHMIERER",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "fuwd",
@@ -125,7 +129,8 @@
     "file": "assets/quiz/img/canv.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Canvasback_drake_FWS_6798.jpg",
     "author": "Lee Karney / USFWS",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "redh",
@@ -133,7 +138,8 @@
     "file": "assets/quiz/img/redh.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Redhead_Duck_Drake,_Huron_Wetland_Management_District_South_Dakota_(52461291219).jpg",
     "author": "USFWS Mountain Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "rndu",
@@ -141,7 +147,8 @@
     "file": "assets/quiz/img/rndu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ring-necked_duck_at_Seedskadee_National_Wildlife_Refuge_Wyoming_(52065160675).jpg",
     "author": "USFWS Mountain Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "grsc",
@@ -149,7 +156,8 @@
     "file": "assets/quiz/img/grsc.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Greater_Scaup_drake_-_DPLA_-_2de8b13506ad36adfc37bc60dcf56042.jpg",
     "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "lesc",
@@ -157,7 +165,8 @@
     "file": "assets/quiz/img/lesc.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lesser_Scaup_(male)_(7027858133).jpg",
     "author": "Pacific Southwest Region USFWS from Sacramento, US",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "buff",
@@ -165,7 +174,8 @@
     "file": "assets/quiz/img/buff.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bufflehead_Drake_Seedskadee_NWR_(16035383424).jpg",
     "author": "USFWS Mountain-Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "cogo",
@@ -173,7 +183,8 @@
     "file": "assets/quiz/img/cogo.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Drake_Common_Goldeneyes_on_Seedskadee_NWR_(24660847212).jpg",
     "author": "USFWS Mountain-Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "bago",
@@ -181,7 +192,8 @@
     "file": "assets/quiz/img/bago.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barrow%27s_Goldeneye_Drake_Seedskadee_NWR_(16656643482).jpg",
     "author": "USFWS Mountain-Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "rudu",
@@ -189,7 +201,8 @@
     "file": "assets/quiz/img/rudu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Male_Ruddy_Duck_Huron_Wetland_Management_District_South_Dakota_(51843513974).jpg",
     "author": "USFWS Mountain Prairie",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "home",
@@ -197,7 +210,8 @@
     "file": "assets/quiz/img/home.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hooded_Merganser_(19103799384).jpg",
     "author": "U.S. Fish and Wildlife Service Southeast Region",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "come",
@@ -205,7 +219,8 @@
     "file": "assets/quiz/img/come.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Common_merganser_(Mergus_merganser)_(6796569359).jpg",
     "author": "Pacific Southwest Region USFWS from Sacramento, US",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "rbme",
@@ -213,7 +228,8 @@
     "file": "assets/quiz/img/rbme.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Red-breasted_merganser,_Willapa_Bay_(53872565147).jpg",
     "author": "USFWS Pacific",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "ltdu",
@@ -221,7 +237,8 @@
     "file": "assets/quiz/img/ltdu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Long-tailed_duck_male_(6728257023).jpg",
     "author": "USFWSAlaska",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "susc",
@@ -229,7 +246,8 @@
     "file": "assets/quiz/img/susc.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:053_-_SURF_SCOTER_(11-20-07)_male,_sloco,_ca_(2)_(8716761870).jpg",
     "author": "ALAN SCHMIERER",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "wwsc",
@@ -237,7 +255,8 @@
     "file": "assets/quiz/img/wwsc.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wwscoter12.JPG",
     "author": "David Menke",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "blsc",
@@ -245,7 +264,8 @@
     "file": "assets/quiz/img/blsc.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:BlackScoter23.jpg",
     "author": "U.S. Fish & Wildlife Service, Alaska Region",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "hadu",
@@ -253,7 +273,8 @@
     "file": "assets/quiz/img/hadu.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Harlequin_Duck_Male_-_DPLA_-_12ffc339b2c2267f18813e46afa7d7fe.jpg",
     "author": "Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888",
-    "license": "Public domain"
+    "license": "Public domain",
+    "sex": "drake"
   },
   {
     "code": "coei",
@@ -261,7 +282,8 @@
     "file": "assets/quiz/img/coei.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Common_eider_(Somateria_mollissima).jpg",
     "author": "Hobbyfotowiki",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "kiei",
@@ -269,7 +291,8 @@
     "file": "assets/quiz/img/kiei.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:049_-_KING_EIDER_(6-15-2016)_barrow,_alaska_-06_(27577003883).jpg",
     "author": "ALAN SCHMIERER",
-    "license": "CC0"
+    "license": "CC0",
+    "sex": "drake"
   },
   {
     "code": "cago",
@@ -382,5 +405,335 @@
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ducks_snatching.ogg",
     "author": "Bert76",
     "license": "CC0"
+  },
+  {
+    "code": "mall",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/mall_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anas_platyrhynchos_(Female)_in_Locarno.jpg",
+    "author": "Commonists",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "abdu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/abdu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:American_Black_Duck,_hen,_Richmond_Park,_Grand_Rapids,_MI,_5_March_2013_(8531793867).jpg",
+    "author": "Caleb Putnam",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+  },
+  {
+    "code": "modu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/modu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mottled_Duck_female_RWD2.jpg",
+    "author": "DickDaniels (https://theworldbirds.org/)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "medu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/medu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:029_-_MEXICAN_MALLARD_(1-21-2017)_female,_patagonia_lake,_santa_cruz_co,_az_-01_(32482525295).jpg",
+    "author": "ALAN SCHMIERER",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+  },
+  {
+    "code": "gadw",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/gadw_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mareca_strepera_MP_03.jpg",
+    "author": "Cephas",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "amwi",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/amwi_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anas-americana-004.jpg",
+    "author": "Mdf",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "code": "euwi",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/euwi_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mareca_penelope_female_s2.jpg",
+    "author": "Alpsdake",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "nopi",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/nopi_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Female_northern_pintail_in_flight-1827.jpg",
+    "author": "Frank Schulenburg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "nsho",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/nsho_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Northern_shoveler_(Spatula_clypeata)_female_Marken.jpg",
+    "author": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "bwte",
+    "kind": "image",
+    "sex": "drake",
+    "file": "assets/quiz/img/bwte.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Blue-winged_Teal_(Spatula_discors)_male_..._(53559312121).jpg",
+    "author": "Bernard DUPONT from FRANCE",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+  },
+  {
+    "code": "gwte",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/gwte_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Green-winged_Teal_(female)_(11160178556).jpg",
+    "author": "Mike's Birds from Riverside, CA, US",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+  },
+  {
+    "code": "cite",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/cite_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Female_Cinnamon_Teal_(8043588267).jpg",
+    "author": "Tony Hisgett from Birmingham, UK",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "code": "wodu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/wodu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wood_duck_female_(73468).jpg",
+    "author": "Rhododendrites",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "canv",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/canv_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Canvasback_(female)_-_Aythya_valisineria,_Oakley_Street,_Cambridge,_Maryland.jpg",
+    "author": "Judy Gallagher",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "code": "redh",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/redh_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Aythya_americana_f_Ontario.jpg",
+    "author": "Mykola Swarnyk",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "rndu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/rndu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:AythyaCollaris_4953.JPG",
+    "author": "Davefoc",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "grsc",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/grsc_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:2014-04-14_Aythya_marila,_female,_Killingworth_Lake,_Northumberland_08.jpg",
+    "author": "MPF",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "lesc",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/lesc_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lesser_Scaup_(female)_-_Aythya_affinis,_Oakley_Street,_Cambridge,_Maryland.jpg",
+    "author": "Judy Gallagher",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "code": "buff",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/buff_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bucephala-albeola-010.jpg",
+    "author": "Mdf",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "code": "cogo",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/cogo_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Common_goldeneye_(Bucephala_clangula_americana)_female_Prince%27s_Island.jpg",
+    "author": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "bago",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/bago_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:2025.06.01_Bucephala_islandica_at_the_Mendenhall_Glacier_Recreation_Area.jpg",
+    "author": "Forest Service Photography",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "code": "rudu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/rudu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ruddy_Duck_(Oxyura_jamaicensis)_RWD.jpg",
+    "author": "DickDaniels  (http://carolinabirds.org/)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "home",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/home_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lophodytes_cucullatus-female.jpg",
+    "author": "Peterwchen",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "come",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/come_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mergus_merganser_qtl1.jpg",
+    "author": "Quartl",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "rbme",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/rbme_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Red-breasted_Merganser_female_(Mergus_serrator),_Barnegat_Inlet,_New_Jersey,_USA_2.jpg",
+    "author": "Chuck Homler d/b/a Focus On Wildlife",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "ltdu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/ltdu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Female_Long-tailed_Duck_(19737964923).jpg",
+    "author": "BLM Alaska",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "code": "susc",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/susc_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Surf_Scoter_(female)_(11635678413).jpg",
+    "author": "Mike's Birds from Riverside, CA, US",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+  },
+  {
+    "code": "wwsc",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/wwsc_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Melanitta_deglandi,_female,_Toronto.jpg",
+    "author": "Mykola Swarnyk",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+  },
+  {
+    "code": "blsc",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/blsc_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Black_Scoter_(11593459243).jpg",
+    "author": "Alaska Region U.S. Fish & Wildlife Service from Anchorage, United States",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "code": "hadu",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/hadu_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Harlequin_duck_female_at_LeHardy_Rapids_(53482678763).jpg",
+    "author": "YellowstoneNPS",
+    "license": "Public domain",
+    "licenseUrl": ""
+  },
+  {
+    "code": "coei",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/coei_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Common_eider_(Somateria_mollissima_borealis)_female_Flatey.jpg",
+    "author": "Charles J. Sharp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+  },
+  {
+    "code": "kiei",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/kiei_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Somateria_spectabilis,_Sterling_NY.jpg",
+    "author": "Seabamirum from Ithaca",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+  },
+  {
+    "code": "bwte",
+    "kind": "image",
+    "sex": "hen",
+    "file": "assets/quiz/img/bwte_hen.jpg",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Spatula_discors_f_Humber_Bay_Park_E_Toronto.jpg",
+    "author": "Mykola Swarnyk",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
   }
 ]

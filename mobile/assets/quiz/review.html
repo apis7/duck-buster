@@ -14,7 +14,7 @@ button{background:#F26B1D;color:#fff;border:0;padding:10px 16px;font-weight:700;
 textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:13px}
 </style></head><body>
 <h1>Duck Buster — quiz review</h1>
-<p class="sub">42 photos + 5 calls = 47 questions. Each round picks 10 at random; the 7 answer choices are generated (look-alikes from the same group first). Mark anything to replace or drop, then press <b>Copy my review</b> and paste it to Claude.</p>
+<p class="sub">74 photos + 5 calls = 79 questions. Each round picks 10 at random; the 7 answer choices are generated (look-alikes from the same group first). Mark anything to replace or drop, then press <b>Copy my review</b> and paste it to Claude.</p>
 <div class="bar"><button onclick="copyReview()">Copy my review</button><span id="msg"></span></div>
 <h2>Calls (5)</h2><div class="grid"><div class="card" data-id="amco-audio" data-label="American Coot (call, amco.mp3)">
   <div class="snd">🔊</div><audio controls preload="none" src="audio/amco.mp3"></audio>
@@ -51,11 +51,18 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="nopi-audio" value="ok" checked> OK</label><label><input type="radio" name="nopi-audio" value="replace"> Replace</label><label><input type="radio" name="nopi-audio" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div></div>
-<h2>Photos (42)</h2><div class="grid"><div class="card" data-id="abdu-image" data-label="American Black Duck (photo, abdu.jpg)">
+<h2>Photos (74)</h2><div class="grid"><div class="card" data-id="abdu-image" data-label="American Black Duck drake (photo, abdu.jpg)">
   <img src="img/abdu.jpg" loading="lazy">
-  <h3>American Black Duck <small>PHOTO · abdu.jpg</small></h3>
+  <h3>American Black Duck — DRAKE <small>PHOTO · abdu.jpg</small></h3>
   <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:028_-_AMERICAN_BLACK_DUCK_(2-19-11)_Quidi_Vidi_Lake,_St_John%27s,_Newfoundland_(8710694225).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="abdu-image" value="ok" checked> OK</label><label><input type="radio" name="abdu-image" value="replace"> Replace</label><label><input type="radio" name="abdu-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="abdu_hen-image" data-label="American Black Duck hen (photo, abdu_hen.jpg)">
+  <img src="img/abdu_hen.jpg" loading="lazy">
+  <h3>American Black Duck — HEN <small>PHOTO · abdu_hen.jpg</small></h3>
+  <p class="cr">Caleb Putnam · CC BY-SA 2.0 · <a href="https://commons.wikimedia.org/wiki/File:American_Black_Duck,_hen,_Richmond_Park,_Grand_Rapids,_MI,_5_March_2013_(8531793867).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="abdu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="abdu_hen-image" value="replace"> Replace</label><label><input type="radio" name="abdu_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="amco-image" data-label="American Coot (photo, amco.jpg)">
@@ -65,18 +72,32 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="amco-image" value="ok" checked> OK</label><label><input type="radio" name="amco-image" value="replace"> Replace</label><label><input type="radio" name="amco-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="amwi-image" data-label="American Wigeon (photo, amwi.jpg)">
+<div class="card" data-id="amwi-image" data-label="American Wigeon drake (photo, amwi.jpg)">
   <img src="img/amwi.jpg" loading="lazy">
-  <h3>American Wigeon <small>PHOTO · amwi.jpg</small></h3>
+  <h3>American Wigeon — DRAKE <small>PHOTO · amwi.jpg</small></h3>
   <p class="cr">Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888 · Public domain · <a href="https://commons.wikimedia.org/wiki/File:American_Wigeon_Drake_-_DPLA_-_3cafc0e26b35f6bf390f658d2f378608.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="amwi-image" value="ok" checked> OK</label><label><input type="radio" name="amwi-image" value="replace"> Replace</label><label><input type="radio" name="amwi-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="bago-image" data-label="Barrow's Goldeneye (photo, bago.jpg)">
+<div class="card" data-id="amwi_hen-image" data-label="American Wigeon hen (photo, amwi_hen.jpg)">
+  <img src="img/amwi_hen.jpg" loading="lazy">
+  <h3>American Wigeon — HEN <small>PHOTO · amwi_hen.jpg</small></h3>
+  <p class="cr">Mdf · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Anas-americana-004.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="amwi_hen-image" value="ok" checked> OK</label><label><input type="radio" name="amwi_hen-image" value="replace"> Replace</label><label><input type="radio" name="amwi_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bago-image" data-label="Barrow's Goldeneye drake (photo, bago.jpg)">
   <img src="img/bago.jpg" loading="lazy">
-  <h3>Barrow's Goldeneye <small>PHOTO · bago.jpg</small></h3>
+  <h3>Barrow's Goldeneye — DRAKE <small>PHOTO · bago.jpg</small></h3>
   <p class="cr">USFWS Mountain-Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Barrow%27s_Goldeneye_Drake_Seedskadee_NWR_(16656643482).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="bago-image" value="ok" checked> OK</label><label><input type="radio" name="bago-image" value="replace"> Replace</label><label><input type="radio" name="bago-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bago_hen-image" data-label="Barrow's Goldeneye hen (photo, bago_hen.jpg)">
+  <img src="img/bago_hen.jpg" loading="lazy">
+  <h3>Barrow's Goldeneye — HEN <small>PHOTO · bago_hen.jpg</small></h3>
+  <p class="cr">Forest Service Photography · Public domain · <a href="https://commons.wikimedia.org/wiki/File:2025.06.01_Bucephala_islandica_at_the_Mendenhall_Glacier_Recreation_Area.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="bago_hen-image" value="ok" checked> OK</label><label><input type="radio" name="bago_hen-image" value="replace"> Replace</label><label><input type="radio" name="bago_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="bbwd-image" data-label="Black-bellied Whistling-Duck (photo, bbwd.jpg)">
@@ -86,11 +107,18 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="bbwd-image" value="ok" checked> OK</label><label><input type="radio" name="bbwd-image" value="replace"> Replace</label><label><input type="radio" name="bbwd-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="blsc-image" data-label="Black Scoter (photo, blsc.jpg)">
+<div class="card" data-id="blsc-image" data-label="Black Scoter drake (photo, blsc.jpg)">
   <img src="img/blsc.jpg" loading="lazy">
-  <h3>Black Scoter <small>PHOTO · blsc.jpg</small></h3>
+  <h3>Black Scoter — DRAKE <small>PHOTO · blsc.jpg</small></h3>
   <p class="cr">U.S. Fish &amp; Wildlife Service, Alaska Region · Public domain · <a href="https://commons.wikimedia.org/wiki/File:BlackScoter23.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="blsc-image" value="ok" checked> OK</label><label><input type="radio" name="blsc-image" value="replace"> Replace</label><label><input type="radio" name="blsc-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="blsc_hen-image" data-label="Black Scoter hen (photo, blsc_hen.jpg)">
+  <img src="img/blsc_hen.jpg" loading="lazy">
+  <h3>Black Scoter — HEN <small>PHOTO · blsc_hen.jpg</small></h3>
+  <p class="cr">Alaska Region U.S. Fish &amp; Wildlife Service from Anchorage, United States · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Black_Scoter_(11593459243).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="blsc_hen-image" value="ok" checked> OK</label><label><input type="radio" name="blsc_hen-image" value="replace"> Replace</label><label><input type="radio" name="blsc_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="bran-image" data-label="Brant (photo, bran.jpg)">
@@ -100,18 +128,32 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="bran-image" value="ok" checked> OK</label><label><input type="radio" name="bran-image" value="replace"> Replace</label><label><input type="radio" name="bran-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="buff-image" data-label="Bufflehead (photo, buff.jpg)">
+<div class="card" data-id="buff-image" data-label="Bufflehead drake (photo, buff.jpg)">
   <img src="img/buff.jpg" loading="lazy">
-  <h3>Bufflehead <small>PHOTO · buff.jpg</small></h3>
+  <h3>Bufflehead — DRAKE <small>PHOTO · buff.jpg</small></h3>
   <p class="cr">USFWS Mountain-Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Bufflehead_Drake_Seedskadee_NWR_(16035383424).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="buff-image" value="ok" checked> OK</label><label><input type="radio" name="buff-image" value="replace"> Replace</label><label><input type="radio" name="buff-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="bwte-image" data-label="Blue-winged Teal (photo, bwte.jpg)">
+<div class="card" data-id="buff_hen-image" data-label="Bufflehead hen (photo, buff_hen.jpg)">
+  <img src="img/buff_hen.jpg" loading="lazy">
+  <h3>Bufflehead — HEN <small>PHOTO · buff_hen.jpg</small></h3>
+  <p class="cr">Mdf · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Bucephala-albeola-010.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="buff_hen-image" value="ok" checked> OK</label><label><input type="radio" name="buff_hen-image" value="replace"> Replace</label><label><input type="radio" name="buff_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bwte-image" data-label="Blue-winged Teal drake (photo, bwte.jpg)">
   <img src="img/bwte.jpg" loading="lazy">
-  <h3>Blue-winged Teal <small>PHOTO · bwte.jpg</small></h3>
-  <p class="cr">USFWS Mountain-Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Blue-winged_Teal_Drake_J._Clark_Salyer_National_Wildlife_Refuge_(53169398934).jpg" target="_blank">source</a></p>
+  <h3>Blue-winged Teal — DRAKE <small>PHOTO · bwte.jpg</small></h3>
+  <p class="cr">Bernard DUPONT from FRANCE · CC BY-SA 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Blue-winged_Teal_(Spatula_discors)_male_..._(53559312121).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="bwte-image" value="ok" checked> OK</label><label><input type="radio" name="bwte-image" value="replace"> Replace</label><label><input type="radio" name="bwte-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bwte_hen-image" data-label="Blue-winged Teal hen (photo, bwte_hen.jpg)">
+  <img src="img/bwte_hen.jpg" loading="lazy">
+  <h3>Blue-winged Teal — HEN <small>PHOTO · bwte_hen.jpg</small></h3>
+  <p class="cr">Mykola Swarnyk · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Spatula_discors_f_Humber_Bay_Park_E_Toronto.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="bwte_hen-image" value="ok" checked> OK</label><label><input type="radio" name="bwte_hen-image" value="replace"> Replace</label><label><input type="radio" name="bwte_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="cacg-image" data-label="Cackling Goose (photo, cacg.jpg)">
@@ -128,39 +170,74 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="cago-image" value="ok" checked> OK</label><label><input type="radio" name="cago-image" value="replace"> Replace</label><label><input type="radio" name="cago-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="canv-image" data-label="Canvasback (photo, canv.jpg)">
+<div class="card" data-id="canv-image" data-label="Canvasback drake (photo, canv.jpg)">
   <img src="img/canv.jpg" loading="lazy">
-  <h3>Canvasback <small>PHOTO · canv.jpg</small></h3>
+  <h3>Canvasback — DRAKE <small>PHOTO · canv.jpg</small></h3>
   <p class="cr">Lee Karney / USFWS · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Canvasback_drake_FWS_6798.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="canv-image" value="ok" checked> OK</label><label><input type="radio" name="canv-image" value="replace"> Replace</label><label><input type="radio" name="canv-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="cite-image" data-label="Cinnamon Teal (photo, cite.jpg)">
+<div class="card" data-id="canv_hen-image" data-label="Canvasback hen (photo, canv_hen.jpg)">
+  <img src="img/canv_hen.jpg" loading="lazy">
+  <h3>Canvasback — HEN <small>PHOTO · canv_hen.jpg</small></h3>
+  <p class="cr">Judy Gallagher · CC BY 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Canvasback_(female)_-_Aythya_valisineria,_Oakley_Street,_Cambridge,_Maryland.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="canv_hen-image" value="ok" checked> OK</label><label><input type="radio" name="canv_hen-image" value="replace"> Replace</label><label><input type="radio" name="canv_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="cite-image" data-label="Cinnamon Teal drake (photo, cite.jpg)">
   <img src="img/cite.jpg" loading="lazy">
-  <h3>Cinnamon Teal <small>PHOTO · cite.jpg</small></h3>
+  <h3>Cinnamon Teal — DRAKE <small>PHOTO · cite.jpg</small></h3>
   <p class="cr">USFWS Mountain Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Cinnamon_Teal_(male),_Scott_Somershoe_(49717524972).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="cite-image" value="ok" checked> OK</label><label><input type="radio" name="cite-image" value="replace"> Replace</label><label><input type="radio" name="cite-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="coei-image" data-label="Common Eider (photo, coei.jpg)">
+<div class="card" data-id="cite_hen-image" data-label="Cinnamon Teal hen (photo, cite_hen.jpg)">
+  <img src="img/cite_hen.jpg" loading="lazy">
+  <h3>Cinnamon Teal — HEN <small>PHOTO · cite_hen.jpg</small></h3>
+  <p class="cr">Tony Hisgett from Birmingham, UK · CC BY 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Female_Cinnamon_Teal_(8043588267).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="cite_hen-image" value="ok" checked> OK</label><label><input type="radio" name="cite_hen-image" value="replace"> Replace</label><label><input type="radio" name="cite_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="coei-image" data-label="Common Eider drake (photo, coei.jpg)">
   <img src="img/coei.jpg" loading="lazy">
-  <h3>Common Eider <small>PHOTO · coei.jpg</small></h3>
+  <h3>Common Eider — DRAKE <small>PHOTO · coei.jpg</small></h3>
   <p class="cr">Hobbyfotowiki · CC0 · <a href="https://commons.wikimedia.org/wiki/File:Common_eider_(Somateria_mollissima).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="coei-image" value="ok" checked> OK</label><label><input type="radio" name="coei-image" value="replace"> Replace</label><label><input type="radio" name="coei-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="cogo-image" data-label="Common Goldeneye (photo, cogo.jpg)">
+<div class="card" data-id="coei_hen-image" data-label="Common Eider hen (photo, coei_hen.jpg)">
+  <img src="img/coei_hen.jpg" loading="lazy">
+  <h3>Common Eider — HEN <small>PHOTO · coei_hen.jpg</small></h3>
+  <p class="cr">Charles J. Sharp · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Common_eider_(Somateria_mollissima_borealis)_female_Flatey.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="coei_hen-image" value="ok" checked> OK</label><label><input type="radio" name="coei_hen-image" value="replace"> Replace</label><label><input type="radio" name="coei_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="cogo-image" data-label="Common Goldeneye drake (photo, cogo.jpg)">
   <img src="img/cogo.jpg" loading="lazy">
-  <h3>Common Goldeneye <small>PHOTO · cogo.jpg</small></h3>
+  <h3>Common Goldeneye — DRAKE <small>PHOTO · cogo.jpg</small></h3>
   <p class="cr">USFWS Mountain-Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Drake_Common_Goldeneyes_on_Seedskadee_NWR_(24660847212).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="cogo-image" value="ok" checked> OK</label><label><input type="radio" name="cogo-image" value="replace"> Replace</label><label><input type="radio" name="cogo-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="come-image" data-label="Common Merganser (photo, come.jpg)">
+<div class="card" data-id="cogo_hen-image" data-label="Common Goldeneye hen (photo, cogo_hen.jpg)">
+  <img src="img/cogo_hen.jpg" loading="lazy">
+  <h3>Common Goldeneye — HEN <small>PHOTO · cogo_hen.jpg</small></h3>
+  <p class="cr">Charles J. Sharp · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Common_goldeneye_(Bucephala_clangula_americana)_female_Prince%27s_Island.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="cogo_hen-image" value="ok" checked> OK</label><label><input type="radio" name="cogo_hen-image" value="replace"> Replace</label><label><input type="radio" name="cogo_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="come-image" data-label="Common Merganser drake (photo, come.jpg)">
   <img src="img/come.jpg" loading="lazy">
-  <h3>Common Merganser <small>PHOTO · come.jpg</small></h3>
+  <h3>Common Merganser — DRAKE <small>PHOTO · come.jpg</small></h3>
   <p class="cr">Pacific Southwest Region USFWS from Sacramento, US · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Common_merganser_(Mergus_merganser)_(6796569359).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="come-image" value="ok" checked> OK</label><label><input type="radio" name="come-image" value="replace"> Replace</label><label><input type="radio" name="come-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="come_hen-image" data-label="Common Merganser hen (photo, come_hen.jpg)">
+  <img src="img/come_hen.jpg" loading="lazy">
+  <h3>Common Merganser — HEN <small>PHOTO · come_hen.jpg</small></h3>
+  <p class="cr">Quartl · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Mergus_merganser_qtl1.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="come_hen-image" value="ok" checked> OK</label><label><input type="radio" name="come_hen-image" value="replace"> Replace</label><label><input type="radio" name="come_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="emgo-image" data-label="Emperor Goose (photo, emgo.jpg)">
@@ -170,11 +247,18 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="emgo-image" value="ok" checked> OK</label><label><input type="radio" name="emgo-image" value="replace"> Replace</label><label><input type="radio" name="emgo-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="euwi-image" data-label="Eurasian Wigeon (photo, euwi.jpg)">
+<div class="card" data-id="euwi-image" data-label="Eurasian Wigeon drake (photo, euwi.jpg)">
   <img src="img/euwi.jpg" loading="lazy">
-  <h3>Eurasian Wigeon <small>PHOTO · euwi.jpg</small></h3>
+  <h3>Eurasian Wigeon — DRAKE <small>PHOTO · euwi.jpg</small></h3>
   <p class="cr">Estormiz · CC0 · <a href="https://commons.wikimedia.org/wiki/File:Mareca_penelope_Oulu_20110515_01.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="euwi-image" value="ok" checked> OK</label><label><input type="radio" name="euwi-image" value="replace"> Replace</label><label><input type="radio" name="euwi-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="euwi_hen-image" data-label="Eurasian Wigeon hen (photo, euwi_hen.jpg)">
+  <img src="img/euwi_hen.jpg" loading="lazy">
+  <h3>Eurasian Wigeon — HEN <small>PHOTO · euwi_hen.jpg</small></h3>
+  <p class="cr">Alpsdake · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Mareca_penelope_female_s2.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="euwi_hen-image" value="ok" checked> OK</label><label><input type="radio" name="euwi_hen-image" value="replace"> Replace</label><label><input type="radio" name="euwi_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="fuwd-image" data-label="Fulvous Whistling-Duck (photo, fuwd.jpg)">
@@ -184,18 +268,32 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="fuwd-image" value="ok" checked> OK</label><label><input type="radio" name="fuwd-image" value="replace"> Replace</label><label><input type="radio" name="fuwd-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="gadw-image" data-label="Gadwall (photo, gadw.jpg)">
+<div class="card" data-id="gadw-image" data-label="Gadwall drake (photo, gadw.jpg)">
   <img src="img/gadw.jpg" loading="lazy">
-  <h3>Gadwall <small>PHOTO · gadw.jpg</small></h3>
+  <h3>Gadwall — DRAKE <small>PHOTO · gadw.jpg</small></h3>
   <p class="cr">Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888 · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Gadwall_Drake_-_DPLA_-_3a0518ab1519a6044a5182c72add2cba.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="gadw-image" value="ok" checked> OK</label><label><input type="radio" name="gadw-image" value="replace"> Replace</label><label><input type="radio" name="gadw-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="grsc-image" data-label="Greater Scaup (photo, grsc.jpg)">
+<div class="card" data-id="gadw_hen-image" data-label="Gadwall hen (photo, gadw_hen.jpg)">
+  <img src="img/gadw_hen.jpg" loading="lazy">
+  <h3>Gadwall — HEN <small>PHOTO · gadw_hen.jpg</small></h3>
+  <p class="cr">Cephas · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Mareca_strepera_MP_03.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="gadw_hen-image" value="ok" checked> OK</label><label><input type="radio" name="gadw_hen-image" value="replace"> Replace</label><label><input type="radio" name="gadw_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="grsc-image" data-label="Greater Scaup drake (photo, grsc.jpg)">
   <img src="img/grsc.jpg" loading="lazy">
-  <h3>Greater Scaup <small>PHOTO · grsc.jpg</small></h3>
+  <h3>Greater Scaup — DRAKE <small>PHOTO · grsc.jpg</small></h3>
   <p class="cr">Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888 · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Greater_Scaup_drake_-_DPLA_-_2de8b13506ad36adfc37bc60dcf56042.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="grsc-image" value="ok" checked> OK</label><label><input type="radio" name="grsc-image" value="replace"> Replace</label><label><input type="radio" name="grsc-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="grsc_hen-image" data-label="Greater Scaup hen (photo, grsc_hen.jpg)">
+  <img src="img/grsc_hen.jpg" loading="lazy">
+  <h3>Greater Scaup — HEN <small>PHOTO · grsc_hen.jpg</small></h3>
+  <p class="cr">MPF · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:2014-04-14_Aythya_marila,_female,_Killingworth_Lake,_Northumberland_08.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="grsc_hen-image" value="ok" checked> OK</label><label><input type="radio" name="grsc_hen-image" value="replace"> Replace</label><label><input type="radio" name="grsc_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="gwfg-image" data-label="Greater White-fronted Goose (photo, gwfg.jpg)">
@@ -205,102 +303,200 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="gwfg-image" value="ok" checked> OK</label><label><input type="radio" name="gwfg-image" value="replace"> Replace</label><label><input type="radio" name="gwfg-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="gwte-image" data-label="Green-winged Teal (photo, gwte.jpg)">
+<div class="card" data-id="gwte-image" data-label="Green-winged Teal drake (photo, gwte.jpg)">
   <img src="img/gwte.jpg" loading="lazy">
-  <h3>Green-winged Teal <small>PHOTO · gwte.jpg</small></h3>
+  <h3>Green-winged Teal — DRAKE <small>PHOTO · gwte.jpg</small></h3>
   <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:Anas_carolinensis.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="gwte-image" value="ok" checked> OK</label><label><input type="radio" name="gwte-image" value="replace"> Replace</label><label><input type="radio" name="gwte-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="hadu-image" data-label="Harlequin Duck (photo, hadu.jpg)">
+<div class="card" data-id="gwte_hen-image" data-label="Green-winged Teal hen (photo, gwte_hen.jpg)">
+  <img src="img/gwte_hen.jpg" loading="lazy">
+  <h3>Green-winged Teal — HEN <small>PHOTO · gwte_hen.jpg</small></h3>
+  <p class="cr">Mike's Birds from Riverside, CA, US · CC BY-SA 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Green-winged_Teal_(female)_(11160178556).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="gwte_hen-image" value="ok" checked> OK</label><label><input type="radio" name="gwte_hen-image" value="replace"> Replace</label><label><input type="radio" name="gwte_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="hadu-image" data-label="Harlequin Duck drake (photo, hadu.jpg)">
   <img src="img/hadu.jpg" loading="lazy">
-  <h3>Harlequin Duck <small>PHOTO · hadu.jpg</small></h3>
+  <h3>Harlequin Duck — DRAKE <small>PHOTO · hadu.jpg</small></h3>
   <p class="cr">Department of the Interior. U.S. Fish and Wildlife Service. National Conservation Training Center. 10/1997-8888 · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Harlequin_Duck_Male_-_DPLA_-_12ffc339b2c2267f18813e46afa7d7fe.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="hadu-image" value="ok" checked> OK</label><label><input type="radio" name="hadu-image" value="replace"> Replace</label><label><input type="radio" name="hadu-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="home-image" data-label="Hooded Merganser (photo, home.jpg)">
+<div class="card" data-id="hadu_hen-image" data-label="Harlequin Duck hen (photo, hadu_hen.jpg)">
+  <img src="img/hadu_hen.jpg" loading="lazy">
+  <h3>Harlequin Duck — HEN <small>PHOTO · hadu_hen.jpg</small></h3>
+  <p class="cr">YellowstoneNPS · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Harlequin_duck_female_at_LeHardy_Rapids_(53482678763).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="hadu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="hadu_hen-image" value="replace"> Replace</label><label><input type="radio" name="hadu_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="home-image" data-label="Hooded Merganser drake (photo, home.jpg)">
   <img src="img/home.jpg" loading="lazy">
-  <h3>Hooded Merganser <small>PHOTO · home.jpg</small></h3>
+  <h3>Hooded Merganser — DRAKE <small>PHOTO · home.jpg</small></h3>
   <p class="cr">U.S. Fish and Wildlife Service Southeast Region · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Hooded_Merganser_(19103799384).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="home-image" value="ok" checked> OK</label><label><input type="radio" name="home-image" value="replace"> Replace</label><label><input type="radio" name="home-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="kiei-image" data-label="King Eider (photo, kiei.jpg)">
+<div class="card" data-id="home_hen-image" data-label="Hooded Merganser hen (photo, home_hen.jpg)">
+  <img src="img/home_hen.jpg" loading="lazy">
+  <h3>Hooded Merganser — HEN <small>PHOTO · home_hen.jpg</small></h3>
+  <p class="cr">Peterwchen · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Lophodytes_cucullatus-female.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="home_hen-image" value="ok" checked> OK</label><label><input type="radio" name="home_hen-image" value="replace"> Replace</label><label><input type="radio" name="home_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="kiei-image" data-label="King Eider drake (photo, kiei.jpg)">
   <img src="img/kiei.jpg" loading="lazy">
-  <h3>King Eider <small>PHOTO · kiei.jpg</small></h3>
+  <h3>King Eider — DRAKE <small>PHOTO · kiei.jpg</small></h3>
   <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:049_-_KING_EIDER_(6-15-2016)_barrow,_alaska_-06_(27577003883).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="kiei-image" value="ok" checked> OK</label><label><input type="radio" name="kiei-image" value="replace"> Replace</label><label><input type="radio" name="kiei-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="lesc-image" data-label="Lesser Scaup (photo, lesc.jpg)">
+<div class="card" data-id="kiei_hen-image" data-label="King Eider hen (photo, kiei_hen.jpg)">
+  <img src="img/kiei_hen.jpg" loading="lazy">
+  <h3>King Eider — HEN <small>PHOTO · kiei_hen.jpg</small></h3>
+  <p class="cr">Seabamirum from Ithaca · CC BY 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Somateria_spectabilis,_Sterling_NY.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="kiei_hen-image" value="ok" checked> OK</label><label><input type="radio" name="kiei_hen-image" value="replace"> Replace</label><label><input type="radio" name="kiei_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="lesc-image" data-label="Lesser Scaup drake (photo, lesc.jpg)">
   <img src="img/lesc.jpg" loading="lazy">
-  <h3>Lesser Scaup <small>PHOTO · lesc.jpg</small></h3>
+  <h3>Lesser Scaup — DRAKE <small>PHOTO · lesc.jpg</small></h3>
   <p class="cr">Pacific Southwest Region USFWS from Sacramento, US · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Lesser_Scaup_(male)_(7027858133).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="lesc-image" value="ok" checked> OK</label><label><input type="radio" name="lesc-image" value="replace"> Replace</label><label><input type="radio" name="lesc-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="ltdu-image" data-label="Long-tailed Duck (photo, ltdu.jpg)">
+<div class="card" data-id="lesc_hen-image" data-label="Lesser Scaup hen (photo, lesc_hen.jpg)">
+  <img src="img/lesc_hen.jpg" loading="lazy">
+  <h3>Lesser Scaup — HEN <small>PHOTO · lesc_hen.jpg</small></h3>
+  <p class="cr">Judy Gallagher · CC BY 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Lesser_Scaup_(female)_-_Aythya_affinis,_Oakley_Street,_Cambridge,_Maryland.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="lesc_hen-image" value="ok" checked> OK</label><label><input type="radio" name="lesc_hen-image" value="replace"> Replace</label><label><input type="radio" name="lesc_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="ltdu-image" data-label="Long-tailed Duck drake (photo, ltdu.jpg)">
   <img src="img/ltdu.jpg" loading="lazy">
-  <h3>Long-tailed Duck <small>PHOTO · ltdu.jpg</small></h3>
+  <h3>Long-tailed Duck — DRAKE <small>PHOTO · ltdu.jpg</small></h3>
   <p class="cr">USFWSAlaska · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Long-tailed_duck_male_(6728257023).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="ltdu-image" value="ok" checked> OK</label><label><input type="radio" name="ltdu-image" value="replace"> Replace</label><label><input type="radio" name="ltdu-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="mall-image" data-label="Mallard (photo, mall.jpg)">
+<div class="card" data-id="ltdu_hen-image" data-label="Long-tailed Duck hen (photo, ltdu_hen.jpg)">
+  <img src="img/ltdu_hen.jpg" loading="lazy">
+  <h3>Long-tailed Duck — HEN <small>PHOTO · ltdu_hen.jpg</small></h3>
+  <p class="cr">BLM Alaska · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Female_Long-tailed_Duck_(19737964923).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="ltdu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="ltdu_hen-image" value="replace"> Replace</label><label><input type="radio" name="ltdu_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="mall-image" data-label="Mallard drake (photo, mall.jpg)">
   <img src="img/mall.jpg" loading="lazy">
-  <h3>Mallard <small>PHOTO · mall.jpg</small></h3>
+  <h3>Mallard — DRAKE <small>PHOTO · mall.jpg</small></h3>
   <p class="cr">USFWS Mountain-Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Mallard_Drake_on_Seedskadee_National_Wildlife_Refuge_(22721823154).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="mall-image" value="ok" checked> OK</label><label><input type="radio" name="mall-image" value="replace"> Replace</label><label><input type="radio" name="mall-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="medu-image" data-label="Mexican Duck (photo, medu.jpg)">
+<div class="card" data-id="mall_hen-image" data-label="Mallard hen (photo, mall_hen.jpg)">
+  <img src="img/mall_hen.jpg" loading="lazy">
+  <h3>Mallard — HEN <small>PHOTO · mall_hen.jpg</small></h3>
+  <p class="cr">Commonists · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Anas_platyrhynchos_(Female)_in_Locarno.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="mall_hen-image" value="ok" checked> OK</label><label><input type="radio" name="mall_hen-image" value="replace"> Replace</label><label><input type="radio" name="mall_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="medu-image" data-label="Mexican Duck drake (photo, medu.jpg)">
   <img src="img/medu.jpg" loading="lazy">
-  <h3>Mexican Duck <small>PHOTO · medu.jpg</small></h3>
+  <h3>Mexican Duck — DRAKE <small>PHOTO · medu.jpg</small></h3>
   <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:029_-_MEXICAN_MALLARD_(1-21-2017)_male,_patagonia_lake,_santa_cruz_co,_az_-01_(32360928371).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="medu-image" value="ok" checked> OK</label><label><input type="radio" name="medu-image" value="replace"> Replace</label><label><input type="radio" name="medu-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="modu-image" data-label="Mottled Duck (photo, modu.jpg)">
+<div class="card" data-id="medu_hen-image" data-label="Mexican Duck hen (photo, medu_hen.jpg)">
+  <img src="img/medu_hen.jpg" loading="lazy">
+  <h3>Mexican Duck — HEN <small>PHOTO · medu_hen.jpg</small></h3>
+  <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:029_-_MEXICAN_MALLARD_(1-21-2017)_female,_patagonia_lake,_santa_cruz_co,_az_-01_(32482525295).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="medu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="medu_hen-image" value="replace"> Replace</label><label><input type="radio" name="medu_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="modu-image" data-label="Mottled Duck drake (photo, modu.jpg)">
   <img src="img/modu.jpg" loading="lazy">
-  <h3>Mottled Duck <small>PHOTO · modu.jpg</small></h3>
+  <h3>Mottled Duck — DRAKE <small>PHOTO · modu.jpg</small></h3>
   <p class="cr">DuckQuacker9 · CC0 · <a href="https://commons.wikimedia.org/wiki/File:Mottled_Duck,_drake,_Florida_1.jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="modu-image" value="ok" checked> OK</label><label><input type="radio" name="modu-image" value="replace"> Replace</label><label><input type="radio" name="modu-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="nopi-image" data-label="Northern Pintail (photo, nopi.jpg)">
+<div class="card" data-id="modu_hen-image" data-label="Mottled Duck hen (photo, modu_hen.jpg)">
+  <img src="img/modu_hen.jpg" loading="lazy">
+  <h3>Mottled Duck — HEN <small>PHOTO · modu_hen.jpg</small></h3>
+  <p class="cr">DickDaniels (https://theworldbirds.org/) · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Mottled_Duck_female_RWD2.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="modu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="modu_hen-image" value="replace"> Replace</label><label><input type="radio" name="modu_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="nopi-image" data-label="Northern Pintail drake (photo, nopi.jpg)">
   <img src="img/nopi.jpg" loading="lazy">
-  <h3>Northern Pintail <small>PHOTO · nopi.jpg</small></h3>
+  <h3>Northern Pintail — DRAKE <small>PHOTO · nopi.jpg</small></h3>
   <p class="cr">USFWSAlaska · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Northern_pintail_drake_(51102248085).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="nopi-image" value="ok" checked> OK</label><label><input type="radio" name="nopi-image" value="replace"> Replace</label><label><input type="radio" name="nopi-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="nsho-image" data-label="Northern Shoveler (photo, nsho.jpg)">
+<div class="card" data-id="nopi_hen-image" data-label="Northern Pintail hen (photo, nopi_hen.jpg)">
+  <img src="img/nopi_hen.jpg" loading="lazy">
+  <h3>Northern Pintail — HEN <small>PHOTO · nopi_hen.jpg</small></h3>
+  <p class="cr">Frank Schulenburg · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Female_northern_pintail_in_flight-1827.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="nopi_hen-image" value="ok" checked> OK</label><label><input type="radio" name="nopi_hen-image" value="replace"> Replace</label><label><input type="radio" name="nopi_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="nsho-image" data-label="Northern Shoveler drake (photo, nsho.jpg)">
   <img src="img/nsho.jpg" loading="lazy">
-  <h3>Northern Shoveler <small>PHOTO · nsho.jpg</small></h3>
+  <h3>Northern Shoveler — DRAKE <small>PHOTO · nsho.jpg</small></h3>
   <p class="cr">USFWS Mountain Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Drake_Northern_Shoveler_at_J_Clark_Salyer_NWR_(42589430525).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="nsho-image" value="ok" checked> OK</label><label><input type="radio" name="nsho-image" value="replace"> Replace</label><label><input type="radio" name="nsho-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="rbme-image" data-label="Red-breasted Merganser (photo, rbme.jpg)">
+<div class="card" data-id="nsho_hen-image" data-label="Northern Shoveler hen (photo, nsho_hen.jpg)">
+  <img src="img/nsho_hen.jpg" loading="lazy">
+  <h3>Northern Shoveler — HEN <small>PHOTO · nsho_hen.jpg</small></h3>
+  <p class="cr">Charles J. Sharp · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Northern_shoveler_(Spatula_clypeata)_female_Marken.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="nsho_hen-image" value="ok" checked> OK</label><label><input type="radio" name="nsho_hen-image" value="replace"> Replace</label><label><input type="radio" name="nsho_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="rbme-image" data-label="Red-breasted Merganser drake (photo, rbme.jpg)">
   <img src="img/rbme.jpg" loading="lazy">
-  <h3>Red-breasted Merganser <small>PHOTO · rbme.jpg</small></h3>
+  <h3>Red-breasted Merganser — DRAKE <small>PHOTO · rbme.jpg</small></h3>
   <p class="cr">USFWS Pacific · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Red-breasted_merganser,_Willapa_Bay_(53872565147).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="rbme-image" value="ok" checked> OK</label><label><input type="radio" name="rbme-image" value="replace"> Replace</label><label><input type="radio" name="rbme-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="redh-image" data-label="Redhead (photo, redh.jpg)">
+<div class="card" data-id="rbme_hen-image" data-label="Red-breasted Merganser hen (photo, rbme_hen.jpg)">
+  <img src="img/rbme_hen.jpg" loading="lazy">
+  <h3>Red-breasted Merganser — HEN <small>PHOTO · rbme_hen.jpg</small></h3>
+  <p class="cr">Chuck Homler d/b/a Focus On Wildlife · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Red-breasted_Merganser_female_(Mergus_serrator),_Barnegat_Inlet,_New_Jersey,_USA_2.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="rbme_hen-image" value="ok" checked> OK</label><label><input type="radio" name="rbme_hen-image" value="replace"> Replace</label><label><input type="radio" name="rbme_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="redh-image" data-label="Redhead drake (photo, redh.jpg)">
   <img src="img/redh.jpg" loading="lazy">
-  <h3>Redhead <small>PHOTO · redh.jpg</small></h3>
+  <h3>Redhead — DRAKE <small>PHOTO · redh.jpg</small></h3>
   <p class="cr">USFWS Mountain Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Redhead_Duck_Drake,_Huron_Wetland_Management_District_South_Dakota_(52461291219).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="redh-image" value="ok" checked> OK</label><label><input type="radio" name="redh-image" value="replace"> Replace</label><label><input type="radio" name="redh-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="rndu-image" data-label="Ring-necked Duck (photo, rndu.jpg)">
+<div class="card" data-id="redh_hen-image" data-label="Redhead hen (photo, redh_hen.jpg)">
+  <img src="img/redh_hen.jpg" loading="lazy">
+  <h3>Redhead — HEN <small>PHOTO · redh_hen.jpg</small></h3>
+  <p class="cr">Mykola Swarnyk · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Aythya_americana_f_Ontario.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="redh_hen-image" value="ok" checked> OK</label><label><input type="radio" name="redh_hen-image" value="replace"> Replace</label><label><input type="radio" name="redh_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="rndu-image" data-label="Ring-necked Duck drake (photo, rndu.jpg)">
   <img src="img/rndu.jpg" loading="lazy">
-  <h3>Ring-necked Duck <small>PHOTO · rndu.jpg</small></h3>
+  <h3>Ring-necked Duck — DRAKE <small>PHOTO · rndu.jpg</small></h3>
   <p class="cr">USFWS Mountain Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Ring-necked_duck_at_Seedskadee_National_Wildlife_Refuge_Wyoming_(52065160675).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="rndu-image" value="ok" checked> OK</label><label><input type="radio" name="rndu-image" value="replace"> Replace</label><label><input type="radio" name="rndu-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="rndu_hen-image" data-label="Ring-necked Duck hen (photo, rndu_hen.jpg)">
+  <img src="img/rndu_hen.jpg" loading="lazy">
+  <h3>Ring-necked Duck — HEN <small>PHOTO · rndu_hen.jpg</small></h3>
+  <p class="cr">Davefoc · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:AythyaCollaris_4953.JPG" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="rndu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="rndu_hen-image" value="replace"> Replace</label><label><input type="radio" name="rndu_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="rogo-image" data-label="Ross's Goose (photo, rogo.jpg)">
@@ -310,11 +506,18 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="rogo-image" value="ok" checked> OK</label><label><input type="radio" name="rogo-image" value="replace"> Replace</label><label><input type="radio" name="rogo-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="rudu-image" data-label="Ruddy Duck (photo, rudu.jpg)">
+<div class="card" data-id="rudu-image" data-label="Ruddy Duck drake (photo, rudu.jpg)">
   <img src="img/rudu.jpg" loading="lazy">
-  <h3>Ruddy Duck <small>PHOTO · rudu.jpg</small></h3>
+  <h3>Ruddy Duck — DRAKE <small>PHOTO · rudu.jpg</small></h3>
   <p class="cr">USFWS Mountain Prairie · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Male_Ruddy_Duck_Huron_Wetland_Management_District_South_Dakota_(51843513974).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="rudu-image" value="ok" checked> OK</label><label><input type="radio" name="rudu-image" value="replace"> Replace</label><label><input type="radio" name="rudu-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="rudu_hen-image" data-label="Ruddy Duck hen (photo, rudu_hen.jpg)">
+  <img src="img/rudu_hen.jpg" loading="lazy">
+  <h3>Ruddy Duck — HEN <small>PHOTO · rudu_hen.jpg</small></h3>
+  <p class="cr">DickDaniels  (http://carolinabirds.org/) · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Ruddy_Duck_(Oxyura_jamaicensis)_RWD.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="rudu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="rudu_hen-image" value="replace"> Replace</label><label><input type="radio" name="rudu_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="sngo-image" data-label="Snow Goose (photo, sngo.jpg)">
@@ -324,25 +527,46 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="sngo-image" value="ok" checked> OK</label><label><input type="radio" name="sngo-image" value="replace"> Replace</label><label><input type="radio" name="sngo-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="susc-image" data-label="Surf Scoter (photo, susc.jpg)">
+<div class="card" data-id="susc-image" data-label="Surf Scoter drake (photo, susc.jpg)">
   <img src="img/susc.jpg" loading="lazy">
-  <h3>Surf Scoter <small>PHOTO · susc.jpg</small></h3>
+  <h3>Surf Scoter — DRAKE <small>PHOTO · susc.jpg</small></h3>
   <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:053_-_SURF_SCOTER_(11-20-07)_male,_sloco,_ca_(2)_(8716761870).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="susc-image" value="ok" checked> OK</label><label><input type="radio" name="susc-image" value="replace"> Replace</label><label><input type="radio" name="susc-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="wodu-image" data-label="Wood Duck (photo, wodu.jpg)">
+<div class="card" data-id="susc_hen-image" data-label="Surf Scoter hen (photo, susc_hen.jpg)">
+  <img src="img/susc_hen.jpg" loading="lazy">
+  <h3>Surf Scoter — HEN <small>PHOTO · susc_hen.jpg</small></h3>
+  <p class="cr">Mike's Birds from Riverside, CA, US · CC BY-SA 2.0 · <a href="https://commons.wikimedia.org/wiki/File:Surf_Scoter_(female)_(11635678413).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="susc_hen-image" value="ok" checked> OK</label><label><input type="radio" name="susc_hen-image" value="replace"> Replace</label><label><input type="radio" name="susc_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="wodu-image" data-label="Wood Duck drake (photo, wodu.jpg)">
   <img src="img/wodu.jpg" loading="lazy">
-  <h3>Wood Duck <small>PHOTO · wodu.jpg</small></h3>
+  <h3>Wood Duck — DRAKE <small>PHOTO · wodu.jpg</small></h3>
   <p class="cr">ALAN SCHMIERER · CC0 · <a href="https://commons.wikimedia.org/wiki/File:023_-_WOOD_DUCK_(12-05-2015)_bernalillo_co,_nm_-09_(23696086716).jpg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="wodu-image" value="ok" checked> OK</label><label><input type="radio" name="wodu-image" value="replace"> Replace</label><label><input type="radio" name="wodu-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
-<div class="card" data-id="wwsc-image" data-label="White-winged Scoter (photo, wwsc.jpg)">
+<div class="card" data-id="wodu_hen-image" data-label="Wood Duck hen (photo, wodu_hen.jpg)">
+  <img src="img/wodu_hen.jpg" loading="lazy">
+  <h3>Wood Duck — HEN <small>PHOTO · wodu_hen.jpg</small></h3>
+  <p class="cr">Rhododendrites · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Wood_duck_female_(73468).jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="wodu_hen-image" value="ok" checked> OK</label><label><input type="radio" name="wodu_hen-image" value="replace"> Replace</label><label><input type="radio" name="wodu_hen-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="wwsc-image" data-label="White-winged Scoter drake (photo, wwsc.jpg)">
   <img src="img/wwsc.jpg" loading="lazy">
-  <h3>White-winged Scoter <small>PHOTO · wwsc.jpg</small></h3>
+  <h3>White-winged Scoter — DRAKE <small>PHOTO · wwsc.jpg</small></h3>
   <p class="cr">David Menke · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Wwscoter12.JPG" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="wwsc-image" value="ok" checked> OK</label><label><input type="radio" name="wwsc-image" value="replace"> Replace</label><label><input type="radio" name="wwsc-image" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="wwsc_hen-image" data-label="White-winged Scoter hen (photo, wwsc_hen.jpg)">
+  <img src="img/wwsc_hen.jpg" loading="lazy">
+  <h3>White-winged Scoter — HEN <small>PHOTO · wwsc_hen.jpg</small></h3>
+  <p class="cr">Mykola Swarnyk · CC BY-SA 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Melanitta_deglandi,_female,_Toronto.jpg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="wwsc_hen-image" value="ok" checked> OK</label><label><input type="radio" name="wwsc_hen-image" value="replace"> Replace</label><label><input type="radio" name="wwsc_hen-image" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div></div>
 <h2>Missing</h2>
