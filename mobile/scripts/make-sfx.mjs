@@ -115,7 +115,32 @@ function toot() {
   return s;
 }
 
+/** Sad trombone: womp, womp, womp, wommmmp — three falling notes and a long wobbly fourth. */
+function womp() {
+  const notes = [[311, 0.32], [294, 0.32], [277, 0.32], [262, 1.1]];
+  const s = [];
+  let phase = 0;
+  notes.forEach(([f0, dur], n) => {
+    const len = Math.floor(dur * RATE);
+    for (let i = 0; i < len; i++) {
+      const t = i / RATE;
+      const last = n === notes.length - 1;
+      // Slide down into each note; the last one wobbles and sags.
+      const f = f0 * (1.04 - 0.04 * Math.min(1, t / 0.06)) * (last ? 1 + 0.03 * Math.sin(2 * Math.PI * 6 * t) - 0.06 * (t / dur) : 1);
+      phase += f / RATE;
+      const x = phase % 1;
+      // Brassy: a buzzy saw with a softer square underneath.
+      const tone = (x * 2 - 1) * 0.55 + (x < 0.5 ? 0.3 : -0.3);
+      const env = Math.min(1, i / 400) * (last ? Math.pow(1 - i / len, 0.7) : i > len - 700 ? (len - i) / 700 : 1);
+      s.push(tone * env * 0.5);
+    }
+    for (let i = 0; i < Math.floor(0.04 * RATE); i++) s.push(0);
+  });
+  return s;
+}
+
 const files = {
+  'womp.wav': womp(),
   'toot.wav': toot(),
   'siren.wav': siren(),
   'boom.wav': noise(0.7, 1, 3.2, 9),

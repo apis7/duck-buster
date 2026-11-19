@@ -87,9 +87,11 @@ export function Busted({ result, onAgain, onDone }: { result: GameResult; onAgai
   const groan = useSharedValue(0);
   useEffect(() => {
     if (!arrived) return;
-    // The perp's groan as he's booked.
+    // The perp's groan as he's booked, then the sad trombone.
     play('badGuy');
+    const womp = setTimeout(() => play('womp'), 2100);
     groan.set(withRepeat(withSequence(withTiming(-2, { duration: 90 }), withTiming(2, { duration: 90 })), -1, true));
+    return () => clearTimeout(womp);
   }, [arrived, groan]);
   const groanStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${groan.value}deg` }] }));
   const cootMeals = result.coots > 15;
