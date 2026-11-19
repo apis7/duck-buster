@@ -99,7 +99,24 @@ function siren(dur = 2.4) {
   return s;
 }
 
+/** A turkey "toot": a low, buzzy, slightly sad brass blat. */
+function toot() {
+  const n = Math.floor(0.42 * RATE);
+  const s = [];
+  let phase = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / n;
+    const f = 150 - 55 * t + Math.sin(i / 90) * 6;
+    phase += f / RATE;
+    const buzz = (phase % 1) * 2 - 1;
+    const env = Math.min(1, i / 300) * Math.pow(1 - t, 0.6);
+    s.push((buzz * 0.7 + (Math.random() * 2 - 1) * 0.12) * env * 0.6);
+  }
+  return s;
+}
+
 const files = {
+  'toot.wav': toot(),
   'siren.wav': siren(),
   'boom.wav': noise(0.7, 1, 3.2, 9),
   'dry.wav': clicks([0], 0.5),

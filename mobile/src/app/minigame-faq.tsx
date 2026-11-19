@@ -83,7 +83,19 @@ export default function MinigameFaq() {
 
       <Q q="Why does the marsh look different?">
         <Body>It follows South Dakota's seasons: green in spring and summer, yellowing in early fall, brown and orange in the fall, snow in winter — and Christmas trees from Christmas through the twelve days after.</Body>
-        <Body>During those twelve days, keep an eye out for a partridge in a pear tree. Drop it for 5 points, and every point for the next 5 seconds counts 1.5×.</Body>
+        <Body>During those twelve days, keep an eye out for a partridge in a pear tree. Drop it for 5 points — it bursts into presents — and every point for the next 5 seconds counts 1.5×.</Body>
+      </Q>
+
+      <Q q="Holidays and special days">
+        <Body>Opening Day (SD duck opener): bigger flocks, blaze-orange confetti.</Body>
+        <Body>Pheasant Opener: roosters flush from the reeds, +4. Hens are illegal in SD, −3.</Body>
+        <Body>Halloween week: jack-o'-lanterns and ghost ducks you can only hit while they're showing.</Body>
+        <Body>Thanksgiving week: a turkey wanders the bank. Leave it alone (−2).</Body>
+        <Body>New Year's Eve and Day: fireworks, and the last 3 seconds count double.</Body>
+        <Body>Spring Snow Goose Order (mid-Feb–April): huge snow goose flocks. No limit!</Body>
+        <Body>St. Patrick's Day: a rainbow, and one lucky emerald duck worth 7.</Body>
+        <Body>Fourth of July: fireworks and a bald eagle. Shoot it and the game warden ends your round.</Body>
+        <Body>Full moon: a moonlit night marsh — fewer, bigger, slower flocks. Winter days can bring a blizzard that drifts your shots.</Body>
       </Q>
 
       <Q q="Sitting ducks?">

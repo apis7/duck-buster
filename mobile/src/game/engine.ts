@@ -27,8 +27,9 @@
  *  A retriever (two for a swan) jumps out of the reeds to fetch a downed goose or swan.
  */
 
+import { NO_FX, type GameFx } from './events';
 import type { GameLayout } from './layout';
-import { PARTRIDGE_H, PARTRIDGE_W, COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
+import { EAGLE_H, EAGLE_W, PHEASANT_H, PHEASANT_W, TURKEY_H, TURKEY_W, PARTRIDGE_H, PARTRIDGE_W, COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
 
 export const GAME_SECONDS = 12;
 export const PIXEL = 3;
@@ -52,10 +53,15 @@ const GRAVITY = 900;
 export const MIN_AIM = -Math.PI + 0.15;
 export const MAX_AIM = -0.15;
 
-export type BirdKind = 'duck' | 'coot' | 'goose' | 'swan' | 'partridge';
+export type BirdKind = 'duck' | 'coot' | 'goose' | 'swan' | 'partridge' | 'pheasant' | 'turkey' | 'eagle';
 
 /** Fraction of the bird's width, from the head back, that counts as a knockout hit. */
-export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goose: 0.8, swan: 0.6, partridge: 1 };
+export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goose: 0.8, swan: 0.6, partridge: 1, pheasant: 1, turkey: 1, eagle: 1 };
+
+/** Holiday birds (see events.ts). */
+export const ROOSTER_POINTS = 4;
+export const HEN_PHEASANT_POINTS = -3;
+export const TURKEY_POINTS = -2;
 
 /** The partridge: what it's worth, and how long and how much its bonus runs. */
 export const PARTRIDGE_POINTS = 5;
@@ -91,6 +97,8 @@ export type Bird = {
   earned: number;
   /** Seconds of hit-shake left. */
   flash: number;
+  /** Halloween: flickers in and out, and can only be hit while showing. */
+  ghost: boolean;
   landed: boolean;
   gone: boolean;
   /** Teal and wood ducks dart up or down now and then: when the next one starts, and the current one. */
@@ -107,7 +115,7 @@ export type Bird = {
 
 export type Dog = { x: number; t: number; flip: boolean; birdId: number; lead: boolean };
 export type Bullet = { x: number; y: number; vx: number; vy: number };
-export type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string };
+export type Particle = { x: number; y: number; vx: number; vy: number; life: number; color: string; present?: boolean };
 export type Popup = { x: number; y: number; text: string; life: number; label: string };
 
 /** Popups live this long; they pop in large and settle. */
@@ -120,6 +128,7 @@ export type GameEvent =
   /** Marauder Mode: a bird blew apart. */
   | { k: 'pop' }
   | { k: 'partridge' }
+  | { k: 'turkey' | 'eagle' | 'henpheasant' | 'midnight' | 'lucky' }
   | { k: 'special'; kind: 'goose' | 'swan'; pts: number; banded: boolean; down: boolean };
 
 export type GameState = {
@@ -167,10 +176,17 @@ export type GameState = {
   partridgeAt: number;
   /** Points count 1.5× until this time (seconds). */
   multUntil: number;
+  /** Today's holiday/season events. */
+  fx: GameFx;
+  luckyAt: number;
+  turkeyAt: number;
+  eagleAt: number;
+  nextPheasant: number;
+  midnightShown: boolean;
   over: boolean;
 };
 
-export function newGame(width: number, height: number, layout: GameLayout, marauder = false, partridgeSeason = false): GameState {
+export function newGame(width: number, height: number, layout: GameLayout, marauder = false, fx: GameFx = NO_FX): GameState {
   'worklet';
   const { gunY, skyTop, reedTop } = layout;
   return {
@@ -209,8 +225,14 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     coots: 0,
     bands: 0,
     downs: 0,
-    partridgeAt: partridgeSeason && Math.random() < PARTRIDGE_CHANCE ? 2 + Math.random() * 4 : Infinity,
+    partridgeAt: fx.partridge && Math.random() < PARTRIDGE_CHANCE ? 2 + Math.random() * 4 : Infinity,
     multUntil: 0,
+    fx,
+    luckyAt: fx.lucky ? 2 + Math.random() * 4 : Infinity,
+    turkeyAt: fx.turkey ? 1.5 + Math.random() * 4 : Infinity,
+    eagleAt: fx.eagle ? 3 + Math.random() * 4 : Infinity,
+    nextPheasant: fx.pheasants ? 1 + Math.random() * 1.5 : Infinity,
+    midnightShown: false,
     over: false,
   };
 }
@@ -280,7 +302,14 @@ export function fire(s: GameState): void {
   }
 }
 
-export function makeBird(s: GameState, kind: BirdKind, x: number, y: number, vx: number, opts: { species?: number; hen?: boolean; banded?: boolean } = {}): Bird {
+export function makeBird(
+  s: GameState,
+  kind: BirdKind,
+  x: number,
+  y: number,
+  vx: number,
+  opts: { species?: number; hen?: boolean; banded?: boolean; ghost?: boolean } = {},
+): Bird {
   'worklet';
   const species = opts.species ?? 0;
   const scale = kind === 'duck' ? FLOCK_SPECIES[species].scale : 1;
@@ -293,7 +322,15 @@ export function makeBird(s: GameState, kind: BirdKind, x: number, y: number, vx:
           ? [COOT_W, COOT_H]
           : kind === 'partridge'
             ? [PARTRIDGE_W, PARTRIDGE_H]
-            : [DUCK_W, DUCK_H];
+            : kind === 'pheasant'
+              ? [PHEASANT_W, PHEASANT_H]
+              : kind === 'turkey'
+                ? [TURKEY_W, TURKEY_H]
+                : kind === 'eagle'
+                  ? [EAGLE_W, EAGLE_H]
+                  : [DUCK_W, DUCK_H];
+  // Full-moon nights: fewer, bigger, slower birds.
+  const night = s.fx.night ? 1.25 : 1;
   return {
     id: s.nextId++,
     kind,
@@ -303,8 +340,8 @@ export function makeBird(s: GameState, kind: BirdKind, x: number, y: number, vx:
     x,
     y,
     baseY: y,
-    w: gw * PIXEL * scale,
-    h: gh * PIXEL * scale,
+    w: gw * PIXEL * scale * night,
+    h: gh * PIXEL * scale * night,
     vx,
     vy: 0,
     phase: Math.random() * Math.PI * 2,
@@ -314,6 +351,7 @@ export function makeBird(s: GameState, kind: BirdKind, x: number, y: number, vx:
     bodyHits: 0,
     earned: 0,
     flash: 0,
+    ghost: opts.ghost ?? false,
     landed: false,
     gone: false,
     jinkNext: kind === 'duck' && FLOCK_SPECIES[species].jinks ? s.t + 0.4 + Math.random() * 1.2 : Infinity,
@@ -347,14 +385,25 @@ function pickSpecies(): number {
   return 0;
 }
 
+function speciesIndex(id: string): number {
+  'worklet';
+  for (let i = 0; i < FLOCK_SPECIES.length; i++) if (FLOCK_SPECIES[i].id === id) return i;
+  return 0;
+}
+
 function spawnFlock(s: GameState): void {
   'worklet';
-  const species = pickSpecies();
+  // Spring conservation order: most flocks are big bunches of snow geese.
+  const snowGeese = s.fx.snowOrder && Math.random() < 0.6;
+  const species = snowGeese ? speciesIndex('sngo') : pickSpecies();
   const sp = FLOCK_SPECIES[species];
-  const size = s.marauder ? 6 + Math.floor(Math.random() * 7) : 3 + Math.floor(Math.random() * 4);
+  let size = s.marauder ? 6 + Math.floor(Math.random() * 7) : 3 + Math.floor(Math.random() * 4);
+  if (snowGeese) size = 10 + Math.floor(Math.random() * 7);
+  if (s.fx.opener) size += 3;
+  if (s.fx.night) size = Math.max(2, size - 2);
   const span = s.skyBottom - s.skyTop - DUCK_PX_H - 40;
   const leadY = s.skyTop + 20 + Math.random() * Math.max(10, span);
-  const speed = (110 + Math.random() * 80) * sp.speed * Math.max(0.85, s.width / 400);
+  const speed = (110 + Math.random() * 80) * sp.speed * Math.max(0.85, s.width / 400) * (s.fx.night ? 0.75 : 1);
   for (let i = 0; i < size; i++) {
     const row = Math.ceil(i / 2);
     const side = i % 2 === 0 ? 1 : -1;
@@ -362,7 +411,10 @@ function spawnFlock(s: GameState): void {
     const x = -DUCK_PX_W - row * 44 - Math.random() * 10;
     // A mud hen tags along now and then.
     if (Math.random() < 0.07) s.birds.push(makeBird(s, 'coot', x, y, speed * 0.85));
-    else s.birds.push(makeBird(s, 'duck', x, y, speed, { species, hen: Math.random() < 0.35 }));
+    else
+      s.birds.push(
+        makeBird(s, 'duck', x, y, speed, { species, hen: !sp.noHen && Math.random() < 0.35, ghost: s.fx.ghosts && Math.random() < 0.35 }),
+      );
   }
   // Gadwall and spoonies: sometimes one peels off and drops onto the pond.
   if (sp.lands && Math.random() < 0.45) {
@@ -404,6 +456,12 @@ function maybeSpawnSpecial(s: GameState): void {
   }
 }
 
+/** Ghost ducks show for a beat, then fade out; only a showing ghost can be hit. */
+export function ghostShowing(b: Bird, t: number): boolean {
+  'worklet';
+  return !b.ghost || Math.sin(t * 3.2 + b.phase * 2) > -0.25;
+}
+
 /** 0 miss, otherwise 'ko' or 'body'. The top fifth of the sprite is air above the back. */
 export function hitZone(b: Bird, x: number, y: number): 'ko' | 'body' | null {
   'worklet';
@@ -428,6 +486,9 @@ export function birdName(b: Bird): string {
   }
   if (b.kind === 'goose') return b.banded ? 'BANDED GOOSE' : 'GOOSE';
   if (b.kind === 'partridge') return 'PARTRIDGE';
+  if (b.kind === 'pheasant') return b.hen ? 'HEN PHEASANT' : 'ROOSTER';
+  if (b.kind === 'turkey') return 'TURKEY';
+  if (b.kind === 'eagle') return 'EAGLE';
   return b.kind === 'swan' ? 'SWAN' : 'COOT';
 }
 
@@ -462,8 +523,33 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
     b.earned = PARTRIDGE_POINTS;
     down = true;
     s.multUntil = s.t + PARTRIDGE_BONUS_SECONDS;
-    burst(s, bx, by, 34, ['#E8D24A', '#3E7A2E', '#FFFFFF', '#E07A3A'], 300);
+    // It bursts into a pile of presents.
+    const colors = ['#D7263D', '#1E8A3A', '#3F88C5', '#E8B923', '#A23B72'];
+    for (let i = 0; i < 18; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const v = 80 + Math.random() * 220;
+      s.particles.push({ x: bx, y: by, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, life: 1 + Math.random() * 0.6, color: colors[i % colors.length], present: true });
+    }
+    burst(s, bx, by, 16, ['#E8D24A', '#FFFFFF'], 260);
     s.events.push({ k: 'partridge' });
+  } else if (b.kind === 'pheasant') {
+    b.earned = b.hen ? HEN_PHEASANT_POINTS : ROOSTER_POINTS;
+    down = true;
+    burst(s, bx, by, 14, b.hen ? ['#A8865E', '#7A5A3A'] : ['#B5652A', '#1F6A3A', '#C8342A'], 220);
+    if (b.hen) s.events.push({ k: 'henpheasant' });
+    else s.events.push({ k: 'ko', pts: b.earned });
+  } else if (b.kind === 'turkey') {
+    b.earned = TURKEY_POINTS;
+    down = true;
+    burst(s, bx, by, 14, ['#7A5232', '#3A2A1E', '#C8342A'], 200);
+    s.events.push({ k: 'turkey' });
+  } else if (b.kind === 'eagle') {
+    // Federal offense: the game warden ends the round on the spot.
+    b.earned = 0;
+    down = true;
+    s.over = true;
+    s.aiming = false;
+    s.events.push({ k: 'eagle' });
   } else if (b.kind === 'coot') {
     b.earned = -1;
     down = true;
@@ -508,6 +594,10 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   if (b.kind === 'duck') b.earned += FLOCK_SPECIES[b.species].bonus ?? 0;
   // The partridge's 1.5× window (not on the partridge itself, and never on a coot's −1).
   if (b.kind !== 'partridge' && b.earned > 0 && s.t < s.multUntil) b.earned = Math.round(b.earned * PARTRIDGE_MULTIPLIER);
+  // New Year's: the last 3 seconds count double.
+  if (s.fx.midnight && b.earned > 0 && s.t >= GAME_SECONDS - 3) b.earned *= 2;
+  // Opening Day: blaze-orange confetti on every bird.
+  if (s.fx.opener) burst(s, b.x + b.w / 2, b.y + b.h / 2, 12, ['#FF6A00', '#FFFFFF', '#FF9A3C'], 240);
   if (b.sit === 2) s.events.push({ k: 'sitting' });
   s.downs++;
   if (s.marauder) {
@@ -562,6 +652,39 @@ export function step(s: GameState, dt: number): void {
       s.over = true;
       s.aiming = false;
     }
+    if (s.fx.midnight && !s.midnightShown && s.t >= GAME_SECONDS - 3) {
+      s.midnightShown = true;
+      s.events.push({ k: 'midnight' });
+    }
+    const scaleX = Math.max(0.85, s.width / 400);
+    const midSky = (f: number) => s.skyTop + (s.skyBottom - s.skyTop) * f;
+    if (s.t >= s.luckyAt) {
+      s.luckyAt = Infinity;
+      s.birds.push(makeBird(s, 'duck', -DUCK_PX_W, midSky(0.2 + Math.random() * 0.5), 190 * scaleX, { species: speciesIndex('lucky') }));
+      s.events.push({ k: 'lucky' });
+    }
+    if (s.t >= s.turkeyAt) {
+      s.turkeyAt = Infinity;
+      const t = makeBird(s, 'turkey', -TURKEY_W * PIXEL, 0, 42 * scaleX);
+      t.y = s.groundY - t.h - 6;
+      t.baseY = t.y;
+      s.birds.push(t);
+    }
+    if (s.t >= s.eagleAt) {
+      s.eagleAt = Infinity;
+      s.birds.push(makeBird(s, 'eagle', -EAGLE_W * PIXEL, midSky(0.15 + Math.random() * 0.3), 95 * scaleX));
+    }
+    if (s.t >= s.nextPheasant && s.t < GAME_SECONDS - 1.5) {
+      // A pheasant flushes out of the reeds: up fast, then away.
+      s.nextPheasant = s.t + 1.8 + Math.random() * 1.6;
+      const fromLeft = Math.random() < 0.5;
+      const x = fromLeft ? s.width * (0.05 + Math.random() * 0.2) : s.width * (0.75 + Math.random() * 0.2);
+      const p = makeBird(s, 'pheasant', x, s.groundY - 10, (fromLeft ? 1 : -1) * (130 + Math.random() * 60) * scaleX, {
+        hen: Math.random() < 0.35,
+      });
+      p.vy = -380 - Math.random() * 80;
+      s.birds.push(p);
+    }
     if (s.t >= s.partridgeAt) {
       s.partridgeAt = Infinity;
       const y = s.skyTop + (s.skyBottom - s.skyTop) * (0.2 + Math.random() * 0.3);
@@ -571,7 +694,7 @@ export function step(s: GameState, dt: number): void {
       spawnFlock(s);
       maybeSpawnMerganser(s);
       maybeSpawnSpecial(s);
-      s.nextFlock = s.t + (s.marauder ? 0.3 + Math.random() * 0.35 : 1.5 + Math.random() * 0.9);
+      s.nextFlock = s.t + (s.marauder ? 0.3 + Math.random() * 0.35 : (1.5 + Math.random() * 0.9) * (s.fx.night ? 1.4 : 1));
     }
   }
 
@@ -588,6 +711,13 @@ export function step(s: GameState, dt: number): void {
         b.x += 5 * dt;
         b.y = sitY + Math.sin(s.t * 2 + b.phase) * 1.5;
       }
+    } else if (b.alive && b.kind === 'pheasant') {
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.vy = Math.min(0, b.vy + 330 * dt);
+    } else if (b.alive && b.kind === 'turkey') {
+      b.x += b.vx * dt;
+      b.y = b.baseY + (Math.floor(s.t * 6) % 2) * 2;
     } else if (b.alive) {
       if (b.x + b.w / 2 >= b.landX) {
         b.sit = 1;
@@ -631,18 +761,19 @@ export function step(s: GameState, dt: number): void {
     if (d.t >= DOG_SECONDS) b.gone = true;
   }
   s.dogs = s.dogs.filter((d) => d.t < DOG_SECONDS);
-  s.birds = s.birds.filter((b) => !b.gone && b.x < s.width + 40 && b.y < s.height + 40);
+  s.birds = s.birds.filter((b) => !b.gone && b.x < s.width + 40 && b.x > -s.width * 0.6 && b.y < s.height + 40);
 
   const keep: Bullet[] = [];
   for (const bl of s.bullets) {
     // Sub-step so a fast bullet can't tunnel through a small bird.
+    bl.vx += s.fx.wind * dt;
     const steps = 3;
     let spent = false;
     for (let k = 0; k < steps && !spent; k++) {
       bl.x += (bl.vx * dt) / steps;
       bl.y += (bl.vy * dt) / steps;
       for (const b of s.birds) {
-        if (!b.alive) continue;
+        if (!b.alive || !ghostShowing(b, s.t)) continue;
         const zone = hitZone(b, bl.x, bl.y);
         if (!zone) continue;
         applyHit(s, b, zone, bl.x, bl.y);
@@ -681,5 +812,6 @@ export function wingsUp(b: Bird, t: number): boolean {
   if (b.sit === 1) return Math.floor(t / 0.07) % 2 === 0;
   const beat = b.kind === 'coot' ? 0.09 : b.kind === 'duck' ? 0.14 : 0.24;
   if (b.kind === 'partridge') return true;
+  if (b.kind === 'turkey') return false;
   return Math.floor((t + b.phase) / beat) % 2 === 0;
 }

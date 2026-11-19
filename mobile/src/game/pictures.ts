@@ -4,6 +4,7 @@ import { PIXEL } from './engine';
 import {
   BANDED_GOOSE, COOT, COOT_DOWN, COOT_UP, DOG, DOG_PALETTE, DUCK_DOWN, DUCK_SIT, DUCK_UP, FLOCK_SPECIES, GLYPHS, GOOSE, GOOSE_DOWN,
   GOOSE_UP, GUN, GUN_PALETTE, PARTRIDGE_PALETTE, PARTRIDGE_TREE, SHELL, SHELL_PALETTE, spritePixels, SWAN, SWAN_DOWN, SWAN_UP,
+  EAGLE_DOWN, EAGLE_PALETTE, EAGLE_UP, HEN_PHEASANT, PHEASANT_DOWN, PHEASANT_UP, PUMPKIN, PUMPKIN_PALETTE, ROOSTER, TURKEY, TURKEY_PALETTE,
   type Grid, type Palette,
 } from './sprites';
 import { THEMES, type Theme } from './theme';
@@ -35,6 +36,10 @@ export type GamePictures = {
   swan: Flap;
   coot: Flap;
   partridge: SkPicture;
+  rooster: Flap;
+  henPheasant: Flap;
+  turkey: SkPicture;
+  eagle: Flap;
   dog: SkPicture;
   dogFlipped: SkPicture;
   gun: SkPicture;
@@ -59,6 +64,10 @@ export function gamePictures(): GamePictures {
     swan: flap(SWAN_UP, SWAN_DOWN, SWAN),
     coot: flap(COOT_UP, COOT_DOWN, COOT),
     partridge: picture(PARTRIDGE_TREE, PARTRIDGE_PALETTE),
+    rooster: flap(PHEASANT_UP, PHEASANT_DOWN, ROOSTER),
+    henPheasant: flap(PHEASANT_UP, PHEASANT_DOWN, HEN_PHEASANT),
+    turkey: picture(TURKEY, TURKEY_PALETTE),
+    eagle: flap(EAGLE_UP, EAGLE_DOWN, EAGLE_PALETTE),
     dog: picture(DOG, DOG_PALETTE),
     dogFlipped: picture(mirror(DOG, 16), DOG_PALETTE),
     gun: picture(GUN, GUN_PALETTE),
@@ -121,13 +130,41 @@ export function backgroundPicture(width: number, height: number, reedTop: number
       paint.setColor(Skia.Color(c));
       canvas.drawRect(Skia.XYWHRect(0, i * bandH, width, bandH + 1), paint);
     });
+    // St. Patrick's Day: a stepped pixel rainbow behind everything.
+    if (theme.rainbow) {
+      const colors = ['#E53935', '#FB8C00', '#FDD835', '#43A047', '#1E88E5', '#5E35B1'];
+      const cx = width * 0.5;
+      const cy = reedTop + 40;
+      colors.forEach((c, i) => {
+        paint.setColor(Skia.Color(c));
+        const R = width * 0.62 - i * 10;
+        for (let yy = -R; yy <= 0; yy += 4) {
+          const half = Math.sqrt(Math.max(0, R * R - yy * yy));
+          const inner = Math.sqrt(Math.max(0, (R - 10) * (R - 10) - yy * yy));
+          canvas.drawRect(Skia.XYWHRect(cx - half, cy + yy, half - inner, 4), paint);
+          canvas.drawRect(Skia.XYWHRect(cx + inner, cy + yy, half - inner, 4), paint);
+        }
+      });
+    }
+
+    // The sun — or, on a full moon, a big pale moon high in the sky.
     paint.setColor(Skia.Color(theme.sun));
     const sx = width * 0.78;
-    const sy = reedTop - 30;
-    const r = 8;
+    const sy = theme.moon ? reedTop * 0.3 : reedTop - 30;
+    const r = theme.moon ? 11 : 8;
     for (let y = -r; y <= r; y++) {
       const half = Math.floor(Math.sqrt(r * r - y * y));
       canvas.drawRect(Skia.XYWHRect(sx - half * 4, sy + y * 4, half * 8, 4), paint);
+    }
+    if (theme.moon) {
+      paint.setColor(Skia.Color('#D6D2BC'));
+      canvas.drawRect(Skia.XYWHRect(sx - 14, sy - 10, 10, 8), paint);
+      canvas.drawRect(Skia.XYWHRect(sx + 10, sy + 6, 12, 10), paint);
+      canvas.drawRect(Skia.XYWHRect(sx - 4, sy + 18, 8, 6), paint);
+      // Stars.
+      paint.setColor(Skia.Color('#F4F2E0'));
+      const st = seeded(91);
+      for (let i = 0; i < 40; i++) canvas.drawRect(Skia.XYWHRect(st() * width, st() * reedTop * 0.8, 2, 2), paint);
     }
 
     // Christmas trees on the far bank, behind the reeds.
@@ -173,6 +210,22 @@ export function backgroundPicture(width: number, height: number, reedTop: number
       if (cat) canvas.drawRect(Skia.XYWHRect(x - 2, top - 10, 8, 18), tail);
       if (theme.snow) canvas.drawRect(Skia.XYWHRect(x - 1, cat ? top - 12 : top - 2, cat ? 10 : 6, 3), snow);
     }
+    // Halloween: jack-o'-lanterns grinning along the bank.
+    if (theme.pumpkins) {
+      const px = 4;
+      for (const fx of [0.04, 0.17, 0.79, 0.9]) {
+        const top = reedTop + 26;
+        PUMPKIN.forEach((row, yy) => {
+          for (let xx = 0; xx < row.length; xx++) {
+            const c = PUMPKIN_PALETTE[row[xx]];
+            if (!c) continue;
+            paint.setColor(Skia.Color(c));
+            canvas.drawRect(Skia.XYWHRect(width * fx + xx * px, top + yy * px, px + 0.5, px + 0.5), paint);
+          }
+        });
+      }
+    }
+
     // Ripples on open water; ice cracks when it's frozen.
     const ripple = Skia.Paint();
     ripple.setColor(Skia.Color(theme.ripple));

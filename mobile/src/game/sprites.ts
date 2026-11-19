@@ -85,6 +85,8 @@ export type FlockSpecies = {
   name: string;
   /** Sometimes drops onto the open water and sits there (gadwall, spoonies). */
   lands?: boolean;
+  /** Never shows up as a hen (the lucky duck, snow geese). */
+  noHen?: boolean;
 };
 
 export const FLOCK_SPECIES: FlockSpecies[] = [
@@ -125,6 +127,13 @@ export const FLOCK_SPECIES: FlockSpecies[] = [
   { id: 'come', name: 'MERGANSER', weight: 0, scale: 1.05, speed: 1.6, solo: true, bonus: 2,
     drake: duck('#1E4A30', '#C8342A', '#F4F0E8', '#F4F0E8', '#F4F0E8', '#1E1E1E', '#F4F4F4', '#8A8A8A'),
     hen: duck('#9A4A28', '#C8342A', '#F4F0E8', '#C8C8C4', '#9A9A96', '#6A6A66', '#F4F4F4', '#6A6A66') },
+  // Event birds: only ever spawned by a holiday (events.ts), never in a normal flock.
+  { id: 'lucky', name: 'LUCKY DUCK', weight: 0, scale: 1, speed: 1.4, solo: true, bonus: 4, noHen: true,
+    drake: duck('#0E8A3A', '#F2C230', '#F2C230', '#16A34A', '#22C55E', '#0B6E2E', '#F2C230', '#0B6E2E'),
+    hen: duck('#0E8A3A', '#F2C230', '#F2C230', '#16A34A', '#22C55E', '#0B6E2E', '#F2C230', '#0B6E2E') },
+  { id: 'sngo', name: 'SNOW GOOSE', weight: 0, scale: 1.25, speed: 0.95, noHen: true,
+    drake: duck('#F4F4F4', '#E88A9A', '#F4F4F4', '#F4F4F4', '#F4F4F4', '#1E1E1E', '#DADAD2', '#F4F4F4'),
+    hen: duck('#F4F4F4', '#E88A9A', '#F4F4F4', '#F4F4F4', '#F4F4F4', '#1E1E1E', '#DADAD2', '#F4F4F4') },
 ];
 
 /* ── Goose: N head/neck · C chinstrap · Y bill · B breast · S body · D wing · K tail · U rump · O feet ── */
@@ -255,6 +264,99 @@ export const PARTRIDGE_H = 16;
 export const PARTRIDGE_PALETTE: Palette = {
   o: '#E07A3A', E: '#111111', K: '#555555', g: '#8A8A80', b: '#8A3A24', f: '#C08060', L: '#3E7A2E', Y: '#E8D24A', T: '#5A3A1E',
 };
+
+/* ── Pheasant (flushes from the reeds; faces right): G head · R wattle · E eye · Y bill · c collar · W wing · C body · T tail ── */
+
+export const PHEASANT_UP: Grid = [
+  '.................GG.',
+  '................GREY',
+  '..........WWW...cGG.',
+  'TTTT.....WWWWccCC...',
+  '..TTTTCCCCCCCCCC....',
+  '.....TTCCCCCCCC.....',
+  '........CCCC........',
+  '....................',
+];
+export const PHEASANT_DOWN: Grid = [
+  '.................GG.',
+  '................GREY',
+  '................cGG.',
+  'TTTT.....CCCCccCC...',
+  '..TTTTCCCCCCCCCC....',
+  '.....TTCCWWWWCC.....',
+  '.........WWWW.......',
+  '..........WW........',
+];
+export const PHEASANT_W = 20;
+export const PHEASANT_H = 8;
+export const ROOSTER: Palette = { G: '#1F6A3A', R: '#C8342A', E: '#111111', Y: '#D8C27A', c: '#F4F4F4', W: '#B88A4A', C: '#B5652A', T: '#8A6A3A' };
+export const HEN_PHEASANT: Palette = { G: '#8A6A48', R: '#8A6A48', E: '#111111', Y: '#C8B07A', c: '#8A6A48', W: '#7A5A3A', C: '#A8865E', T: '#7A5A3A' };
+
+/* ── Turkey (walks the bank; faces right): T fan · B body · H head · R snood/wattle · E eye · Y beak · L legs ── */
+
+export const TURKEY: Grid = [
+  '..........R...',
+  '.........RHH..',
+  '.........HHEY.',
+  '........RRH...',
+  '..TTT...BB....',
+  '.TTTTTBBBBB...',
+  'TTTTTBBBBBBB..',
+  'TTTTBBBBBBBB..',
+  '.TTTBBBBBBB...',
+  '..TT.BBBBB....',
+  '......L.L.....',
+  '......L.L.....',
+  '.....LL.LL....',
+];
+export const TURKEY_W = 14;
+export const TURKEY_H = 13;
+export const TURKEY_PALETTE: Palette = { T: '#7A5232', B: '#3A2A1E', H: '#9AB0C8', R: '#C8342A', E: '#111111', Y: '#D8B24A', L: '#C89A4A' };
+
+/* ── Bald eagle (Fourth of July — do NOT shoot): D wing · B body · H white head · E eye · Y beak/feet · T white tail ── */
+
+export const EAGLE_UP: Grid = [
+  '..DDDD....................',
+  '...DDDDD..................',
+  '....DDDDDD................',
+  '.....DDDDDDD..........HH..',
+  '......DDDDDDD........HHEHY',
+  'TTBBBBBBBBBBBBBBBBBBBHHH..',
+  '.TTBBBBBBBBBBBBBBBBB......',
+  '...BBBBBBBBBBBBBB.........',
+  '......YY..................',
+  '..........................',
+  '..........................',
+];
+export const EAGLE_DOWN: Grid = [
+  '..........................',
+  '..........................',
+  '..........................',
+  '......................HH..',
+  '.....................HHEHY',
+  'TTBBBBBBBBBBBBBBBBBBBHHH..',
+  '.TTBBBDDDDDDDBBBBBBB......',
+  '...BBBDDDDDDDDBBB.........',
+  '......DDDDDDD.............',
+  '.......DDDDD..............',
+  '........DDD...............',
+];
+export const EAGLE_W = 26;
+export const EAGLE_H = 11;
+export const EAGLE_PALETTE: Palette = { D: '#3A2A1A', B: '#4A3220', H: '#F4F4F4', E: '#111111', Y: '#E8B923', T: '#F4F4F4' };
+
+/* ── Jack-o'-lantern (Halloween bank decoration) ── */
+export const PUMPKIN: Grid = [
+  '....G....',
+  '..OOOOO..',
+  '.OOOOOOO.',
+  'OOYOOOYOO',
+  'OOOOOOOOO',
+  'OOYYYYYOO',
+  '.OOYOYOO.',
+  '..OOOOO..',
+];
+export const PUMPKIN_PALETTE: Palette = { O: '#E07A1A', Y: '#FFE070', G: '#3E7A2E' };
 
 /* ── Retriever, facing right: Y coat · L ear · E eye · N nose ── */
 

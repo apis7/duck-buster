@@ -10,12 +10,13 @@ import { Pixel } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
 import {
-  aimToward, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, multLeft, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
+  aimToward, dogTop, finished, fire, GAME_SECONDS, ghostShowing, GUN_LENGTH, multLeft, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
   type Bird, type GameEvent, type GameState,
 } from './engine';
 import type { GameLayout } from './layout';
 import { backgroundPicture, foregroundPicture, gamePictures, sceneTheme, type GamePictures } from './pictures';
 import { GUN_H, GUN_W } from './sprites';
+import { NO_FX, type GameFx } from './events';
 import type { Theme } from './theme';
 
 export type GameResult = { score: number; shots: number; hits: number; kos: number; geese: number; swans: number; coots: number; bands: number; downs: number };
@@ -44,6 +45,21 @@ const SITTING_JABS = [
 
 type Banner = { key: number; text: string; color: string; big?: boolean; small?: boolean };
 
+// Worklet helpers sit above the worklets that use them (see engine.ts).
+function spriteW(kind: Bird['kind']): number {
+  'worklet';
+  switch (kind) {
+    case 'goose': return 24;
+    case 'swan': return 26;
+    case 'coot': return 12;
+    case 'partridge': return 16;
+    case 'pheasant': return 20;
+    case 'turkey': return 14;
+    case 'eagle': return 26;
+    default: return 16;
+  }
+}
+
 function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
   'worklet';
   const up = b.alive ? wingsUp(b, t) : false;
@@ -52,9 +68,16 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
   else if (b.kind === 'swan') flap = pics.swan;
   else if (b.kind === 'coot') flap = pics.coot;
   else if (b.kind === 'partridge') flap = { up: pics.partridge, down: pics.partridge };
+  else if (b.kind === 'pheasant') flap = b.hen ? pics.henPheasant : pics.rooster;
+  else if (b.kind === 'turkey') flap = { up: pics.turkey, down: pics.turkey };
+  else if (b.kind === 'eagle') flap = pics.eagle;
   else flap = b.hen ? pics.ducks[b.species].hen : pics.ducks[b.species].drake;
   const pic = b.kind === 'duck' && b.sit === 2 && b.alive ? (flap as GamePictures['ducks'][number]['drake']).sit : up ? flap.up : flap.down;
-  const scale = b.kind === 'duck' ? b.w / 48 : 1;
+  // Sprites are drawn at their native size; scale up for big ducks and full-moon nights.
+  const scale = b.kind === 'duck' ? b.w / 48 : b.w / (spriteW(b.kind) * 3);
+  // Halloween ghosts flicker; a pheasant flying left faces left.
+  const alpha = b.ghost ? (ghostShowing(b, t) ? 0.75 : 0.12) : 1;
+  const flip = b.kind === 'pheasant' && b.vx < 0;
   const shake = b.flash > 0 ? Math.sin(t * 90) * 3 : 0;
   canvas.save();
   if (b.alive) {
@@ -66,8 +89,23 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
     canvas.translate(-b.w / 2, -b.h / 2);
   }
   if (scale !== 1) canvas.scale(scale, scale);
-  canvas.drawPicture(pic);
+  if (flip) {
+    canvas.translate(b.w / scale, 0);
+    canvas.scale(-1, 1);
+  }
+  if (alpha < 1) {
+    const p = Skia.Paint();
+    p.setAlphaf(alpha);
+    canvas.saveLayer(p);
+    canvas.drawPicture(pic);
+    canvas.restore();
+  } else canvas.drawPicture(pic);
   canvas.restore();
+}
+
+/** Fireworks on New Year's and the Fourth (never in Marauder Mode). */
+function scene_fireworks(theme: Theme, marauder: boolean): boolean {
+  return !marauder && !!theme.fireworks;
 }
 
 /**
@@ -75,7 +113,7 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
  * thread; the JS thread hears about events (sounds, banners) and the end.
  */
 export function GameView({
-  width, height, scale, layout, running, onEnd, marauder = false, theme,
+  width, height, scale, layout, running, onEnd, marauder = false, theme, fx, banners = [],
 }: {
   width: number;
   height: number;
@@ -86,14 +124,20 @@ export function GameView({
   marauder?: boolean;
   /** The season's marsh (fall colors, snow, Christmas trees…). */
   theme: Theme;
+  /** Today's events (holidays, blizzard, full moon…), plus their opening banners. */
+  fx?: GameFx;
+  banners?: string[];
 }) {
+  const dayFx = marauder ? NO_FX : (fx ?? NO_FX);
+  const fireworks = !!scene_fireworks(theme, marauder);
+  const windy = dayFx.wind !== 0;
   const scene = sceneTheme(theme, marauder);
   const snowing = scene.snow;
   const { gunY, skyTop } = layout;
   const pics = useMemo(() => gamePictures(), []);
   const initial = useMemo(
-    () => newGame(width, height, layout, marauder, theme.partridge && !marauder),
-    [width, height, layout, marauder, theme.partridge],
+    () => newGame(width, height, layout, marauder, dayFx),
+    [width, height, layout, marauder, dayFx],
   );
   const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop, scene), [width, height, layout, scene]);
   const fg = useMemo(() => foregroundPicture(width, height, initial.groundY, scene), [width, height, initial.groundY, scene]);
@@ -153,6 +197,25 @@ export function GameView({
           break;
         }
         case 'dog': play('woof'); break;
+        case 'turkey':
+          play('toot');
+          showBanner('WRONG BIRD, PILGRIM!\n-2', '#FFB199');
+          break;
+        case 'henpheasant':
+          play('wrong');
+          showBanner('HEN PHEASANT!\nILLEGAL IN SD. -3', '#FFB199');
+          break;
+        case 'eagle':
+          play('siren');
+          showBanner('FEDERAL OFFENSE!\nTHE GAME WARDEN ENDED YOUR ROUND', '#FF5A4E', true, 2600);
+          break;
+        case 'midnight':
+          play('celebrate');
+          showBanner('MIDNIGHT!\nPOINTS ×2', C.gold, false, 1400);
+          break;
+        case 'lucky':
+          showBanner('A LUCKY DUCK!\nWORTH 7', '#4ADE80', false, 1400);
+          break;
         case 'partridge':
           play('celebrate');
           showBanner('A PARTRIDGE IN A PEAR TREE!\n×1.5 FOR 5 SECONDS', C.gold, false, 1800);
@@ -181,6 +244,11 @@ export function GameView({
 
   useEffect(() => {
     live.set(running);
+    // The day's events announce themselves as the round starts.
+    if (running && banners.length && !marauder) {
+      banners.forEach((b, i) => later(i * 1500, () => showBanner(b, C.gold, false, 1400)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, live]);
 
   useFrameCallback((frame) => {
@@ -276,9 +344,38 @@ export function GameView({
       for (const p of s.particles) {
         paint.setColor(Skia.Color(p.color));
         paint.setAlphaf(Math.min(1, p.life * 2));
-        canvas.drawRect(Skia.XYWHRect(p.x, p.y, 4, 4), paint);
+        if (p.present) {
+          // A little gift box with a white ribbon.
+          canvas.drawRect(Skia.XYWHRect(p.x - 5, p.y - 5, 10, 10), paint);
+          paint.setColor(Skia.Color('#FFFFFF'));
+          canvas.drawRect(Skia.XYWHRect(p.x - 1, p.y - 5, 2, 10), paint);
+          canvas.drawRect(Skia.XYWHRect(p.x - 5, p.y - 1, 10, 2), paint);
+          canvas.drawRect(Skia.XYWHRect(p.x - 3, p.y - 7, 6, 2), paint);
+        } else canvas.drawRect(Skia.XYWHRect(p.x, p.y, 4, 4), paint);
       }
       paint.setAlphaf(1);
+
+      // Fireworks: bursts computed from the clock, no state to keep.
+      if (fireworks) {
+        const cols = ['#FF3B2E', '#FFE29A', '#3F88C5', '#FFFFFF', '#4ADE80', '#E05297'];
+        for (let k = 0; k < 3; k++) {
+          const tt = s.t + k * 0.45;
+          const n = Math.floor(tt / 1.3);
+          const lt = tt - n * 1.3;
+          const fx = ((Math.sin(n * 12.9898 + k) * 43758.5453) % 1 + 1) % 1;
+          const fy = ((Math.sin(n * 78.233 + k * 3) * 12345.678) % 1 + 1) % 1;
+          const cx = s.width * (0.15 + fx * 0.7);
+          const cy = s.skyTop + (s.skyBottom - s.skyTop) * (0.05 + fy * 0.4);
+          const rad = lt * 110;
+          paint.setColor(Skia.Color(cols[(n + k) % cols.length]));
+          paint.setAlphaf(Math.max(0, 1 - lt / 1.3));
+          for (let i = 0; i < 14; i++) {
+            const a = (i / 14) * Math.PI * 2;
+            canvas.drawRect(Skia.XYWHRect(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad + lt * lt * 30, 4, 4), paint);
+          }
+        }
+        paint.setAlphaf(1);
+      }
 
       // Snow drifting down, from the clock alone (no state to keep).
       if (snowing) {
@@ -290,6 +387,21 @@ export function GameView({
           const x = (i * 97 + Math.sin(s.t * 1.3 + i) * 14 + s.width * 4) % s.width;
           const size = i % 3 === 0 ? 4 : 3;
           canvas.drawRect(Skia.XYWHRect(x, y, size, size), paint);
+        }
+        paint.setAlphaf(1);
+      }
+
+      // Blizzard: whiteout gusts sweep across with the wind.
+      if (windy) {
+        paint.setColor(Skia.Color('#FFFFFF'));
+        paint.setAlphaf(0.18 + 0.14 * Math.sin(s.t * 1.7));
+        canvas.drawRect(Skia.XYWHRect(0, 0, s.width, s.height), paint);
+        paint.setAlphaf(0.7);
+        const dir = s.fx.wind > 0 ? 1 : -1;
+        for (let i = 0; i < 40; i++) {
+          const y = (i * 61) % s.height;
+          const x = (((i * 131 + dir * s.t * 260) % s.width) + s.width) % s.width;
+          canvas.drawRect(Skia.XYWHRect(x, y, 14, 2), paint);
         }
         paint.setAlphaf(1);
       }

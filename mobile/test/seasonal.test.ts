@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { applyHit, makeBird, multLeft, newGame, PARTRIDGE_POINTS, step } from '@/game/engine';
 import { gameLayout } from '@/game/layout';
+import { NO_FX } from '@/game/events';
 import { themeFor } from '@/game/theme';
 
 describe('seasonal marsh', () => {
@@ -27,13 +28,13 @@ describe('seasonal marsh', () => {
 
 describe('partridge in a pear tree', () => {
   const game = () => {
-    const s = newGame(400, 800, gameLayout(400, 800, 24, 48), false, false);
+    const s = newGame(400, 800, gameLayout(400, 800, 24, 48), false, NO_FX);
     s.nextFlock = 999;
     return s;
   };
 
   it('never flies outside the Christmas season', () => {
-    for (let i = 0; i < 50; i++) expect(newGame(400, 800, gameLayout(400, 800, 24, 48), false, false).partridgeAt).toBe(Infinity);
+    for (let i = 0; i < 50; i++) expect(newGame(400, 800, gameLayout(400, 800, 24, 48), false, NO_FX).partridgeAt).toBe(Infinity);
   });
 
   it('scores 5, then 1.5× for 5 seconds', () => {

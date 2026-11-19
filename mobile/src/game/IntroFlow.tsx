@@ -14,7 +14,7 @@ import { Busted } from './Busted';
 import { GameView, type GameResult } from './GameView';
 import { INTRO_MS, IntroScene } from './IntroScene';
 import { gameLayout, gameScale } from './layout';
-import { themeFor } from './theme';
+import { gameDay } from './events';
 
 type Phase = 'whirl' | 'count' | 'play' | 'summary';
 
@@ -54,7 +54,8 @@ export function IntroFlow({
   const [taps, setTaps] = useState(0);
   const [marauder, setMarauder] = useState(false);
   // The marsh follows the calendar: fall colors, winter snow, Christmas trees and the partridge.
-  const [theme] = useState(() => themeFor(todayISO()));
+  const [day] = useState(() => gameDay(todayISO()));
+  const theme = day.theme;
   const justHeld = useRef(false);
   const holdStart = useRef(0);
   const holdTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -161,6 +162,8 @@ export function IntroFlow({
           layout={layout}
           marauder={marauder}
           theme={theme}
+          fx={day.fx}
+          banners={day.banners}
           running={phase === 'play'}
           onEnd={(r) => {
             setResult(r);
