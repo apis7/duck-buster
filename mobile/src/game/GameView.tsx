@@ -212,7 +212,7 @@ export function GameView({
           break;
         case 'henpheasant':
           play('wrong');
-          showBanner('HEN PHEASANT!\nILLEGAL IN SD. -3', '#FFB199');
+          showBanner('HEN PHEASANT!\nILLEGAL. -3', '#FFB199');
           break;
         case 'eagle':
           play('siren');
