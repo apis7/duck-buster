@@ -33,6 +33,7 @@ export const SKUNK_LINES = [
   'Skunked? Sorry for your loss. Of dignity. The ducks are fine.',
   'Skunked? It’s not a competition. (It is.)',
   'Skunked? Chin up! There’s always the Participation Trophy at Awards Night.',
+  'Skunked? Apparently it’s WABBIT SEASON!',
 ];
 
 /** A random line index that isn't `last` (no repeats back to back). */

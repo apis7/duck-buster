@@ -5,6 +5,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { play } from '@/audio/sfx';
 import { seasonAwards } from '@/domain/awards';
+import { HONORS, seasonHonors } from '@/domain/honors';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { useStore } from '@/state/store';
 import { Body, Btn, Pixel } from '@/ui/kit';
@@ -16,7 +17,21 @@ export default function Awards() {
   const params = useLocalSearchParams<{ season?: string }>();
   const season = Number(params.season) || currentSeason();
   const { data } = useStore();
-  const results = useMemo(() => seasonAwards(data, season), [data, season]);
+  // Awards, then the roast, then the season titles — saving the Grand Poombah for last.
+  const results = useMemo(() => {
+    const awards = seasonAwards(data, season).map((r) => ({
+      key: r.award.id, icon: r.award.icon, title: r.award.title, winners: r.winners, text: r.text, kind: r.award.roast ? 'roast' : 'award',
+    }));
+    const order = ['coots', 'third', 'second', 'first'] as const;
+    const titles = order
+      .map((id) => seasonHonors(data, season).find((h) => h.id === id))
+      .filter((h): h is NonNullable<typeof h> => !!h)
+      .map((h) => ({
+        key: `title-${h.id}`, icon: HONORS[h.id].icon, title: HONORS[h.id].title, winners: h.hunterIds,
+        text: h.id === 'coots' ? `${h.value} coots. The ditch chickens fear you.` : `${HONORS[h.id].why} · ${h.value} points`, kind: 'title',
+      }));
+    return [...awards, ...titles];
+  }, [data, season]);
   const [shown, setShown] = useState(0);
   const names = new Map(data.hunters.map((h) => [h.id, h]));
 
@@ -24,7 +39,8 @@ export default function Awards() {
     if (shown > 0) play('badge');
   }, [shown]);
 
-  const firstRoast = results.findIndex((r) => r.award.roast);
+  const firstRoast = results.findIndex((r) => r.kind === 'roast');
+  const firstTitle = results.findIndex((r) => r.kind === 'title');
 
   return (
     <SubScreen title={`AWARDS ${seasonLabel(season)}`} dark>
@@ -33,17 +49,30 @@ export default function Awards() {
       ) : null}
 
       {results.slice(0, shown).map((r, i) => (
-        <Animated.View key={r.award.id} entering={FadeInDown.springify().damping(12)}>
+        <Animated.View key={r.key} entering={FadeInDown.springify().damping(12)}>
           {i === firstRoast ? (
             <Pixel size={10} color={C.orange} style={{ textAlign: 'center', marginVertical: 10 }}>
               ~ AND NOW, THE ROAST ~
             </Pixel>
           ) : null}
-          <View style={{ backgroundColor: r.award.roast ? '#2A1F12' : C.navy, borderWidth: 2.5, borderColor: r.award.roast ? C.orange : C.gold, padding: 14, gap: 6 }}>
+          {i === firstTitle ? (
+            <Pixel size={10} color={C.gold} style={{ textAlign: 'center', marginVertical: 10 }}>
+              ~ AND NOW, THE SEASON TITLES ~
+            </Pixel>
+          ) : null}
+          <View
+            style={{
+              backgroundColor: r.kind === 'roast' ? '#2A1F12' : r.kind === 'title' ? '#3A2A06' : C.navy,
+              borderWidth: r.kind === 'title' ? 4 : 2.5,
+              borderColor: r.kind === 'roast' ? C.orange : C.gold,
+              padding: 14,
+              gap: 6,
+            }}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Text style={{ fontSize: 40 }}>{r.award.icon}</Text>
+              <Text style={{ fontSize: 40 }}>{r.icon}</Text>
               <View style={{ flex: 1 }}>
-                <Pixel size={10} color={r.award.roast ? C.orange : C.gold}>{r.award.title.toUpperCase()}</Pixel>
+                <Pixel size={10} color={r.kind === 'roast' ? C.orange : C.gold} style={{ lineHeight: 16 }}>{r.title.toUpperCase()}</Pixel>
                 <Pixel size={14} color={C.white}>
                   {r.winners.map((w) => names.get(w)?.name ?? '?').join(' & ').toUpperCase()}
                 </Pixel>

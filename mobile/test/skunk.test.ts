@@ -4,7 +4,7 @@ import { pickSkunkLine, SKUNK_LINES } from '@/domain/skunk';
 
 describe('skunk zingers', () => {
   it('has the full set, all starting with "Skunked?"', () => {
-    expect(SKUNK_LINES.length).toBe(30);
+    expect(SKUNK_LINES.length).toBe(31);
     for (const l of SKUNK_LINES) expect(l.startsWith('Skunked?')).toBe(true);
   });
 

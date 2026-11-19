@@ -5,6 +5,7 @@ import { seasonWindow } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
 import { BADGE_BY_ID } from '@/domain/badges';
 import { gameLeaders } from '@/domain/gameStats';
+import { HONORS, seasonHonors } from '@/domain/honors';
 import { formatMeat } from '@/domain/meat';
 import { seasonLabel } from '@/domain/season';
 import { hunterStats, partyStats } from '@/domain/stats';
@@ -31,12 +32,29 @@ export default function SeasonArchive() {
     .sort((a, b) => b.s.birds - a.s.birds);
   const leaders = gameLeaders(data, scope);
   const awards = seasonAwards(data, season);
+  const honors = seasonHonors(data, season);
   const { start, end } = seasonWindow(season);
   const badges = celebratedAt.filter((c) => c.at >= start && c.at < end && BADGE_BY_ID[c.badgeId]);
 
   return (
     <SubScreen title={`${seasonLabel(season)} SEASON`}>
       <Body muted>Archived. This is how the season ended.</Body>
+
+      {honors.length ? (
+        <Section title="Season titles">
+          <Card style={{ gap: 10, borderColor: C.gold }}>
+            {honors.map((h) => (
+              <View key={h.id} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                <Text style={{ fontSize: 26 }}>{HONORS[h.id].icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Pixel size={9} style={{ lineHeight: 15 }}>{HONORS[h.id].title.toUpperCase()}</Pixel>
+                  <Body style={{ fontSize: 13 }}>{h.hunterIds.map((id) => names.get(id)?.name ?? '?').join(' & ')}</Body>
+                </View>
+              </View>
+            ))}
+          </Card>
+        </Section>
+      ) : null}
 
       <Section title="Final board">
         <Card style={{ gap: 8 }}>

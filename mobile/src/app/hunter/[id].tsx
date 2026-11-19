@@ -2,7 +2,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
+import { archivedSeasons } from '@/domain/archive';
 import { BADGE_BY_ID, BADGES } from '@/domain/badges';
+import { honorsFor, HONORS } from '@/domain/honors';
 import { formatMeat } from '@/domain/meat';
 import { currentSeason, prettyDate, seasonLabel } from '@/domain/season';
 import { SPECIES_BY_ID } from '@/domain/species';
@@ -25,6 +27,7 @@ export default function HunterProfile() {
   const badges = badgesFor(hunter.id);
   const species = Object.entries(s.bySpecies).sort((a, b) => b[1] - a[1]);
   const party = hunter.partyId ? data.parties.find((p) => p.id === hunter.partyId) : null;
+  const honors = honorsFor(data, hunter.id, archivedSeasons(data));
 
   const stat = (label: string, value: string | number) => (
     <View style={{ width: '33.33%', alignItems: 'center', paddingVertical: 8 }}>
@@ -43,6 +46,21 @@ export default function HunterProfile() {
           {title.next ? `${title.xp} XP · ${title.next.xp - title.xp} to ${title.next.name}` : `${title.xp} XP · top of the ladder`}
         </Body>
       </Card>
+
+      {honors.length ? (
+        <Card style={{ gap: 8, borderColor: C.gold }}>
+          <Pixel size={9} color={C.muted}>SEASON TITLES</Pixel>
+          {honors.map((h) => (
+            <View key={`${h.season}-${h.id}`} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+              <Text style={{ fontSize: 22 }}>{HONORS[h.id].icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Pixel size={9} style={{ lineHeight: 15 }}>{HONORS[h.id].title.toUpperCase()}</Pixel>
+                <Body muted style={{ fontSize: 12 }}>{seasonLabel(h.season)}</Body>
+              </View>
+            </View>
+          ))}
+        </Card>
+      ) : null}
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} />
