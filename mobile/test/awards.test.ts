@@ -55,6 +55,8 @@ describe('awards, rivalry, wrapped, titles', () => {
     expect(crew[0].id).toBe('hunts');
     expect(crew[0].rows.map((r) => r.hunterId).sort()).toEqual(['dad', 'kid']);
     expect(crew.at(-1)?.id).toBe('title');
+    // Both finished as 'Decoy' with the same sign-off: shared taglines are dropped.
+    expect(crew.at(-1)?.rows.every((r) => r.caption === '')).toBe(true);
   });
 
   it('titles', () => {

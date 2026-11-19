@@ -137,7 +137,14 @@ export function crewWrapped(data: Data, season: number, titleName: (hunterId: st
         .filter((r): r is { hunterId: string; card: WrappedCard } => !!r.card);
       // Biggest number first where there is one; otherwise the crew's usual order.
       rows.sort((a, b) => (b.card.n ?? 0) - (a.card.n ?? 0));
-      return { id, kicker: CREW_KICKERS[id](season), rows: rows.map((r) => ({ hunterId: r.hunterId, big: r.card.big, caption: r.card.caption })) };
+      // A tagline shared by several hunters reads like filler: only unique ones are kept.
+      const uses = new Map<string, number>();
+      for (const r of rows) uses.set(r.card.caption, (uses.get(r.card.caption) ?? 0) + 1);
+      return {
+        id,
+        kicker: CREW_KICKERS[id](season),
+        rows: rows.map((r) => ({ hunterId: r.hunterId, big: r.card.big, caption: uses.get(r.card.caption) === 1 ? r.card.caption : '' })),
+      };
     })
     .filter((step) => step.rows.length > 0);
 }

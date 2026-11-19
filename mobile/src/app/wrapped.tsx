@@ -60,7 +60,7 @@ export default function Wrapped() {
                     >
                       {r.big.toUpperCase()}
                     </Text>
-                    <Body style={{ color: C.white, fontSize: 14, lineHeight: 19 }}>{r.caption}</Body>
+                    {r.caption ? <Body style={{ color: C.white, fontSize: 14, lineHeight: 19 }}>{r.caption}</Body> : null}
                   </View>
                 );
               })}
