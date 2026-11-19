@@ -61,20 +61,41 @@ export default function Board() {
 
   const awardsSeason = season ?? currentSeason();
   const awardsKey = `awardsEarly:${awardsSeason}`;
-  const awardsReady = awardsOpen(awardsSeason) || settings[awardsKey] === '1';
+  // When the crew closed this season early (a timestamp; empty = not closed).
+  const closedAt = Number(settings[awardsKey] || 0);
+  const awardsReady = awardsOpen(awardsSeason) || closedAt > 0;
   const openAwards = async () => {
-    if (!awardsReady) {
-      const v = await ask({
-        icon: '🏆',
-        title: 'Awards Night opens Feb 1',
-        message: 'It’s the end-of-season ceremony, so it waits until the duck season is over. Season over early for your crew?',
-        buttons: [
-          { label: 'Season’s over — hold it now', value: 'open', kind: 'primary' },
-          { label: 'Not yet', value: 'no' },
-        ],
-      });
-      if (v !== 'open') return;
-      await setSetting(awardsKey, '1');
+    if (!awardsOpen(awardsSeason)) {
+      if (closedAt > 0) {
+        // Closed early: maybe the season started back up since. Ask before every ceremony.
+        const since = data.hunts.filter((h) => h.createdAt > closedAt).length;
+        const v = await ask({
+          icon: '🦆',
+          title: 'Season back on?',
+          message: `You closed the season early${since ? `, and ${since} ${since === 1 ? 'hunt has' : 'hunts have'} been logged since` : ''}. Has your crew started hunting again? If so, the season picks up where you left off and Awards Night waits for Feb 1.`,
+          buttons: [
+            { label: 'Still over — go to Awards Night', value: 'open', kind: 'primary' },
+            { label: 'We’re hunting again', value: 'reopen' },
+          ],
+        });
+        if (v === 'reopen') {
+          await setSetting(awardsKey, '');
+          return;
+        }
+        if (v !== 'open') return;
+      } else {
+        const v = await ask({
+          icon: '🏆',
+          title: 'Awards Night opens Feb 1',
+          message: 'It’s the end-of-season ceremony, so it waits until the duck season is over. Season over early for your crew?',
+          buttons: [
+            { label: 'Season’s over — hold it now', value: 'open', kind: 'primary' },
+            { label: 'Not yet', value: 'no' },
+          ],
+        });
+        if (v !== 'open') return;
+        await setSetting(awardsKey, String(Date.now()));
+      }
     }
     router.push({ pathname: '/awards', params: { season: String(awardsSeason) } });
   };
