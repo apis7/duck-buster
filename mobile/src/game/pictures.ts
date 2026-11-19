@@ -71,11 +71,11 @@ function seeded(seed: number) {
 const inPond = (x: number, width: number) => x > width * 0.27 && x < width * 0.73;
 
 /** Dawn sky in pixel bands, a blocky sun, water, and the back row of reeds with an opening of open water in the middle. */
-export function backgroundPicture(width: number, height: number, reedTop: number, murder = false): SkPicture {
+export function backgroundPicture(width: number, height: number, reedTop: number, marauder = false): SkPicture {
   return createPicture((canvas) => {
     const paint = Skia.Paint();
-    // Murder Mode: a blood-red dawn.
-    const bands = murder
+    // Marauder Mode: a blood-red dawn.
+    const bands = marauder
       ? ['#1A0204', '#3A0508', '#5E0A0E', '#8A1014', '#B3261E', '#D9482C']
       : ['#2B3F73', '#3E5A94', '#5F7DB3', '#8EA3C8', '#D9A98A', '#F0C38E'];
     const bandH = Math.ceil(reedTop / bands.length);
@@ -83,7 +83,7 @@ export function backgroundPicture(width: number, height: number, reedTop: number
       paint.setColor(Skia.Color(c));
       canvas.drawRect(Skia.XYWHRect(0, i * bandH, width, bandH + 1), paint);
     });
-    paint.setColor(Skia.Color(murder ? '#FF3B2E' : '#FFE29A'));
+    paint.setColor(Skia.Color(marauder ? '#FF3B2E' : '#FFE29A'));
     const sx = width * 0.78;
     const sy = reedTop - 30;
     const r = 8;
@@ -91,10 +91,10 @@ export function backgroundPicture(width: number, height: number, reedTop: number
       const half = Math.floor(Math.sqrt(r * r - y * y));
       canvas.drawRect(Skia.XYWHRect(sx - half * 4, sy + y * 4, half * 8, 4), paint);
     }
-    paint.setColor(Skia.Color(murder ? '#4A0A0E' : '#30507E'));
+    paint.setColor(Skia.Color(marauder ? '#4A0A0E' : '#30507E'));
     canvas.drawRect(Skia.XYWHRect(0, reedTop, width, height - reedTop), paint);
     const reed = Skia.Paint();
-    reed.setColor(Skia.Color(murder ? '#1A0A0A' : '#22381F'));
+    reed.setColor(Skia.Color(marauder ? '#1A0A0A' : '#22381F'));
     const tail = Skia.Paint();
     tail.setColor(Skia.Color('#5A3A1E'));
     const rand = seeded(7);
@@ -111,7 +111,7 @@ export function backgroundPicture(width: number, height: number, reedTop: number
     }
     // Ripples on the open water.
     const ripple = Skia.Paint();
-    ripple.setColor(Skia.Color(murder ? '#7A1A1E' : '#4A6E9E'));
+    ripple.setColor(Skia.Color(marauder ? '#7A1A1E' : '#4A6E9E'));
     for (let i = 0; i < 14; i++) {
       const rx = width * 0.29 + rand() * width * 0.4;
       const ry = reedTop + 8 + rand() * 40;
@@ -121,10 +121,10 @@ export function backgroundPicture(width: number, height: number, reedTop: number
 }
 
 /** The front row of reeds and the mud, drawn over the dogs so they come up out of cover. */
-export function foregroundPicture(width: number, height: number, groundY: number, murder = false): SkPicture {
+export function foregroundPicture(width: number, height: number, groundY: number, marauder = false): SkPicture {
   return createPicture((canvas) => {
     const reed = Skia.Paint();
-    reed.setColor(Skia.Color(murder ? '#240C0C' : '#2C4A27'));
+    reed.setColor(Skia.Color(marauder ? '#240C0C' : '#2C4A27'));
     const rand = seeded(31);
     for (let x = -2; x < width; x += 5) {
       const h = 10 + rand() * 26;
@@ -133,7 +133,7 @@ export function foregroundPicture(width: number, height: number, groundY: number
       canvas.drawRect(Skia.XYWHRect(x, top, 4, height), reed);
     }
     const mud = Skia.Paint();
-    mud.setColor(Skia.Color(murder ? '#140404' : '#1A2A18'));
+    mud.setColor(Skia.Color(marauder ? '#140404' : '#1A2A18'));
     canvas.drawRect(Skia.XYWHRect(0, groundY + 6, width, height), mud);
   });
 }

@@ -19,14 +19,14 @@ type Phase = 'whirl' | 'count' | 'play' | 'summary';
 /**
  * - practice: the launch game (and replays from More). Logo intro → 3-2-1 → twelve
  *   seconds → arcade summary with PRACTICE high scores. Nothing counts for the season.
- *   Tap the duck at the top 7× to skip. Hold it for 5 seconds and… Murder Mode.
+ *   Tap the duck at the top 7× to skip. Hold it for 5 seconds and… Marauder Mode.
  * - hunt: the hunt winner's round. No intro, no skip, no easter egg; the result is
  *   handed back to be saved for the season.
  */
 export type GameMode = 'practice' | 'hunt';
 
 const SKIP_TAPS = 7;
-const MURDER_HOLD_MS = 5000;
+const MARAUDER_HOLD_MS = 5000;
 
 export function IntroFlow({
   mode = 'practice', intro = true, playerName, onDone, onResult,
@@ -45,7 +45,8 @@ export function IntroFlow({
   const [result, setResult] = useState<GameResult | null>(null);
   const [round, setRound] = useState(0);
   const [taps, setTaps] = useState(0);
-  const [murder, setMurder] = useState(false);
+  const [marauder, setMarauder] = useState(false);
+  const justHeld = useRef(false);
 
   // The scene is laid out in "game units" and scaled up as one on wide screens.
   const scale = gameScale(width);
@@ -77,8 +78,8 @@ export function IntroFlow({
     return () => clearTimeout(t);
   }, [phase, count]);
 
-  function restart(nextMurder = murder) {
-    setMurder(nextMurder);
+  function restart(nextMarauder = marauder) {
+    setMarauder(nextMarauder);
     setResult(null);
     setCount(3);
     setRound((r) => r + 1);
@@ -86,19 +87,25 @@ export function IntroFlow({
   }
 
   function tapDuck() {
+    // Letting go after the 5-second hold isn't a skip tap.
+    if (justHeld.current) {
+      justHeld.current = false;
+      return;
+    }
     const n = taps + 1;
     setTaps(n);
     if (n >= SKIP_TAPS) onDone();
   }
 
-  function enterMurderMode() {
+  function enterMarauderMode() {
+    justHeld.current = true;
     play('boom');
     setTaps(0);
     restart(true);
   }
 
   const huntRound = mode === 'hunt';
-  const theme = murder ? '#1A0204' : C.navyDark;
+  const theme = marauder ? '#1A0204' : C.navyDark;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme }}>
@@ -109,7 +116,7 @@ export function IntroFlow({
           height={vh}
           scale={scale}
           layout={layout}
-          murder={murder}
+          marauder={marauder}
           running={phase === 'play'}
           onEnd={(r) => {
             setResult(r);
@@ -125,20 +132,20 @@ export function IntroFlow({
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.center]}>
           {huntRound && playerName ? (
             <Pixel size={14} color={C.gold} style={{ marginBottom: 18 }}>{`${playerName.toUpperCase()}'S ROUND`}</Pixel>
-          ) : murder ? (
-            <Pixel size={16} color="#FF5A4E" style={{ marginBottom: 18 }}>MURDER MODE</Pixel>
+          ) : marauder ? (
+            <Pixel size={16} color="#FF5A4E" style={{ marginBottom: 18 }}>MARAUDER MODE</Pixel>
           ) : null}
-          <Pixel size={72} color={murder ? '#FF5A4E' : C.white} style={{ lineHeight: 90 }}>
+          <Pixel size={72} color={marauder ? '#FF5A4E' : C.white} style={{ lineHeight: 90 }}>
             {count > 0 ? `${count}` : 'GO!'}
           </Pixel>
           <Pixel size={10} color={C.white} style={{ marginTop: 24, textAlign: 'center', paddingHorizontal: 30 }}>
-            {murder ? 'Semi-auto. Go nuts.' : 'Grab the gun, drag to aim,\nlet go to shoot'}
+            {marauder ? 'Semi-auto. Go nuts.' : 'Grab the gun, drag to aim,\nlet go to shoot'}
           </Pixel>
         </View>
       ) : null}
 
       {phase === 'summary' && result ? (
-        murder ? (
+        marauder ? (
           <Busted result={result} onAgain={() => restart(false)} onDone={onDone} />
         ) : huntRound ? (
           <RoundSummary result={result} playerName={playerName ?? ''} onDone={onDone} />
@@ -151,8 +158,8 @@ export function IntroFlow({
       {phase !== 'summary' && !huntRound ? (
         <Pressable
           onPress={tapDuck}
-          onLongPress={murder ? undefined : enterMurderMode}
-          delayLongPress={MURDER_HOLD_MS}
+          onLongPress={marauder ? undefined : enterMarauderMode}
+          delayLongPress={MARAUDER_HOLD_MS}
           style={[styles.skipZone, { paddingTop: insets.top + 8 }]}
         >
           <PixelBird species={SPECIES_BY_ID.mall} size={44 * scale} />

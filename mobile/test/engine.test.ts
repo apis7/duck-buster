@@ -168,7 +168,7 @@ describe('gun', () => {
     expect(s.birds.find((x) => x.id === b.id)).toBeUndefined();
   });
 
-  it('murder mode: buckshot spread, 8-shell magazine, a sky full of birds', () => {
+  it('marauder mode: buckshot spread, 8-shell magazine, a sky full of birds', () => {
     const m = newGame(400, 800, gameLayout(400, 800, 24, 48), true);
     expect(m.clip).toBe(8);
     fire(m);
@@ -176,15 +176,15 @@ describe('gun', () => {
     const angles = m.bullets.map((b) => Math.atan2(b.vy, b.vx));
     expect(Math.max(...angles) - Math.min(...angles)).toBeLessThan(0.35);
     const calm = newGame(400, 800, gameLayout(400, 800, 24, 48));
-    let mostMurder = 0;
+    let mostMarauder = 0;
     let mostCalm = 0;
     for (let i = 0; i < 6 * 60; i++) {
       step(m, 1 / 60);
       step(calm, 1 / 60);
-      mostMurder = Math.max(mostMurder, m.birds.length);
+      mostMarauder = Math.max(mostMarauder, m.birds.length);
       mostCalm = Math.max(mostCalm, calm.birds.length);
     }
-    expect(mostMurder).toBeGreaterThan(mostCalm * 2);
+    expect(mostMarauder).toBeGreaterThan(mostCalm * 2);
   });
 
   it('ends after twelve seconds', () => {

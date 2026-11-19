@@ -11,7 +11,7 @@ import { C } from '@/ui/theme';
 import type { GameResult } from './GameView';
 
 /**
- * How Murder Mode ends: sirens, a squad car rolls up, and you're arrested for
+ * How Marauder Mode ends: sirens, a squad car rolls up, and you're arrested for
  * poaching. The score isn't saved anywhere — this screen is all you get.
  */
 

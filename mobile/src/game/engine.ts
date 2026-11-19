@@ -5,7 +5,7 @@
  *
  * Units are screen points; time in seconds.
  *
- * Murder Mode (the hidden easter egg): a semi-auto shotgun that throws a random
+ * Marauder Mode (the hidden easter egg): a semi-auto shotgun that throws a random
  * spread of pellets, a sky packed with birds, and clipped popups. Nothing from it
  * is ever saved.
  *
@@ -37,8 +37,8 @@ export const DOG_PX_H = DOG_H * PIXEL;
 export const BULLET_SPEED = 1100;
 export const GUN_LENGTH = 22 * PIXEL;
 export const CLIP = 3;
-/** Murder Mode: a semi-auto shotgun with a bigger magazine. */
-export const MURDER_CLIP = 8;
+/** Marauder Mode: a semi-auto shotgun with a bigger magazine. */
+export const MARAUDER_CLIP = 8;
 const PELLETS_MIN = 5;
 const PELLETS_MAX = 8;
 /** Half-width of the pellet spread, radians — random per shot, never too wide. */
@@ -125,7 +125,7 @@ export type GameState = {
   gunX: number;
   gunY: number;
   /** The easter egg. */
-  murder: boolean;
+  marauder: boolean;
   clip: number;
   aim: number;
   aiming: boolean;
@@ -154,7 +154,7 @@ export type GameState = {
   over: boolean;
 };
 
-export function newGame(width: number, height: number, layout: GameLayout, murder = false): GameState {
+export function newGame(width: number, height: number, layout: GameLayout, marauder = false): GameState {
   'worklet';
   const { gunY, skyTop, reedTop } = layout;
   return {
@@ -169,11 +169,11 @@ export function newGame(width: number, height: number, layout: GameLayout, murde
     pondR: width * 0.73,
     gunX: width / 2,
     gunY,
-    murder,
-    clip: murder ? MURDER_CLIP : CLIP,
+    marauder,
+    clip: marauder ? MARAUDER_CLIP : CLIP,
     aim: -Math.PI / 2,
     aiming: false,
-    ammo: murder ? MURDER_CLIP : CLIP,
+    ammo: marauder ? MARAUDER_CLIP : CLIP,
     reloadUntil: 0,
     birds: [],
     dogs: [],
@@ -234,7 +234,7 @@ export function fire(s: GameState): void {
   }
   const muzzleX = s.gunX + Math.cos(s.aim) * GUN_LENGTH;
   const muzzleY = s.gunY + Math.sin(s.aim) * GUN_LENGTH;
-  if (s.murder) {
+  if (s.marauder) {
     // Buckshot: a random handful of pellets in a random (but not silly) spread.
     const pellets = PELLETS_MIN + Math.floor(Math.random() * (PELLETS_MAX - PELLETS_MIN + 1));
     const spread = SPREAD_MIN + Math.random() * (SPREAD_MAX - SPREAD_MIN);
@@ -319,7 +319,7 @@ function spawnFlock(s: GameState): void {
   'worklet';
   const species = pickSpecies();
   const sp = FLOCK_SPECIES[species];
-  const size = s.murder ? 6 + Math.floor(Math.random() * 7) : 3 + Math.floor(Math.random() * 4);
+  const size = s.marauder ? 6 + Math.floor(Math.random() * 7) : 3 + Math.floor(Math.random() * 4);
   const span = s.skyBottom - s.skyTop - DUCK_PX_H - 40;
   const leadY = s.skyTop + 20 + Math.random() * Math.max(10, span);
   const speed = (110 + Math.random() * 80) * sp.speed * Math.max(0.85, s.width / 400);
@@ -358,8 +358,8 @@ function maybeSpawnMerganser(s: GameState): void {
 /** Roll for the big birds. At most one per game, and only early enough to be shot down. */
 function maybeSpawnSpecial(s: GameState): void {
   'worklet';
-  if ((s.specialSeen && !s.murder) || s.t > GAME_SECONDS - 6) return;
-  const r = s.murder ? Math.random() * 0.4 : Math.random();
+  if ((s.specialSeen && !s.marauder) || s.t > GAME_SECONDS - 6) return;
+  const r = s.marauder ? Math.random() * 0.4 : Math.random();
   const scale = Math.max(0.85, s.width / 400);
   const mid = s.skyTop + (s.skyBottom - s.skyTop) * (0.25 + Math.random() * 0.35);
   let bird: Bird | null = null;
@@ -400,14 +400,14 @@ export function birdName(b: Bird): string {
 
 function popup(s: GameState, b: Bird, pts: number): void {
   'worklet';
-  // Murder Mode would be wall-to-wall popups: clip the name and cut the life short.
+  // Marauder Mode would be wall-to-wall popups: clip the name and cut the life short.
   const full = birdName(b);
   let label = full;
-  if (s.murder) {
+  if (s.marauder) {
     label = '';
     for (const ch of full) if (ch >= 'A' && ch <= 'Z' && label.length < 4) label += ch;
   }
-  s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: s.murder ? POPUP_LIFE * 0.55 : POPUP_LIFE, label });
+  s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: s.marauder ? POPUP_LIFE * 0.55 : POPUP_LIFE, label });
 }
 
 function knockDown(b: Bird): void {
@@ -517,7 +517,7 @@ export function step(s: GameState, dt: number): void {
       spawnFlock(s);
       maybeSpawnMerganser(s);
       maybeSpawnSpecial(s);
-      s.nextFlock = s.t + (s.murder ? 0.3 + Math.random() * 0.35 : 1.5 + Math.random() * 0.9);
+      s.nextFlock = s.t + (s.marauder ? 0.3 + Math.random() * 0.35 : 1.5 + Math.random() * 0.9);
     }
   }
 

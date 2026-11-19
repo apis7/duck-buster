@@ -73,13 +73,13 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
  * thread; the JS thread hears about events (sounds, banners) and the end.
  */
 export function GameView({
-  width, height, scale, layout, running, onEnd, murder = false,
-}: { width: number; height: number; scale: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void; murder?: boolean }) {
+  width, height, scale, layout, running, onEnd, marauder = false,
+}: { width: number; height: number; scale: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void; marauder?: boolean }) {
   const { gunY, skyTop } = layout;
   const pics = useMemo(() => gamePictures(), []);
-  const initial = useMemo(() => newGame(width, height, layout, murder), [width, height, layout, murder]);
-  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop, murder), [width, height, layout, murder]);
-  const fg = useMemo(() => foregroundPicture(width, height, initial.groundY, murder), [width, height, initial.groundY, murder]);
+  const initial = useMemo(() => newGame(width, height, layout, marauder), [width, height, layout, marauder]);
+  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop, marauder), [width, height, layout, marauder]);
+  const fg = useMemo(() => foregroundPicture(width, height, initial.groundY, marauder), [width, height, initial.groundY, marauder]);
   const state = useSharedValue<GameState>(initial);
   const live = useSharedValue(false);
   const lastScore = useSharedValue(0);
@@ -179,6 +179,9 @@ export function GameView({
   const pan = usePanGesture({
     minDistance: 0,
     maxPointers: 1,
+    // Only touches that start down by the gun belong to the gun. Without this the
+    // pan claimed every touch on screen — including a long-press on the duck up top.
+    hitSlop: { top: -Math.max(0, (gunY - GRAB_RADIUS) * scale) },
     onBegin: (e) => {
       'worklet';
       const s = state.value;
@@ -300,7 +303,7 @@ export function GameView({
       const shown = shellsShown(s);
       for (let i = 0; i < s.clip; i++) {
         canvas.save();
-        // Murder Mode's 8 shells wrap into two rows.
+        // Marauder Mode's 8 shells wrap into two rows.
         canvas.translate(s.gunX + 56 + (i % 4) * 18, s.gunY - 6 + Math.floor(i / 4) * 30 - (s.clip > 4 ? 15 : 0));
         if (i >= shown) {
           paint.setColor(Skia.Color('#FFFFFF'));
@@ -326,7 +329,7 @@ export function GameView({
         </Canvas>
       </GestureDetector>
       <View pointerEvents="none" style={[styles.hud, { top: (skyTop - 56) * scale }]}>
-        <Pixel size={16 * scale} color={murder ? '#FF5A4E' : C.white}>{`${hud.score}`}</Pixel>
+        <Pixel size={16 * scale} color={marauder ? '#FF5A4E' : C.white}>{`${hud.score}`}</Pixel>
         <Pixel size={11 * scale} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
       </View>
       {reloadingNow ? (
