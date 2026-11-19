@@ -24,6 +24,7 @@ const SOURCES = {
   siren: require('../../assets/sfx/siren.wav'),
   cry: require('../../assets/sfx/quack.mp3'),
   toot: require('../../assets/sfx/toot.wav'),
+  badGuy: require('../../assets/sfx/bad_guy.mp3'),
 } as const;
 
 export type Sfx = keyof typeof SOURCES;

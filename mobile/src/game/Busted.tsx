@@ -87,7 +87,8 @@ export function Busted({ result, onAgain, onDone }: { result: GameResult; onAgai
   const groan = useSharedValue(0);
   useEffect(() => {
     if (!arrived) return;
-    play('wrong');
+    // The perp's groan as he's booked.
+    play('badGuy');
     groan.set(withRepeat(withSequence(withTiming(-2, { duration: 90 }), withTiming(2, { duration: 90 })), -1, true));
   }, [arrived, groan]);
   const groanStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${groan.value}deg` }] }));
