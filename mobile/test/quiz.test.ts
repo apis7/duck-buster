@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { CHOICES, makeChoices, makeRound } from '@/domain/quiz';
-import { SPECIES_BY_ID } from '@/domain/species';
+import { QUIZ_WEIGHT } from '@/domain/regs';
+import { SPECIES, SPECIES_BY_ID } from '@/domain/species';
 
 describe('quiz', () => {
   it('seven unique choices including the answer', () => {
@@ -25,5 +26,22 @@ describe('quiz', () => {
     expect(new Set(r.map((q) => q.speciesId)).size).toBe(4);
     expect(r.find((q) => q.speciesId === 'cago')?.kind).toBe('audio');
     expect(r.find((q) => q.speciesId === 'wodu')?.kind).toBe('image');
+  });
+});
+
+describe('quiz weighting', () => {
+  it('common South Dakota birds come up far more than rarities', () => {
+    let mall = 0;
+    let kiei = 0;
+    for (let i = 0; i < 400; i++) {
+      const r = makeRound(['mall', 'kiei', 'gwte', 'gadw', 'bwte', 'wwsc', 'emgo', 'nopi'], [], Math.random, 3);
+      if (r.some((q) => q.speciesId === 'mall')) mall++;
+      if (r.some((q) => q.speciesId === 'kiei')) kiei++;
+    }
+    expect(mall).toBeGreaterThan(kiei * 4);
+  });
+
+  it('every quizzed species has a weight', () => {
+    expect(SPECIES.map((s) => s.id).filter((id) => QUIZ_WEIGHT[id] == null)).toEqual([]);
   });
 });

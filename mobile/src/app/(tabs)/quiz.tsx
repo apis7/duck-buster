@@ -4,6 +4,7 @@ import { Image, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'r
 
 import { play } from '@/audio/sfx';
 import { makeRound, quizRank, type Question } from '@/domain/quiz';
+import { RESTRICTIONS } from '@/domain/regs';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { QUIZ_IMAGES, QUIZ_SOUNDS } from '@/quiz/media.generated';
 import { useStore } from '@/state/store';
@@ -99,7 +100,7 @@ export default function Quiz() {
 
   return (
     <Screen title="DUCK ID QUIZ" right={<Pixel size={9} color={C.muted}>{`${playerName.toUpperCase()} · ${i + 1}/${round.length} · ${score}✓`}</Pixel>}>
-      <Prompt q={q} />
+      <Prompt q={q} answered={!!picked} />
       <View style={{ gap: 8 }}>
         {q.choices.map((id) => {
           const right = picked && id === q.speciesId;
@@ -132,13 +133,28 @@ function playerHint(hunters: number) {
   return hunters === 0 ? <Body muted>Add hunters to keep a best score for each of them.</Body> : null;
 }
 
-function Prompt({ q }: { q: Question }) {
-  if (q.kind === 'audio') return <SoundPrompt key={q.speciesId} speciesId={q.speciesId} />;
-  return <PhotoPrompt speciesId={q.speciesId} />;
+function Prompt({ q, answered }: { q: Question; answered: boolean }) {
+  // The regs flag shows only after answering — before, it would give the bird away.
+  return q.kind === 'audio' ? (
+    <SoundPrompt key={q.speciesId} speciesId={q.speciesId} answered={answered} />
+  ) : (
+    <PhotoPrompt speciesId={q.speciesId} answered={answered} />
+  );
+}
+
+function RegsFlag({ speciesId }: { speciesId: string }) {
+  const r = RESTRICTIONS[speciesId];
+  if (!r) return null;
+  return (
+    <View style={[styles.flag, { backgroundColor: r.level === 'closed' ? C.red : C.orange }]}>
+      <Text style={styles.flagTxt}>{`${r.level === 'closed' ? '⛔ PROTECTED / CLOSED' : '⚠️ RESTRICTED'} · ${r.text}`}</Text>
+      <Text style={[styles.flagTxt, { fontWeight: '600', fontSize: 10 }]}>Limits change yearly — check current SD regs.</Text>
+    </View>
+  );
 }
 
 /** The whole photo, never cropped: fitted inside a 4:3 frame that leaves room for the seven answers. */
-function PhotoPrompt({ speciesId }: { speciesId: string }) {
+function PhotoPrompt({ speciesId, answered }: { speciesId: string; answered: boolean }) {
   const img = QUIZ_IMAGES[speciesId];
   const { width, height } = useWindowDimensions();
   const w = width - 32 - 6;
@@ -147,13 +163,14 @@ function PhotoPrompt({ speciesId }: { speciesId: string }) {
     <View style={{ gap: 4 }}>
       <View style={[styles.frame, { backgroundColor: C.navyDark }]}>
         <Image source={img.src} style={{ width: w, height: h }} resizeMode="contain" />
+        {answered ? <RegsFlag speciesId={speciesId} /> : null}
       </View>
       {img.credit ? <Text style={styles.credit}>{`Photo: ${img.credit}`}</Text> : null}
     </View>
   );
 }
 
-function SoundPrompt({ speciesId }: { speciesId: string }) {
+function SoundPrompt({ speciesId, answered }: { speciesId: string; answered: boolean }) {
   const sound = QUIZ_SOUNDS[speciesId];
   const player = useAudioPlayer(sound.src);
   const playIt = useMemo(
@@ -172,6 +189,7 @@ function SoundPrompt({ speciesId }: { speciesId: string }) {
       <Pressable onPress={playIt} style={[styles.frame, { aspectRatio: 4 / 3, alignItems: 'center', justifyContent: 'center', backgroundColor: C.navyDark }]}>
         <Text style={{ fontSize: 64 }}>🔊</Text>
         <Pixel size={10} color={C.white}>WHO'S CALLING? TAP TO REPLAY</Pixel>
+        {answered ? <RegsFlag speciesId={speciesId} /> : null}
       </Pressable>
       {sound.credit ? <Text style={styles.credit}>{`Recording: ${sound.credit}`}</Text> : null}
     </View>
@@ -181,6 +199,8 @@ function SoundPrompt({ speciesId }: { speciesId: string }) {
 const styles = StyleSheet.create({
   frame: { borderWidth: 3, borderColor: C.navy, backgroundColor: C.white, overflow: 'hidden' },
   credit: { fontSize: 10, color: C.muted },
+  flag: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingVertical: 5, paddingHorizontal: 8 },
+  flagTxt: { color: C.white, fontSize: 12, fontWeight: '800' },
   choice: { borderWidth: 2.5, borderColor: C.navy, backgroundColor: C.white, paddingVertical: 12, paddingHorizontal: 14 },
   choiceTxt: { fontSize: 16, fontWeight: '800', color: C.navy },
 });

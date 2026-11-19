@@ -1,3 +1,4 @@
+import { quizWeight } from './regs';
 import { SPECIES, SPECIES_BY_ID } from './species';
 
 /**
@@ -35,12 +36,25 @@ export function makeChoices(answer: string, rng: Rng = Math.random): string[] {
 }
 
 /**
- * A round of questions. Each species appears at most once; sound questions are
- * mixed in when calls are available (roughly one in three).
+ * Weighted draw without repeats: common South Dakota birds come up far more often
+ * than rarities (each item's key is rng^(1/weight); the biggest keys win).
  */
-export function makeRound(images: string[], sounds: string[], rng: Rng = Math.random, size = ROUND): Question[] {
+function weightedPick(ids: string[], n: number, weight: (id: string) => number, rng: Rng): string[] {
+  return ids
+    .map((id) => ({ id, key: Math.pow(rng(), 1 / Math.max(0.01, weight(id))) }))
+    .sort((a, b) => b.key - a.key)
+    .slice(0, n)
+    .map((x) => x.id);
+}
+
+/**
+ * A round of questions. Each species appears at most once, picked by how common
+ * it is in South Dakota; sound questions are mixed in when calls are available
+ * (roughly one in three).
+ */
+export function makeRound(images: string[], sounds: string[], rng: Rng = Math.random, size = ROUND, weight: (id: string) => number = quizWeight): Question[] {
   const soundSet = new Set(sounds);
-  const pool = shuffle(Array.from(new Set([...images, ...sounds])), rng).slice(0, size);
+  const pool = weightedPick(Array.from(new Set([...images, ...sounds])), size, weight, rng);
   return pool.map((speciesId) => {
     const hasImage = images.includes(speciesId);
     const hasSound = soundSet.has(speciesId);
