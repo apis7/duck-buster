@@ -76,19 +76,19 @@ export default function MinigameFaq() {
       </Q>
 
       <Q q="Which ducks fly?">
-        <Body>{`South Dakota regulars: ${flockNames.join(', ')}.`}</Body>
+        <Body>{`Prairie regulars: ${flockNames.join(', ')}.`}</Body>
         <Body>Teal and woodies dart up and down without warning. Gadwall and spoonies fly slow — and sometimes land on the open water in the middle.</Body>
         <Body>Mergansers come through alone, fast and low. Worth the bonus.</Body>
       </Q>
 
       <Q q="Why does the marsh look different?">
-        <Body>It follows South Dakota's seasons: green in spring and summer, yellowing in early fall, brown and orange in the fall, snow in winter.</Body>
+        <Body>It follows the seasons: green in spring and summer, yellowing in early fall, brown and orange in the fall, snow in winter.</Body>
         <Body>Holidays and feast days only show up in the winner's round — practice is always just the plain season. From Christmas through the twelve days after, there are Christmas trees, and you might see a partridge in a pear tree. Drop it for 5 points — it bursts into presents — and every point for the next 5 seconds counts 1.5×.</Body>
       </Q>
 
       <Q q="Holidays and special days (winner's round only)">
-        <Body>Opening Day (SD duck opener): bigger flocks, blaze-orange confetti.</Body>
-        <Body>Pheasant Opener: roosters flush from the reeds, +4. Hens are illegal in SD, −3.</Body>
+        <Body>Opening Day (duck opener): bigger flocks, blaze-orange confetti.</Body>
+        <Body>Pheasant Opener: roosters flush from the reeds, +4. Hen pheasants are illegal, −3.</Body>
         <Body>Halloween week: jack-o'-lanterns and ghost ducks you can only hit while they're showing.</Body>
         <Body>Thanksgiving week: a turkey wanders the bank. Leave it alone (−2).</Body>
         <Body>New Year's Eve and Day: fireworks, and the last 3 seconds count double.</Body>

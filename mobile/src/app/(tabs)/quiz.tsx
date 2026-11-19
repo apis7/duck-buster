@@ -148,7 +148,7 @@ function RegsFlag({ speciesId }: { speciesId: string }) {
   return (
     <View style={[styles.flag, { backgroundColor: r.level === 'closed' ? C.red : C.orange }]}>
       <Text style={styles.flagTxt}>{`${r.level === 'closed' ? '⛔ PROTECTED / CLOSED' : '⚠️ RESTRICTED'} · ${r.text}`}</Text>
-      <Text style={[styles.flagTxt, { fontWeight: '600', fontSize: 10 }]}>Limits change yearly — check current SD regs.</Text>
+      <Text style={[styles.flagTxt, { fontWeight: '600', fontSize: 10 }]}>Limits change yearly — check your state's regulations.</Text>
     </View>
   );
 }
