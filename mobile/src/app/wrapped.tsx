@@ -6,7 +6,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { seasonWrapped } from '@/domain/wrapped';
 import { useStore } from '@/state/store';
-import { Body, Chip, Pixel } from '@/ui/kit';
+import { Body, Chip, Explainer, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C, PIXEL_FONT } from '@/ui/theme';
 
@@ -25,13 +25,22 @@ export default function Wrapped() {
 
   return (
     <SubScreen title={`WRAPPED ${seasonLabel(season)}`} scroll={false}>
-      <View style={{ padding: 16 }}>
+      <View style={{ padding: 16, paddingBottom: 0, gap: 10 }}>
+        <Explainer>
+          {`One hunter's ${seasonLabel(season)} season as a stack of recap cards — birds, best day, favorite duck, title and more. Pick a hunter below, then tap the card to flip to the next one.`}
+        </Explainer>
+        <Pixel size={8} color={C.muted}>PICK A HUNTER</Pixel>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {data.hunters.map((h) => (
             <Chip key={h.id} label={h.name} color={h.color} on={h.id === hunterId} onPress={() => { setHunterId(h.id); setI(0); }} />
           ))}
         </ScrollView>
       </View>
+      {hunter && card ? (
+        <Pixel size={10} color={C.navy} style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+          {`${hunter.name.toUpperCase()}'S SEASON · CARD ${Math.min(i, cards.length - 1) + 1} OF ${cards.length}`}
+        </Pixel>
+      ) : null}
       {card ? (
         <Pressable style={{ flex: 1, padding: 16 }} onPress={() => setI((n) => (n + 1) % cards.length)}>
           <Animated.View
