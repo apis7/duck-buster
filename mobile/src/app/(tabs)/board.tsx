@@ -80,6 +80,7 @@ export default function Board() {
         });
         if (v === 'reopen') {
           await setSetting(awardsKey, '');
+          await setSetting(`awardsHeld:${awardsSeason}`, '');
           return;
         }
         if (v !== 'open') return;

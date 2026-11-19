@@ -1,7 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { seasonBadges } from '@/domain/archive';
+import { BADGE_BY_ID } from '@/domain/badges';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { groupRivalry } from '@/domain/rivalry';
 import { partyMembers } from '@/domain/stats';
@@ -13,7 +15,7 @@ import { C } from '@/ui/theme';
 /** Tale of the tape between two hunters. */
 export default function Rivalry() {
   const params = useLocalSearchParams<{ mode?: string }>();
-  const { data, titleOf } = useStore();
+  const { data, titleOf, celebratedAt } = useStore();
   const [parties, setParties] = useState(params.mode === 'parties');
   // Either side is a hunter or a party; both use the same tale of the tape.
   const sides = parties
@@ -36,7 +38,14 @@ export default function Rivalry() {
     </ScrollView>
   );
 
-  const r = ha && hb ? groupRivalry(data, ha.members, hb.members, allTime ? {} : { season }) : null;
+  const badges = useMemo(() => {
+    const known = celebratedAt.filter((c) => BADGE_BY_ID[c.badgeId]);
+    if (!allTime) return seasonBadges(known, season);
+    const all = new Map<string, string[]>();
+    for (const c of known) all.set(c.hunterId, [...(all.get(c.hunterId) ?? []), c.badgeId]);
+    return all;
+  }, [celebratedAt, season, allTime]);
+  const r = ha && hb ? groupRivalry(data, ha.members, hb.members, allTime ? {} : { season }, badges) : null;
   const aScore = r ? r.rows.filter((x) => (x.lowerWins ? x.a < x.b : x.a > x.b)).length : 0;
   const bScore = r ? r.rows.filter((x) => (x.lowerWins ? x.b < x.a : x.b > x.a)).length : 0;
 

@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { play } from '@/audio/sfx';
-import { seasonBadges } from '@/domain/archive';
+import { awardsOpen, seasonBadges } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
 import { HONORS, seasonHonors } from '@/domain/honors';
 import { currentSeason, seasonLabel } from '@/domain/season';
@@ -18,7 +18,7 @@ import { C } from '@/ui/theme';
 export default function Awards() {
   const params = useLocalSearchParams<{ season?: string }>();
   const season = Number(params.season) || currentSeason();
-  const { data, celebratedAt } = useStore();
+  const { data, celebratedAt, settings, setSetting } = useStore();
   const badges = useMemo(() => seasonBadges(celebratedAt, season), [celebratedAt, season]);
   // Awards, then the roast, then the season titles — saving the Grand Poombah for last.
   const results = useMemo(() => {
@@ -35,12 +35,23 @@ export default function Awards() {
       }));
     return [...awards, ...titles];
   }, [data, season, badges]);
-  const [shown, setShown] = useState(0);
+  // Once the ceremony has been held and the season is closed (Feb 1, archived, or
+  // closed early), coming back shows every envelope already open.
+  const heldKey = `awardsHeld:${season}`;
+  const closed = awardsOpen(season) || Number(settings[`awardsEarly:${season}`] || 0) > 0;
+  const [replay, setReplay] = useState(false);
+  const [opened, setShown] = useState(0);
+  const allOpen = closed && settings[heldKey] === '1' && !replay;
+  const shown = allOpen ? results.length : opened;
   const names = new Map(data.hunters.map((h) => [h.id, h]));
 
   useEffect(() => {
-    if (shown > 0) play('badge');
-  }, [shown]);
+    if (opened > 0) play('badge');
+  }, [opened]);
+
+  useEffect(() => {
+    if (results.length && opened >= results.length && settings[heldKey] !== '1') setSetting(heldKey, '1');
+  }, [opened, results.length, heldKey, settings, setSetting]);
 
   const firstRoast = results.findIndex((r) => r.kind === 'roast');
   const firstTitle = results.findIndex((r) => r.kind === 'title');
@@ -51,8 +62,11 @@ export default function Awards() {
         <Body style={{ color: C.navySoft }}>No hunts this season yet. The trophies are waiting.</Body>
       ) : null}
 
+      {allOpen && results.length ? (
+        <Pixel size={8} color={C.navySoft} style={{ textAlign: 'center', marginBottom: 6 }}>THE ENVELOPES HAVE BEEN OPENED</Pixel>
+      ) : null}
       {results.slice(0, shown).map((r, i) => (
-        <Animated.View key={r.key} entering={FadeInDown.duration(200)}>
+        <Animated.View key={r.key} entering={allOpen ? undefined : FadeInDown.duration(200)}>
           {i === firstRoast ? (
             <Pixel size={10} color={C.orange} style={{ textAlign: 'center', marginVertical: 10 }}>
               ~ AND NOW, THE ROAST ~
@@ -97,7 +111,14 @@ export default function Awards() {
       ) : results.length ? (
         <>
           <SeasonBadges badges={badges} names={names} dark />
-          <Btn label="START OVER" kind="secondary" onPress={() => setShown(0)} />
+          <Btn
+            label={allOpen ? 'RE-RUN THE CEREMONY' : 'START OVER'}
+            kind="secondary"
+            onPress={() => {
+              setReplay(true);
+              setShown(0);
+            }}
+          />
         </>
       ) : null}
     </SubScreen>

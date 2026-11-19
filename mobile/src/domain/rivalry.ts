@@ -1,4 +1,5 @@
 import { partyBirdsFor } from './badges';
+import { gamesFor, gameStats } from './gameStats';
 import { groupDays, statsFromDays, type Scope } from './stats';
 import type { Data } from './types';
 
@@ -15,8 +16,8 @@ export type Rivalry = {
 };
 
 /** Hunter vs hunter. */
-export function rivalry(data: Data, a: string, b: string, scope: Scope = {}): Rivalry {
-  return groupRivalry(data, [a], [b], scope);
+export function rivalry(data: Data, a: string, b: string, scope: Scope = {}, badges?: Map<string, string[]>): Rivalry {
+  return groupRivalry(data, [a], [b], scope, badges);
 }
 
 /**
@@ -24,7 +25,7 @@ export function rivalry(data: Data, a: string, b: string, scope: Scope = {}): Ri
  * hunts where both sides had someone in the blind; the side whose people shot
  * more that day takes it.
  */
-export function groupRivalry(data: Data, a: string[], b: string[], scope: Scope = {}): Rivalry {
+export function groupRivalry(data: Data, a: string[], b: string[], scope: Scope = {}, badges?: Map<string, string[]>): Rivalry {
   const sa = statsFromDays(groupDays(data, a, scope));
   const sb = statsFromDays(groupDays(data, b, scope));
   const rows: TapeRow[] = [
@@ -38,6 +39,15 @@ export function groupRivalry(data: Data, a: string[], b: string[], scope: Scope 
     { label: 'Meat (lb)', a: Math.round(sa.meatOz / 16), b: Math.round(sb.meatOz / 16) },
     { label: 'Skunks', a: sa.skunks, b: sb.skunks, lowerWins: true },
   ];
+  // The duck shoot: winners' rounds only (practice never counts).
+  const ga = gameStats(a.flatMap((id) => gamesFor(data, id, scope)));
+  const gb = gameStats(b.flatMap((id) => gamesFor(data, id, scope)));
+  rows.push({ label: 'Duck shoot high', a: ga.best, b: gb.best }, { label: 'Duck shoot total', a: ga.total, b: gb.total });
+  // Badges earned in the same window (see archive.seasonBadges).
+  if (badges) {
+    const count = (side: string[]) => side.reduce((n, id) => n + (badges.get(id)?.length ?? 0), 0);
+    rows.push({ label: 'Badges', a: count(a), b: count(b) });
+  }
 
   const party = partyBirdsFor(data);
   let together = 0;

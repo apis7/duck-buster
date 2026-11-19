@@ -4,7 +4,7 @@ import { seasonAwards } from '@/domain/awards';
 import { rivalry } from '@/domain/rivalry';
 import { seasonLabel, seasonOf } from '@/domain/season';
 import { titleFor } from '@/domain/titles';
-import { seasonWrapped } from '@/domain/wrapped';
+import { crewWrapped, seasonWrapped } from '@/domain/wrapped';
 
 import { makeData } from './fixtures';
 
@@ -44,9 +44,16 @@ describe('awards, rivalry, wrapped, titles', () => {
     const r = rivalry(d, 'dad', 'kid');
     expect(r.together).toBe(1);
     expect(r.aWins).toBe(1);
+    expect(r.rows.map((x) => x.label)).toContain('Duck shoot high');
+    const withBadges = rivalry(d, 'dad', 'kid', {}, new Map([['dad', ['a', 'b']]]));
+    expect(withBadges.rows.find((x) => x.label === 'Badges')).toMatchObject({ a: 2, b: 0 });
     const cards = seasonWrapped(d, 'dad', 2026, 'Decoy');
     expect(cards[0].big).toBe('1');
     expect(cards.at(-1)?.big).toBe('Decoy');
+    const crew = crewWrapped(d, 2026, () => 'Decoy');
+    expect(crew[0].id).toBe('hunts');
+    expect(crew[0].rows.map((r) => r.hunterId).sort()).toEqual(['dad', 'kid']);
+    expect(crew.at(-1)?.id).toBe('title');
   });
 
   it('titles', () => {
