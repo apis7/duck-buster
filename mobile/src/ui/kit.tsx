@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { HolidayOrnament } from './Ornament';
 import { C, PIXEL_FONT } from './theme';
 
 /** Small shared building blocks: pixel headings, chunky buttons with hard shadows, cards. */
@@ -79,7 +80,11 @@ export function Screen({ title, children, right, scroll = true, padded = true }:
     <View style={{ flex: 1, backgroundColor: C.paper, paddingTop: insets.top }}>
       {title ? (
         <View style={styles.header}>
-          <Pixel size={14}>{title}</Pixel>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <HolidayOrnament side="left" />
+            <Pixel size={14}>{title}</Pixel>
+            <HolidayOrnament side="right" />
+          </View>
           {right}
         </View>
       ) : null}

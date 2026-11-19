@@ -203,9 +203,9 @@ export function IntroFlow({
         marauder ? (
           <Busted result={result} onAgain={() => restart(false)} onDone={onDone} />
         ) : huntRound ? (
-          <RoundSummary result={result} playerName={playerName ?? ''} onDone={onDone} />
+          <RoundSummary result={result} playerName={playerName ?? ''} onDone={onDone} dayNames={day.names} />
         ) : (
-          <PracticeSummary result={result} onAgain={() => restart(false)} onDone={onDone} />
+          <PracticeSummary result={result} onAgain={() => restart(false)} onDone={onDone} dayNames={day.names} />
         )
       ) : null}
 
@@ -278,7 +278,17 @@ function useArmed(onArm?: () => void) {
   return armed;
 }
 
-function PracticeSummary({ result, onAgain, onDone }: { result: GameResult; onAgain: () => void; onDone: () => void }) {
+/** One quiet line naming today's feast day or holiday, if there is one. */
+function DayLine({ names }: { names: string[] }) {
+  if (!names.length) return null;
+  return (
+    <Pixel size={8} color={C.gold} style={{ textAlign: 'center', marginTop: 8, lineHeight: 14 }}>
+      {`TODAY: ${names.join(' · ').toUpperCase()}`}
+    </Pixel>
+  );
+}
+
+function PracticeSummary({ result, onAgain, onDone, dayNames }: { result: GameResult; onAgain: () => void; onDone: () => void; dayNames: string[] }) {
   const { highScores, addHighScore } = useStore();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -308,6 +318,7 @@ function PracticeSummary({ result, onAgain, onDone }: { result: GameResult; onAg
           <Pixel size={12} color={C.orange}>PRACTICE OVER</Pixel>
           <Pixel size={48} color={C.white} style={{ lineHeight: 64 }}>{`${result.score}`}</Pixel>
           <Stats result={result} />
+          <DayLine names={dayNames} />
           <Pixel size={8} color={C.navySoft} style={{ textAlign: 'center', marginTop: 6 }}>
             {'Practice only. Win a hunt to play\nthe round that counts.'}
           </Pixel>
@@ -359,7 +370,7 @@ function PracticeSummary({ result, onAgain, onDone }: { result: GameResult; onAg
 }
 
 /** The hunt winner's round: saved for the season. One shot at it — no "again". */
-function RoundSummary({ result, playerName, onDone }: { result: GameResult; playerName: string; onDone: () => void }) {
+function RoundSummary({ result, playerName, onDone, dayNames }: { result: GameResult; playerName: string; onDone: () => void; dayNames: string[] }) {
   const insets = useSafeAreaInsets();
   const armed = useArmed();
   return (
@@ -368,6 +379,7 @@ function RoundSummary({ result, playerName, onDone }: { result: GameResult; play
         <Pixel size={12} color={C.gold}>{`${playerName.toUpperCase()}'S ROUND`}</Pixel>
         <Pixel size={56} color={C.white} style={{ lineHeight: 72 }}>{`${result.score}`}</Pixel>
         <Stats result={result} />
+        <DayLine names={dayNames} />
         <Pixel size={9} color={C.orange} style={{ textAlign: 'center', marginTop: 10 }}>
           {'SAVED TO THE SEASON.\nCHECK THE BRAGGING BOARD.'}
         </Pixel>

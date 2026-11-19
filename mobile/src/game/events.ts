@@ -1,3 +1,4 @@
+import { FEAST_NAMES, feastsOn } from '@/domain/calendar';
 import { isThanksgiving } from '@/domain/season';
 
 import { themeFor, THEMES, type Theme } from './theme';
@@ -20,6 +21,19 @@ import { themeFor, THEMES, type Theme } from './theme';
  *  - Fourth of July (Jul 3–5): fireworks, and a bald eagle. Shoot it and the game
  *    warden ends your round.
  *  - Full moon: a moonlit night marsh with fewer, bigger, slower flocks.
+ *
+ * Feast days (domain/calendar.ts):
+ *  - St. Hubert (Nov 3): a white stag with a cross walks the bank. Let it pass:
+ *    ×2 for the rest of the round. Shoot it: PENANCE, score halved.
+ *  - Martinmas (Nov 11) and Michaelmas (Sep 29): geese are worth 3× and show up
+ *    a quarter more often.
+ *  - Fridays in Lent: no meat — every bird scores −1.
+ *  - Candlemas (Feb 2): candles on the bank; each miss blows one out; lit
+ *    candles at the end are +2 each.
+ *  - St. Isidore (May 15): an angel ploughs across the back; birds dropped while
+ *    it's on screen are +1.
+ *  - St. John's Eve, Epiphany, Rogation Days: just to look at — bonfires; the
+ *    star and the three kings; rain that clears as a procession passes.
  */
 
 export type GameFx = {
@@ -35,14 +49,25 @@ export type GameFx = {
   eagle: boolean;
   night: boolean;
   lucky: boolean;
+  hubert: boolean;
+  /** Martinmas / Michaelmas. */
+  geeseFeast: boolean;
+  lent: boolean;
+  candles: boolean;
+  isidore: boolean;
+  bonfires: boolean;
+  epiphany: boolean;
+  rogation: boolean;
 };
 
 export const NO_FX: GameFx = {
   opener: false, pheasants: false, ghosts: false, turkey: false, partridge: false, midnight: false,
   snowOrder: false, wind: 0, eagle: false, night: false, lucky: false,
+  hubert: false, geeseFeast: false, lent: false, candles: false, isidore: false, bonfires: false, epiphany: false, rogation: false,
 };
 
-export type GameDay = { theme: Theme; fx: GameFx; banners: string[] };
+/** `names`: today's feast days and holidays, for the end-of-round summary. */
+export type GameDay = { theme: Theme; fx: GameFx; banners: string[]; names: string[] };
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -118,10 +143,41 @@ export function gameDay(date: string, rng: () => number = Math.random): GameDay 
     fx.wind = (rng() < 0.5 ? -1 : 1) * (50 + rng() * 50);
     banners.push('BLIZZARD!\nWIND DRIFTS YOUR SHOTS');
   }
+  const feasts = feastsOn(date);
+  if (feasts.includes('hubert')) {
+    fx.hubert = true;
+    banners.push('FEAST OF ST. HUBERT\nLET THE STAG PASS');
+  }
+  if (feasts.includes('martinmas') || feasts.includes('michaelmas')) {
+    fx.geeseFeast = true;
+    banners.push(feasts.includes('martinmas') ? 'MARTINMAS!\nGEESE ×3' : 'MICHAELMAS!\nGEESE ×3');
+  }
+  if (feasts.includes('lent')) {
+    fx.lent = true;
+    banners.push('NO MEAT ON\nLENTEN FRIDAYS!');
+  }
+  if (feasts.includes('candlemas')) {
+    fx.candles = true;
+    banners.push('CANDLEMAS\nEACH MISS BLOWS OUT A CANDLE');
+  }
+  if (feasts.includes('isidore')) {
+    fx.isidore = true;
+    banners.push('ST. ISIDORE THE FARMER\n+1 WHILE THE ANGEL PLOUGHS');
+  }
+  if (feasts.includes('stjohn')) fx.bonfires = true;
+  if (feasts.includes('epiphany')) fx.epiphany = true;
+  if (feasts.includes('rogation')) fx.rogation = true;
+
   if (isFullMoon(date)) {
     fx.night = true;
     theme = { ...THEMES.night, snow: theme.snow, trees: theme.trees, fireworks: theme.fireworks, pumpkins: theme.pumpkins };
     banners.push('FULL MOON');
   }
-  return { theme, fx, banners };
+  const names = feasts.map((f) => FEAST_NAMES[f]);
+  if (fx.opener) names.push('Duck Opener');
+  if (fx.pheasants) names.push('Pheasant Opener');
+  if (fx.turkey && !feasts.includes('thanksgiving')) names.push('Thanksgiving week');
+  if (fx.snowOrder) names.push('Spring Snow Goose Order');
+  if (fx.night) names.push('Full moon');
+  return { theme, fx, banners, names };
 }

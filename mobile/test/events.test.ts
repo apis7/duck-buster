@@ -109,3 +109,68 @@ describe('event birds', () => {
     expect(saw).toBe(true);
   });
 });
+
+describe('feast days', () => {
+  const game = (fx: Partial<GameFx> = {}): GameState => {
+    const s = newGame(400, 800, gameLayout(400, 800, 24, 48), false, { ...NO_FX, ...fx });
+    s.nextFlock = 999;
+    s.stagAt = Infinity;
+    return s;
+  };
+
+  it('Lenten Friday: every bird is −1', () => {
+    const s = game({ lent: true });
+    const d = makeBird(s, 'duck', 0, 0, 0);
+    s.birds.push(d);
+    applyHit(s, d, 'ko', 0, 0);
+    expect(s.score).toBe(-1);
+  });
+
+  it('Martinmas: geese ×3 (13 → 39)', () => {
+    const s = game({ geeseFeast: true });
+    const g = makeBird(s, 'goose', 0, 0, 0);
+    s.birds.push(g);
+    for (let i = 0; i < 4; i++) applyHit(s, g, 'ko', 0, 0);
+    expect(s.score).toBe(39);
+  });
+
+  it('St. Hubert: shoot the stag and the score is halved; let it pass and points double', () => {
+    const a = game({ hubert: true });
+    a.score = 20;
+    const stag = makeBird(a, 'stag', 0, 0, 0);
+    a.birds.push(stag);
+    applyHit(a, stag, 'body', 0, 0);
+    expect(a.score).toBe(10);
+
+    const b = game({ hubert: true });
+    const passing = makeBird(b, 'stag', b.width - 5, 600, 60);
+    b.birds.push(passing);
+    for (let i = 0; i < 30; i++) step(b, 1 / 60);
+    expect(b.blessed).toBe(true);
+    const d = makeBird(b, 'duck', 0, 0, 0);
+    b.birds.push(d);
+    applyHit(b, d, 'ko', 0, 0);
+    expect(b.score).toBe(6);
+  });
+
+  it('Candlemas: lit candles pay +2 each at the end; misses blow them out', () => {
+    const s = game({ candles: true });
+    s.misses = 3;
+    while (!s.over || !s.finalized) step(s, 1 / 60);
+    expect(s.score).toBe((8 - 3) * 2);
+  });
+
+  it('St. Isidore: +1 while the angel ploughs', () => {
+    const s = game({ isidore: true });
+    while (s.t < 4) step(s, 1 / 60);
+    const d = makeBird(s, 'duck', 0, 0, 0);
+    s.birds.push(d);
+    applyHit(s, d, 'ko', 0, 0);
+    expect(s.score).toBe(4);
+  });
+
+  it('the summary names the day', () => {
+    expect(gameDay('2026-11-03', calm).names[0]).toMatch(/Hubert/);
+    expect(gameDay('2026-08-12', calm).names).toEqual([]);
+  });
+});

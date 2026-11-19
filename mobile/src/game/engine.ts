@@ -29,7 +29,7 @@
 
 import { NO_FX, type GameFx } from './events';
 import type { GameLayout } from './layout';
-import { EAGLE_H, EAGLE_W, PHEASANT_H, PHEASANT_W, TURKEY_H, TURKEY_W, PARTRIDGE_H, PARTRIDGE_W, COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
+import { STAG_H, STAG_W, EAGLE_H, EAGLE_W, PHEASANT_H, PHEASANT_W, TURKEY_H, TURKEY_W, PARTRIDGE_H, PARTRIDGE_W, COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
 
 export const GAME_SECONDS = 12;
 export const PIXEL = 3;
@@ -53,10 +53,16 @@ const GRAVITY = 900;
 export const MIN_AIM = -Math.PI + 0.15;
 export const MAX_AIM = -0.15;
 
-export type BirdKind = 'duck' | 'coot' | 'goose' | 'swan' | 'partridge' | 'pheasant' | 'turkey' | 'eagle';
+export type BirdKind = 'duck' | 'coot' | 'goose' | 'swan' | 'partridge' | 'pheasant' | 'turkey' | 'eagle' | 'stag';
 
 /** Fraction of the bird's width, from the head back, that counts as a knockout hit. */
-export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goose: 0.8, swan: 0.6, partridge: 1, pheasant: 1, turkey: 1, eagle: 1 };
+export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goose: 0.8, swan: 0.6, partridge: 1, pheasant: 1, turkey: 1, eagle: 1, stag: 1 };
+
+/** Candlemas: candles on the bank; each miss blows one out; each still lit at the end is worth this. */
+export const CANDLES = 8;
+export const CANDLE_POINTS = 2;
+/** St. Isidore's angel takes this long to plough across. */
+export const ANGEL_SECONDS = 9;
 
 /** Holiday birds (see events.ts). */
 export const ROOSTER_POINTS = 4;
@@ -128,7 +134,8 @@ export type GameEvent =
   /** Marauder Mode: a bird blew apart. */
   | { k: 'pop' }
   | { k: 'partridge' }
-  | { k: 'turkey' | 'eagle' | 'henpheasant' | 'midnight' | 'lucky' }
+  | { k: 'turkey' | 'eagle' | 'henpheasant' | 'midnight' | 'lucky' | 'penance' | 'blessing' }
+  | { k: 'candles'; lit: number }
   | { k: 'special'; kind: 'goose' | 'swan'; pts: number; banded: boolean; down: boolean };
 
 export type GameState = {
@@ -183,6 +190,13 @@ export type GameState = {
   eagleAt: number;
   nextPheasant: number;
   midnightShown: boolean;
+  stagAt: number;
+  /** St. Hubert: the stag walked by unharmed — ×2 for the rest of the round. */
+  blessed: boolean;
+  /** Shots that hit nothing (Candlemas). */
+  misses: number;
+  /** End-of-round bonuses have been added. */
+  finalized: boolean;
   over: boolean;
 };
 
@@ -233,6 +247,10 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     eagleAt: fx.eagle ? 3 + Math.random() * 4 : Infinity,
     nextPheasant: fx.pheasants ? 1 + Math.random() * 1.5 : Infinity,
     midnightShown: false,
+    stagAt: fx.hubert ? 0.8 + Math.random() * 1.2 : Infinity,
+    blessed: false,
+    misses: 0,
+    finalized: false,
     over: false,
   };
 }
@@ -251,6 +269,20 @@ export function aimToward(s: GameState, x: number, y: number): void {
   const dy = y - s.gunY;
   if (dx * dx + dy * dy < 14 * 14) return;
   s.aim = clampAim(Math.atan2(dy, dx));
+}
+
+/** Candlemas: candles still burning. */
+export function candlesLit(s: GameState): number {
+  'worklet';
+  return Math.max(0, CANDLES - s.misses);
+}
+
+/** St. Isidore's angel: where it is (x, left edge), or null when off screen. */
+export function angelX(s: GameState): number | null {
+  'worklet';
+  if (!s.fx.isidore) return null;
+  const x = -90 + (s.t / ANGEL_SECONDS) * (s.width + 180);
+  return x > -90 && x < s.width + 90 ? x : null;
 }
 
 /** Seconds of 1.5× left, or 0. */
@@ -328,7 +360,9 @@ export function makeBird(
                 ? [TURKEY_W, TURKEY_H]
                 : kind === 'eagle'
                   ? [EAGLE_W, EAGLE_H]
-                  : [DUCK_W, DUCK_H];
+                  : kind === 'stag'
+                    ? [STAG_W, STAG_H]
+                    : [DUCK_W, DUCK_H];
   // Full-moon nights: fewer, bigger, slower birds.
   const night = s.fx.night ? 1.25 : 1;
   return {
@@ -449,7 +483,7 @@ function maybeSpawnSpecial(s: GameState): void {
   let bird: Bird | null = null;
   if (r < 0.006) bird = makeBird(s, 'goose', -GOOSE_W * PIXEL, mid, 70 * scale, { banded: true });
   else if (r < 0.05) bird = makeBird(s, 'swan', -SWAN_W * PIXEL, mid, 58 * scale);
-  else if (r < 0.2) bird = makeBird(s, 'goose', -GOOSE_W * PIXEL, mid, 70 * scale);
+  else if (r < (s.fx.geeseFeast ? 0.2375 : 0.2)) bird = makeBird(s, 'goose', -GOOSE_W * PIXEL, mid, 70 * scale);
   if (bird) {
     s.birds.push(bird);
     s.specialSeen = true;
@@ -489,6 +523,7 @@ export function birdName(b: Bird): string {
   if (b.kind === 'pheasant') return b.hen ? 'HEN PHEASANT' : 'ROOSTER';
   if (b.kind === 'turkey') return 'TURKEY';
   if (b.kind === 'eagle') return 'EAGLE';
+  if (b.kind === 'stag') return 'STAG';
   return b.kind === 'swan' ? 'SWAN' : 'COOT';
 }
 
@@ -543,6 +578,13 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
     down = true;
     burst(s, bx, by, 14, ['#7A5232', '#3A2A1E', '#C8342A'], 200);
     s.events.push({ k: 'turkey' });
+  } else if (b.kind === 'stag') {
+    // You shot St. Hubert's stag. Penance: your score is cut in half.
+    b.earned = 0;
+    down = true;
+    s.score = Math.floor(s.score / 2);
+    burst(s, bx, by, 20, ['#F4F2EC', '#FFD84A'], 220);
+    s.events.push({ k: 'penance' });
   } else if (b.kind === 'eagle') {
     // Federal offense: the game warden ends the round on the spot.
     b.earned = 0;
@@ -596,6 +638,14 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   if (b.kind !== 'partridge' && b.earned > 0 && s.t < s.multUntil) b.earned = Math.round(b.earned * PARTRIDGE_MULTIPLIER);
   // New Year's: the last 3 seconds count double.
   if (s.fx.midnight && b.earned > 0 && s.t >= GAME_SECONDS - 3) b.earned *= 2;
+  // Martinmas / Michaelmas: geese are worth triple.
+  if (s.fx.geeseFeast && b.kind === 'goose') b.earned *= 3;
+  // St. Isidore: +1 for every bird dropped while the angel ploughs.
+  if (b.earned > 0 && angelX(s) != null && b.kind !== 'stag') b.earned += 1;
+  // St. Hubert's blessing: ×2 after the stag has passed.
+  if (s.blessed && b.earned > 0) b.earned *= 2;
+  // Fridays in Lent: no meat. Every bird is −1.
+  if (s.fx.lent && b.kind !== 'stag' && b.kind !== 'eagle') b.earned = -1;
   // Opening Day: blaze-orange confetti on every bird.
   if (s.fx.opener) burst(s, b.x + b.w / 2, b.y + b.h / 2, 12, ['#FF6A00', '#FFFFFF', '#FF9A3C'], 240);
   if (b.sit === 2) s.events.push({ k: 'sitting' });
@@ -670,6 +720,13 @@ export function step(s: GameState, dt: number): void {
       t.baseY = t.y;
       s.birds.push(t);
     }
+    if (s.t >= s.stagAt) {
+      s.stagAt = Infinity;
+      const st = makeBird(s, 'stag', -STAG_W * PIXEL, 0, 34 * scaleX);
+      st.y = s.groundY - st.h - 4;
+      st.baseY = st.y;
+      s.birds.push(st);
+    }
     if (s.t >= s.eagleAt) {
       s.eagleAt = Infinity;
       s.birds.push(makeBird(s, 'eagle', -EAGLE_W * PIXEL, midSky(0.15 + Math.random() * 0.3), 95 * scaleX));
@@ -715,6 +772,13 @@ export function step(s: GameState, dt: number): void {
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.vy = Math.min(0, b.vy + 330 * dt);
+    } else if (b.alive && b.kind === 'stag') {
+      b.x += b.vx * dt;
+      if (b.x > s.width && !s.blessed) {
+        // Let the stag pass and St. Hubert blesses the rest of your round.
+        s.blessed = true;
+        s.events.push({ k: 'blessing' });
+      }
     } else if (b.alive && b.kind === 'turkey') {
       b.x += b.vx * dt;
       b.y = b.baseY + (Math.floor(s.t * 6) % 2) * 2;
@@ -782,8 +846,18 @@ export function step(s: GameState, dt: number): void {
       }
     }
     if (!spent && bl.x > -20 && bl.x < s.width + 20 && bl.y > -20) keep.push(bl);
+    else if (!spent) s.misses++;
   }
   s.bullets = keep;
+
+  if (s.over && !s.finalized) {
+    s.finalized = true;
+    if (s.fx.candles) {
+      const lit = candlesLit(s);
+      s.score += lit * CANDLE_POINTS;
+      s.events.push({ k: 'candles', lit });
+    }
+  }
 
   for (const p of s.particles) {
     p.vy += 220 * dt;
@@ -812,6 +886,6 @@ export function wingsUp(b: Bird, t: number): boolean {
   if (b.sit === 1) return Math.floor(t / 0.07) % 2 === 0;
   const beat = b.kind === 'coot' ? 0.09 : b.kind === 'duck' ? 0.14 : 0.24;
   if (b.kind === 'partridge') return true;
-  if (b.kind === 'turkey') return false;
+  if (b.kind === 'turkey' || b.kind === 'stag') return false;
   return Math.floor((t + b.phase) / beat) % 2 === 0;
 }

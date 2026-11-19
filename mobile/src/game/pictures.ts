@@ -4,6 +4,7 @@ import { PIXEL } from './engine';
 import {
   BANDED_GOOSE, COOT, COOT_DOWN, COOT_UP, DOG, DOG_PALETTE, DUCK_DOWN, DUCK_SIT, DUCK_UP, FLOCK_SPECIES, GLYPHS, GOOSE, GOOSE_DOWN,
   GOOSE_UP, GUN, GUN_PALETTE, PARTRIDGE_PALETTE, PARTRIDGE_TREE, SHELL, SHELL_PALETTE, spritePixels, SWAN, SWAN_DOWN, SWAN_UP,
+  ANGEL, ANGEL_PALETTE, FRIAR, FRIAR_PALETTE, KING, KING_PALETTES, STAG, STAG_PALETTE,
   EAGLE_DOWN, EAGLE_PALETTE, EAGLE_UP, HEN_PHEASANT, PHEASANT_DOWN, PHEASANT_UP, PUMPKIN, PUMPKIN_PALETTE, ROOSTER, TURKEY, TURKEY_PALETTE,
   type Grid, type Palette,
 } from './sprites';
@@ -40,6 +41,10 @@ export type GamePictures = {
   henPheasant: Flap;
   turkey: SkPicture;
   eagle: Flap;
+  stag: SkPicture;
+  angel: SkPicture;
+  kings: SkPicture[];
+  friar: SkPicture;
   dog: SkPicture;
   dogFlipped: SkPicture;
   gun: SkPicture;
@@ -68,6 +73,10 @@ export function gamePictures(): GamePictures {
     henPheasant: flap(PHEASANT_UP, PHEASANT_DOWN, HEN_PHEASANT),
     turkey: picture(TURKEY, TURKEY_PALETTE),
     eagle: flap(EAGLE_UP, EAGLE_DOWN, EAGLE_PALETTE),
+    stag: picture(STAG, STAG_PALETTE),
+    angel: picture(ANGEL, ANGEL_PALETTE),
+    kings: KING_PALETTES.map((p) => picture(KING, p)),
+    friar: picture(FRIAR, FRIAR_PALETTE),
     dog: picture(DOG, DOG_PALETTE),
     dogFlipped: picture(mirror(DOG, 16), DOG_PALETTE),
     gun: picture(GUN, GUN_PALETTE),

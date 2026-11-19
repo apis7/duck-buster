@@ -345,6 +345,81 @@ export const EAGLE_W = 26;
 export const EAGLE_H = 11;
 export const EAGLE_PALETTE: Palette = { D: '#3A2A1A', B: '#4A3220', H: '#F4F4F4', E: '#111111', Y: '#E8B923', T: '#F4F4F4' };
 
+/* ── St. Hubert's stag (walks the bank; faces right): A antler · Y gold cross · W white · E eye · N nose · B hoof ── */
+export const STAG: Grid = [
+  '...........A.Y.A..',
+  '..........A.YYY.A.',
+  '...........A.Y.A..',
+  '............AAA...',
+  '............WWWW..',
+  '............WEWWN.',
+  '...........WWWW...',
+  '..WWWWWWWWWWWW....',
+  '.WWWWWWWWWWWWW....',
+  'WWWWWWWWWWWWW.....',
+  'WWWWWWWWWWWW......',
+  '.W..W....W..W.....',
+  '.W..W....W..W.....',
+  '.B..B....B..B.....',
+];
+export const STAG_W = 18;
+export const STAG_H = 14;
+export const STAG_PALETTE: Palette = { A: '#C8B08A', Y: '#FFD84A', W: '#F4F2EC', E: '#111111', N: '#333333', B: '#5A4A3A' };
+
+/* ── St. Isidore's angel and plough: Y halo · S skin · W wings · R robe · H handle · P plough ── */
+export const ANGEL: Grid = [
+  '...YYY................',
+  '..Y...Y...............',
+  '...SSS................',
+  'WW.RRR.WW.............',
+  'WWWRRRWWW.............',
+  '.WWRRRWW..............',
+  '...RRRR...............',
+  '...RRRRHHHHHHH........',
+  '...RRRR.......HH......',
+  '...RR.RR.......PPPP...',
+  '...S...S......PPPPPP..',
+  '..................PP..',
+];
+export const ANGEL_PALETTE: Palette = { Y: '#FFD84A', S: '#F2D2B0', W: '#F4F4F4', R: '#BFD8F0', H: '#6A4A2A', P: '#8A9098' };
+
+/* ── Epiphany: a king (crown, robe, gift). Robe color swapped per king. ── */
+export const KING: Grid = [
+  '.Y.Y.Y.',
+  '.YYYYY.',
+  '..SSS..',
+  '..SSS..',
+  '.RRRRR.',
+  'RRRRRRR',
+  'RRGRRRR',
+  'RRRRRRR',
+  '.RRRRR.',
+  '.RRRRR.',
+  '.R...R.',
+  '.B...B.',
+];
+export const KING_PALETTES: Palette[] = [
+  { Y: '#FFD84A', S: '#F2D2B0', R: '#A8242A', G: '#FFD84A', B: '#3A2A1E' },
+  { Y: '#FFD84A', S: '#8A5A3A', R: '#1E6A4A', G: '#F4F4F4', B: '#3A2A1E' },
+  { Y: '#FFD84A', S: '#C8956A', R: '#5A2A7A', G: '#E8B923', B: '#3A2A1E' },
+];
+
+/* ── Rogation procession: a friar (S skin · B habit · K sandal) ── */
+export const FRIAR: Grid = [
+  '..SS..',
+  '..SS..',
+  '.BBBB.',
+  'BBBBBB',
+  'BBBBBB',
+  'BBBBBB',
+  '.BBBB.',
+  '.BBBB.',
+  '.BBBB.',
+  '.B..B.',
+  '.K..K.',
+];
+export const FRIAR_PALETTE: Palette = { S: '#F2D2B0', B: '#6A4A2E', K: '#2A1E14' };
+
 /* ── Jack-o'-lantern (Halloween bank decoration) ── */
 export const PUMPKIN: Grid = [
   '....G....',

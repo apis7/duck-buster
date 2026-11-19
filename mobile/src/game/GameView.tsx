@@ -10,7 +10,7 @@ import { Pixel } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
 import {
-  aimToward, dogTop, finished, fire, GAME_SECONDS, ghostShowing, GUN_LENGTH, multLeft, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
+  angelX, aimToward, CANDLES, candlesLit, dogTop, finished, fire, GAME_SECONDS, ghostShowing, GUN_LENGTH, multLeft, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
   type Bird, type GameEvent, type GameState,
 } from './engine';
 import type { GameLayout } from './layout';
@@ -56,6 +56,7 @@ function spriteW(kind: Bird['kind']): number {
     case 'pheasant': return 20;
     case 'turkey': return 14;
     case 'eagle': return 26;
+    case 'stag': return 18;
     default: return 16;
   }
 }
@@ -71,6 +72,7 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
   else if (b.kind === 'pheasant') flap = b.hen ? pics.henPheasant : pics.rooster;
   else if (b.kind === 'turkey') flap = { up: pics.turkey, down: pics.turkey };
   else if (b.kind === 'eagle') flap = pics.eagle;
+  else if (b.kind === 'stag') flap = { up: pics.stag, down: pics.stag };
   else flap = b.hen ? pics.ducks[b.species].hen : pics.ducks[b.species].drake;
   const pic = b.kind === 'duck' && b.sit === 2 && b.alive ? (flap as GamePictures['ducks'][number]['drake']).sit : up ? flap.up : flap.down;
   // Sprites are drawn at their native size; scale up for big ducks and full-moon nights.
@@ -146,7 +148,8 @@ export function GameView({
   const lastScore = useSharedValue(0);
   const lastLeft = useSharedValue(GAME_SECONDS);
   const lastMult = useSharedValue(0);
-  const [hud, setHud] = useState({ score: 0, left: GAME_SECONDS, mult: 0 });
+  const lastBlessed = useSharedValue(false);
+  const [hud, setHud] = useState({ score: 0, left: GAME_SECONDS, mult: 0, blessed: false });
   const [banner, setBanner] = useState<Banner | null>(null);
   const [reloadingNow, setReloadingNow] = useState(false);
   const ended = useRef(false);
@@ -166,7 +169,7 @@ export function GameView({
     later(ms, () => setBanner((b) => (b?.key === key ? null : b)));
   };
 
-  const onHud = (score: number, left: number, mult: number) => setHud({ score, left, mult });
+  const onHud = (score: number, left: number, mult: number, blessed: boolean) => setHud({ score, left, mult, blessed });
 
   const onEvents = (events: GameEvent[]) => {
     for (const e of events) {
@@ -208,6 +211,17 @@ export function GameView({
         case 'eagle':
           play('siren');
           showBanner('FEDERAL OFFENSE!\nTHE GAME WARDEN ENDED YOUR ROUND', '#FF5A4E', true, 2600);
+          break;
+        case 'penance':
+          play('wrong');
+          showBanner('PENANCE!\nYOU SHOT ST. HUBERT’S STAG — SCORE HALVED', '#FFB199', false, 2200);
+          break;
+        case 'blessing':
+          play('celebrate');
+          showBanner('ST. HUBERT’S BLESSING\n×2 FOR THE REST OF THE ROUND', C.gold, false, 2000);
+          break;
+        case 'candles':
+          if (e.k === 'candles' && e.lit > 0) showBanner(`${e.lit} CANDLES STILL LIT\n+${e.lit * 2}`, C.gold, false, 1800);
           break;
         case 'midnight':
           play('celebrate');
@@ -269,11 +283,12 @@ export function GameView({
     const s = state.value;
     const left = Math.max(0, Math.ceil(GAME_SECONDS - s.t));
     const mult = multLeft(s);
-    if (s.score !== lastScore.value || left !== lastLeft.value || mult !== lastMult.value) {
+    if (s.score !== lastScore.value || left !== lastLeft.value || mult !== lastMult.value || s.blessed !== lastBlessed.value) {
       lastScore.value = s.score;
       lastLeft.value = left;
       lastMult.value = mult;
-      scheduleOnRN(onHud, s.score, left, mult);
+      lastBlessed.value = s.blessed;
+      scheduleOnRN(onHud, s.score, left, mult, s.blessed);
     }
     if (finished(s)) {
       live.set(false);
@@ -325,6 +340,70 @@ export function GameView({
   const world = useDerivedValue(() => {
     const s = state.value;
     return createPicture((canvas) => {
+      const deco = Skia.Paint();
+      // St. John's Eve: bonfires flicker along the bank, sparks rising.
+      if (s.fx.bonfires) {
+        for (const fx of [0.1, 0.84]) {
+          const bx = s.width * fx;
+          const by = s.groundY - 4;
+          deco.setColor(Skia.Color('#5A3A1E'));
+          canvas.drawRect(Skia.XYWHRect(bx - 14, by - 6, 28, 6), deco);
+          for (let i = 0; i < 9; i++) {
+            const h = 10 + ((Math.sin(s.t * 13 + i * 2.1) + 1) / 2) * 26;
+            deco.setColor(Skia.Color(i % 3 === 0 ? '#FFE29A' : i % 3 === 1 ? '#F26B1D' : '#D7263D'));
+            canvas.drawRect(Skia.XYWHRect(bx - 12 + i * 3, by - 6 - h, 3, h), deco);
+          }
+          deco.setColor(Skia.Color('#FFB44A'));
+          for (let i = 0; i < 8; i++) {
+            const life = (s.t * 0.9 + i / 8) % 1;
+            canvas.drawRect(Skia.XYWHRect(bx + Math.sin(i * 3 + s.t) * 18, by - 40 - life * 160, 3, 3), deco);
+          }
+        }
+      }
+      // Epiphany: the star crosses the sky; the three kings follow along the bank.
+      if (s.fx.epiphany) {
+        const sx = s.width * (0.1 + (s.t / GAME_SECONDS) * 0.8);
+        const sy = s.skyTop + 18;
+        deco.setColor(Skia.Color('#FFF6C8'));
+        canvas.drawRect(Skia.XYWHRect(sx - 2, sy - 12, 4, 24), deco);
+        canvas.drawRect(Skia.XYWHRect(sx - 12, sy - 2, 24, 4), deco);
+        canvas.drawRect(Skia.XYWHRect(sx - 4, sy - 4, 8, 8), deco);
+        deco.setAlphaf(0.35);
+        canvas.drawRect(Skia.XYWHRect(sx - 1, sy + 12, 2, 60), deco);
+        deco.setAlphaf(1);
+        pics.kings.forEach((k, i) => {
+          canvas.save();
+          canvas.translate(-60 + s.t * 30 - i * 26, s.groundY - 40 + (Math.floor(s.t * 5 + i) % 2));
+          canvas.drawPicture(k);
+          canvas.restore();
+        });
+      }
+      // St. Isidore: the angel ploughs across the far bank.
+      const ax = angelX(s);
+      if (ax != null) {
+        canvas.save();
+        canvas.translate(ax, s.groundY - 40);
+        canvas.drawPicture(pics.angel);
+        canvas.restore();
+      }
+      // Rogation: a procession walks the bank behind a cross.
+      if (s.fx.rogation) {
+        const lead = -40 + (s.t / 10) * (s.width + 200);
+        for (let i = 0; i < 5; i++) {
+          const fx2 = lead - i * 24;
+          const bob = Math.floor(s.t * 4 + i) % 2;
+          if (i === 0) {
+            deco.setColor(Skia.Color('#B8862E'));
+            canvas.drawRect(Skia.XYWHRect(fx2 + 16, s.groundY - 60, 3, 32), deco);
+            canvas.drawRect(Skia.XYWHRect(fx2 + 10, s.groundY - 54, 15, 3), deco);
+          }
+          canvas.save();
+          canvas.translate(fx2, s.groundY - 36 + bob);
+          canvas.drawPicture(pics.friar);
+          canvas.restore();
+        }
+      }
+
       for (const b of s.birds) if (!b.landed) drawBird(canvas, pics, b, s.t);
       for (const d of s.dogs) {
         canvas.save();
@@ -389,6 +468,48 @@ export function GameView({
           canvas.drawRect(Skia.XYWHRect(x, y, size, size), paint);
         }
         paint.setAlphaf(1);
+      }
+
+      // Rogation: rain that thins and clears as the procession passes.
+      if (s.fx.rogation) {
+        const left = Math.max(0, 1 - s.t / 9);
+        if (left > 0) {
+          paint.setColor(Skia.Color('#22304E'));
+          paint.setAlphaf(0.4 * left);
+          canvas.drawRect(Skia.XYWHRect(0, 0, s.width, s.groundY), paint);
+          paint.setColor(Skia.Color('#C8D8F0'));
+          paint.setAlphaf(0.7 * left);
+          const drops = Math.floor(70 * left);
+          for (let i = 0; i < drops; i++) {
+            const x = (i * 71 + s.t * 40) % s.width;
+            const y = (i * 113 + s.t * 520) % s.groundY;
+            canvas.drawRect(Skia.XYWHRect(x, y, 2, 10), paint);
+          }
+          paint.setAlphaf(1);
+        }
+      }
+
+      // Candlemas: a row of candles on the bank; misses blow them out.
+      if (s.fx.candles) {
+        const lit = candlesLit(s);
+        for (let i = 0; i < CANDLES; i++) {
+          const cx = s.width * (0.08 + (i / (CANDLES - 1)) * 0.84);
+          const cy = s.groundY + 2;
+          paint.setColor(Skia.Color('#F4EEDC'));
+          canvas.drawRect(Skia.XYWHRect(cx - 3, cy - 16, 6, 16), paint);
+          if (i < lit) {
+            const flick = Math.sin(s.t * 20 + i) * 1.5;
+            paint.setColor(Skia.Color('#FFB44A'));
+            canvas.drawRect(Skia.XYWHRect(cx - 2 + flick, cy - 24, 4, 7), paint);
+            paint.setColor(Skia.Color('#FFF2B0'));
+            canvas.drawRect(Skia.XYWHRect(cx - 1 + flick, cy - 22, 2, 4), paint);
+          } else {
+            paint.setColor(Skia.Color('#8A8A8A'));
+            paint.setAlphaf(0.5);
+            canvas.drawRect(Skia.XYWHRect(cx - 1, cy - 26 - ((s.t * 20) % 10), 2, 6), paint);
+            paint.setAlphaf(1);
+          }
+        }
       }
 
       // Blizzard: whiteout gusts sweep across with the wind.
@@ -494,6 +615,7 @@ export function GameView({
       <View pointerEvents="none" style={[styles.hud, { top: (skyTop - 56) * scale }]}>
         <Pixel size={16 * scale} color={marauder ? '#FF5A4E' : C.white}>{`${hud.score}`}</Pixel>
         {hud.mult > 0 ? <Pixel size={11 * scale} color={C.gold}>{`×1.5 ${hud.mult}s`}</Pixel> : null}
+        {hud.blessed ? <Pixel size={11 * scale} color={C.gold}>{'×2 ✝'}</Pixel> : null}
         <Pixel size={11 * scale} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
       </View>
       {reloadingNow ? (

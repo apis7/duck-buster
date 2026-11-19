@@ -4,6 +4,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Pixel } from './kit';
+import { HolidayOrnament } from './Ornament';
 import { C } from './theme';
 
 /** A pushed screen with a back link. */
@@ -22,6 +23,7 @@ export function SubScreen({ title, children, dark, scroll = true }: { title: str
           <Pixel size={10} color={fg}>{'< BACK'}</Pixel>
         </Pressable>
         <Pixel size={12} color={fg} style={{ flex: 1 }}>{title}</Pixel>
+        <HolidayOrnament side="right" />
       </View>
       {scroll ? (
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: insets.bottom + 32 }}>
