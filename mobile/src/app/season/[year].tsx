@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 
 import { seasonBadges } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
+import { speciesLeads, withLeads } from '@/domain/leads';
 import { gameLeaders } from '@/domain/gameStats';
 import { HONORS, seasonHonors } from '@/domain/honors';
 import { formatMeat } from '@/domain/meat';
@@ -31,7 +32,7 @@ export default function SeasonArchive() {
     .filter((r) => r.s.hunts > 0)
     .sort((a, b) => b.s.birds - a.s.birds);
   const leaders = gameLeaders(data, scope);
-  const seasonBadgeMap = seasonBadges(celebratedAt, season);
+  const seasonBadgeMap = withLeads(seasonBadges(celebratedAt, season), speciesLeads(data, { season }));
   const awards = seasonAwards(data, season, seasonBadgeMap);
   const honors = seasonHonors(data, season);
 

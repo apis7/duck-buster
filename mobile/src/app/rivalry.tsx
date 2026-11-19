@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import { seasonBadges } from '@/domain/archive';
 import { BADGE_BY_ID } from '@/domain/badges';
+import { speciesLeads, withLeads } from '@/domain/leads';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { groupRivalry } from '@/domain/rivalry';
 import { partyMembers } from '@/domain/stats';
@@ -40,11 +41,12 @@ export default function Rivalry() {
 
   const badges = useMemo(() => {
     const known = celebratedAt.filter((c) => BADGE_BY_ID[c.badgeId]);
-    if (!allTime) return seasonBadges(known, season);
+    const leads = speciesLeads(data, allTime ? {} : { season });
+    if (!allTime) return withLeads(seasonBadges(known, season), leads);
     const all = new Map<string, string[]>();
     for (const c of known) all.set(c.hunterId, [...(all.get(c.hunterId) ?? []), c.badgeId]);
-    return all;
-  }, [celebratedAt, season, allTime]);
+    return withLeads(all, leads);
+  }, [celebratedAt, season, allTime, data]);
   const r = ha && hb ? groupRivalry(data, ha.members, hb.members, allTime ? {} : { season }, badges) : null;
   const aScore = r ? r.rows.filter((x) => (x.lowerWins ? x.a < x.b : x.a > x.b)).length : 0;
   const bScore = r ? r.rows.filter((x) => (x.lowerWins ? x.b < x.a : x.b > x.a)).length : 0;

@@ -5,12 +5,14 @@ import { Pressable, Text, View } from 'react-native';
 import { archivedSeasons } from '@/domain/archive';
 import { BADGE_BY_ID, BADGES } from '@/domain/badges';
 import { honorsFor, HONORS } from '@/domain/honors';
+import { speciesLabel, speciesLeads } from '@/domain/leads';
 import { formatMeat } from '@/domain/meat';
 import { currentSeason, prettyDate, seasonLabel } from '@/domain/season';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { hunterStats } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { Bar, Body, Btn, Card, Chip, Pixel, Section } from '@/ui/kit';
+import { PixelBird } from '@/ui/PixelBird';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
 
@@ -28,6 +30,8 @@ export default function HunterProfile() {
   const species = Object.entries(s.bySpecies).sort((a, b) => b[1] - a[1]);
   const party = hunter.partyId ? data.parties.find((p) => p.id === hunter.partyId) : null;
   const honors = honorsFor(data, hunter.id, archivedSeasons(data));
+  // Each species this hunter leads the crew in counts as a badge while it lasts.
+  const leads = speciesLeads(data, allTime ? {} : { season }).get(hunter.id) ?? [];
 
   const stat = (label: string, value: string | number) => (
     <View style={{ width: '33.33%', alignItems: 'center', paddingVertical: 8 }}>
@@ -89,7 +93,7 @@ export default function HunterProfile() {
         <Body muted>{`Biggest day: ${s.biggestDay.birds} birds on ${prettyDate(s.biggestDay.hunt.date)}`}</Body>
       ) : null}
 
-      <Section title={`Badges ${badges.length}/${BADGES.length}`}>
+      <Section title={`Badges ${badges.length + leads.length}`}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {badges.map((b) => (
             <View key={b} style={{ width: '31%', backgroundColor: C.white, borderWidth: 2, borderColor: C.navy, padding: 8, alignItems: 'center', gap: 2 }}>
@@ -100,6 +104,26 @@ export default function HunterProfile() {
         </View>
         <Body muted style={{ fontSize: 13 }}>
           {`🔒 ${BADGES.length - badges.length} secret badges left to find. Go hunting.`}
+        </Body>
+        <Pixel size={9} color={C.muted} style={{ marginTop: 6 }}>{`SPECIES LEADER · ${allTime ? 'ALL TIME' : seasonLabel(season)}`}</Pixel>
+        {leads.length ? (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {leads.map((l) => {
+              const sp = SPECIES_BY_ID[l.speciesId];
+              return (
+                <View key={l.speciesId} style={{ width: '31%', backgroundColor: C.white, borderWidth: 2, borderColor: C.gold, padding: 8, alignItems: 'center', gap: 2 }}>
+                  {sp ? <PixelBird species={sp} size={40} /> : <Text style={{ fontSize: 30 }}>🦆</Text>}
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: C.navy, textAlign: 'center' }}>{`Top ${speciesLabel(data, l.speciesId)}`}</Text>
+                  <Pixel size={8} color={C.orange}>{`${l.count} BAGGED`}</Pixel>
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
+        <Body muted style={{ fontSize: 13 }}>
+          {leads.length
+            ? `Leads the crew in ${leads.length} ${leads.length === 1 ? 'species' : 'species'} — +1 badge each, for as long as nobody passes them.`
+            : 'Bag more of a species than anyone else to lead it. Each lead is +1 badge (ties don’t count).'}
         </Body>
       </Section>
 

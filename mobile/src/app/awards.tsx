@@ -6,6 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { play } from '@/audio/sfx';
 import { awardsOpen, seasonBadges } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
+import { speciesLeads, withLeads } from '@/domain/leads';
 import { HONORS, seasonHonors } from '@/domain/honors';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { useStore } from '@/state/store';
@@ -19,7 +20,7 @@ export default function Awards() {
   const params = useLocalSearchParams<{ season?: string }>();
   const season = Number(params.season) || currentSeason();
   const { data, celebratedAt, settings, setSetting } = useStore();
-  const badges = useMemo(() => seasonBadges(celebratedAt, season), [celebratedAt, season]);
+  const badges = useMemo(() => withLeads(seasonBadges(celebratedAt, season), speciesLeads(data, { season })), [celebratedAt, season, data]);
   // Awards, then the roast, then the season titles — saving the Grand Poombah for last.
   const results = useMemo(() => {
     const awards = seasonAwards(data, season, badges).map((r) => ({

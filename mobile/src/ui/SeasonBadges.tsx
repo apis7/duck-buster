@@ -1,6 +1,8 @@
 import { Text, View } from 'react-native';
 
 import { BADGE_BY_ID } from '@/domain/badges';
+import { LEAD_PREFIX, speciesLabel } from '@/domain/leads';
+import { useStore } from '@/state/store';
 
 import { Body, Pixel, Section } from './kit';
 import { C } from './theme';
@@ -9,8 +11,14 @@ import { C } from './theme';
 export function SeasonBadges({
   badges, names, dark,
 }: { badges: Map<string, string[]>; names: Map<string, { name: string }>; dark?: boolean }) {
+  const { data } = useStore();
+  // Real badges plus species leads (`lead:<speciesId>`, see domain/leads).
+  const show = (id: string) =>
+    id.startsWith(LEAD_PREFIX)
+      ? { icon: '🏆', name: `Top ${speciesLabel(data, id.slice(LEAD_PREFIX.length))}` }
+      : BADGE_BY_ID[id];
   const rows = Array.from(badges.entries())
-    .map(([hunterId, ids]) => ({ hunterId, ids: ids.filter((id) => BADGE_BY_ID[id]) }))
+    .map(([hunterId, ids]) => ({ hunterId, ids: ids.filter((id) => show(id)) }))
     .filter((r) => r.ids.length)
     .sort((a, b) => b.ids.length - a.ids.length);
   const fg = dark ? C.white : C.navy;
@@ -30,8 +38,8 @@ export function SeasonBadges({
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {r.ids.map((id) => (
               <View key={id} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={{ fontSize: 16 }}>{BADGE_BY_ID[id].icon}</Text>
-                <Text style={{ fontSize: 12, color: sub }}>{BADGE_BY_ID[id].name}</Text>
+                <Text style={{ fontSize: 16 }}>{show(id).icon}</Text>
+                <Text style={{ fontSize: 12, color: sub }}>{show(id).name}</Text>
               </View>
             ))}
           </View>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { seasonAwards } from '@/domain/awards';
+import { speciesLeader, speciesLeads, withLeads } from '@/domain/leads';
 import { rivalry } from '@/domain/rivalry';
 import { seasonLabel, seasonOf } from '@/domain/season';
 import { titleFor } from '@/domain/titles';
@@ -60,5 +61,30 @@ describe('awards, rivalry, wrapped, titles', () => {
     expect(titleFor(0).name).toBe('Decoy');
     expect(titleFor(10).name).toBe('Mud Wader');
     expect(titleFor(5000).next).toBeNull();
+  });
+});
+
+describe('species leads', () => {
+  it('one leader per species, ties lead nobody', () => {
+    const d = makeData();
+    const h = d.hunt('2026-10-01', ['dad', 'kid']);
+    d.bird(h, 'dad', 'mall', 4);
+    d.bird(h, 'kid', 'mall', 1);
+    d.bird(h, 'dad', 'gadw', 2);
+    d.bird(h, 'kid', 'gadw', 2);
+    const leads = speciesLeads(d);
+    const all = Array.from(leads.values()).flat();
+    expect(all.length).toBeGreaterThan(0);
+    const ids = all.map((l) => l.speciesId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const l of all) {
+      const top = speciesLeader(d, l.speciesId);
+      expect(top?.hunterIds.length).toBe(1);
+      expect(top?.count).toBe(l.count);
+    }
+    expect(leads.get('dad')).toEqual([{ speciesId: 'mall', count: 4 }]);
+    expect(speciesLeader(d, 'gadw')?.hunterIds).toEqual(['dad', 'kid']);
+    const merged = withLeads(new Map(), leads);
+    expect(Array.from(merged.values()).flat().every((id) => id.startsWith('lead:'))).toBe(true);
   });
 });

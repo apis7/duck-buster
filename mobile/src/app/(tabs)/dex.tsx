@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { AdBanner } from '@/ads/ads';
-import { prettyDate } from '@/domain/season';
+import { speciesLeader } from '@/domain/leads';
+import { currentSeason, prettyDate, seasonLabel } from '@/domain/season';
 import { GROUP_LABEL, SPECIES, SPECIES_BY_ID, type Species } from '@/domain/species';
 import { bandTrophies, dexEntries, type DexEntry } from '@/domain/stats';
 import { useStore } from '@/state/store';
@@ -91,7 +92,13 @@ export default function Dex() {
 }
 
 function Detail({ s, entry, hunters, onClose }: { s: Species; entry?: DexEntry; hunters: Map<string, { name: string }>; onClose: () => void }) {
+  const { data } = useStore();
   const found = !!entry;
+  const season = currentSeason();
+  const leaderLine = (label: string, l: ReturnType<typeof speciesLeader>) =>
+    l ? `${label}: ${l.hunterIds.map((id) => hunters.get(id)?.name ?? '?').join(' & ')}${l.hunterIds.length > 1 ? ' (tied)' : ''} · ${l.count}` : null;
+  const seasonLead = leaderLine(seasonLabel(season), speciesLeader(data, s.id, { season }));
+  const allTimeLead = leaderLine('All time', speciesLeader(data, s.id));
   return (
     <View style={[styles.detail, { borderColor: found ? RARITY_BORDER[s.rarity] : C.navy }]}>
       <PixelBird species={s} size={160} locked={!found} />
@@ -105,6 +112,13 @@ function Detail({ s, entry, hunters, onClose }: { s: Species; entry?: DexEntry; 
           <Body muted style={{ textAlign: 'center' }}>
             {`By ${Array.from(entry!.hunters).map((id) => hunters.get(id)?.name ?? '?').join(', ')}`}
           </Body>
+          <View style={{ alignSelf: 'stretch', borderWidth: 2, borderColor: C.gold, padding: 8, gap: 2, alignItems: 'center' }}>
+            <Pixel size={8} color={C.orange}>🏆 LEADER</Pixel>
+            {[seasonLead, allTimeLead].filter(Boolean).map((line) => (
+              <Body key={line} style={{ textAlign: 'center', fontSize: 14 }}>{line}</Body>
+            ))}
+            {!seasonLead ? <Body muted style={{ textAlign: 'center', fontSize: 12 }}>{`None bagged in ${seasonLabel(season)} yet.`}</Body> : null}
+          </View>
           {s.aliases.length ? (
             <Body muted style={{ textAlign: 'center', fontSize: 13 }}>{`aka ${s.aliases.slice(0, 4).join(', ')}`}</Body>
           ) : null}
