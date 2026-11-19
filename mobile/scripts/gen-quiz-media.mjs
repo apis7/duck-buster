@@ -32,4 +32,60 @@ const lines = [
 ];
 mkdirSync(join(root, 'src/quiz'), { recursive: true });
 writeFileSync(join(root, 'src/quiz/media.generated.ts'), lines.join('\n'));
-console.log(`quiz media: ${images.length} images, ${sounds.length} sounds`);
+
+// review.html: a contact sheet of every question for approving or flagging media.
+const speciesSrc = readFileSync(join(root, 'src/domain/species.ts'), 'utf8');
+const names = new Map([...speciesSrc.matchAll(/id: '([a-z]+)', name: (?:'([^']+)'|"([^"]+)")/g)].map((m) => [m[1], m[2] ?? m[3]]));
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+const info = (code, kind) => credits.find((x) => x.code === code && x.kind === kind) ?? {};
+const item = (code, kind, file) => {
+  const c = info(code, kind);
+  const media = kind === 'image' ? `<img src="${kind === 'image' ? 'img' : 'audio'}/${file}" loading="lazy">` : `<div class="snd">🔊</div><audio controls preload="none" src="audio/${file}"></audio>`;
+  return `<div class="card" data-id="${code}-${kind}" data-label="${esc(names.get(code) ?? code)} (${kind === 'image' ? 'photo' : 'call'}, ${file})">
+  ${media}
+  <h3>${esc(names.get(code) ?? code)} <small>${kind === 'image' ? 'PHOTO' : 'CALL'} · ${file}</small></h3>
+  <p class="cr">${esc(c.author || 'Unknown')} · ${esc(c.license || '?')}${c.sourceUrl ? ` · <a href="${esc(c.sourceUrl)}" target="_blank">source</a>` : ''}</p>
+  <div class="v"><label><input type="radio" name="${code}-${kind}" value="ok" checked> OK</label><label><input type="radio" name="${code}-${kind}" value="replace"> Replace</label><label><input type="radio" name="${code}-${kind}" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>`;
+};
+const noSound = [...names.keys()].filter((c) => !sounds.some((f) => strip(f) === c)).map((c) => names.get(c));
+const noImage = [...names.keys()].filter((c) => !images.some((f) => strip(f) === c)).map((c) => names.get(c));
+const html = `<!doctype html><html><head><meta charset="utf-8"><title>Duck Buster quiz review</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0B1F3D;color:#fff;margin:0;padding:20px}
+h1{margin:0 0 4px}.sub{color:#9fb3d1;margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:#13315C;border:2px solid #2B3F73;padding:10px}
+.card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.snd{font-size:60px;text-align:center;background:#0B1F3D;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}
+audio{width:100%;margin-top:6px}h3{margin:8px 0 2px;font-size:16px}small{color:#9fb3d1;font-weight:400}
+.cr{font-size:11px;color:#9fb3d1;margin:0 0 6px}.cr a{color:#F2A65A}
+.v label{margin-right:10px;font-size:13px}.note{width:100%;box-sizing:border-box;margin-top:6px;padding:4px}
+.bar{position:sticky;top:0;background:#0B1F3D;padding:10px 0;z-index:2;display:flex;gap:10px;align-items:center}
+button{background:#F26B1D;color:#fff;border:0;padding:10px 16px;font-weight:700;cursor:pointer}
+textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:13px}
+</style></head><body>
+<h1>Duck Buster — quiz review</h1>
+<p class="sub">${images.length} photos + ${sounds.length} calls = ${images.length + sounds.length} questions. Each round picks 10 at random; the 7 answer choices are generated (look-alikes from the same group first). Mark anything to replace or drop, then press <b>Copy my review</b> and paste it to Claude.</p>
+<div class="bar"><button onclick="copyReview()">Copy my review</button><span id="msg"></span></div>
+<h2>Calls (${sounds.length})</h2><div class="grid">${sounds.map((f) => item(strip(f), 'audio', f)).join('\n')}</div>
+<h2>Photos (${images.length})</h2><div class="grid">${images.map((f) => item(strip(f), 'image', f)).join('\n')}</div>
+<h2>Missing</h2>
+<p class="miss"><b>No call recording yet (${noSound.length}):</b> ${noSound.map(esc).join(', ') || 'none'}</p>
+<p class="miss"><b>No photo yet (${noImage.length}):</b> ${noImage.map(esc).join(', ') || 'none'}</p>
+<textarea id="out" placeholder="Your review appears here too, in case copying is blocked."></textarea>
+<script>
+function copyReview(){
+  const lines=[];
+  document.querySelectorAll('.card').forEach(c=>{
+    const v=c.querySelector('input[type=radio]:checked').value;const n=c.querySelector('.note').value.trim();
+    if(v!=='ok'||n)lines.push('- '+c.dataset.label+': '+v.toUpperCase()+(n?' — '+n:''));
+  });
+  const t=lines.length?'Quiz review:\n'+lines.join('\n'):'Quiz review: all OK';
+  document.getElementById('out').value=t;
+  navigator.clipboard?.writeText(t).then(()=>{document.getElementById('msg').textContent='Copied.'},()=>{document.getElementById('msg').textContent='Copy blocked — use the box at the bottom.'});
+}
+</script></body></html>`;
+writeFileSync(join(root, 'assets/quiz/review.html'), html);
+console.log(`quiz media: ${images.length} images, ${sounds.length} sounds · review sheet: assets/quiz/review.html`);

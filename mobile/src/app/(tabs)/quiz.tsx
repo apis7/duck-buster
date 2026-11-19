@@ -10,16 +10,24 @@ import { useStore } from '@/state/store';
 import { Body, Btn, Card, Pixel, Screen } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
+/** Kids and guests: plays without a hunter, with its own best score. */
+const NO_HUNTER = 'none';
+
 export default function Quiz() {
-  const { settings, setSetting } = useStore();
+  const { data, settings, setSetting } = useStore();
+  const [player, setPlayer] = useState<string | null>(null);
   const [round, setRound] = useState<Question[] | null>(null);
   const [i, setI] = useState(0);
   const [score, setScore] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
-  const best = Number(settings.quizBest ?? 0);
+  const bestOf = (id: string) => Number(settings[`quizBest:${id}`] ?? 0);
+  const best = player ? bestOf(player) : 0;
+  const playerName = player === NO_HUNTER ? 'No hunter' : (data.hunters.find((h) => h.id === player)?.name ?? '');
   const available = Object.keys(QUIZ_IMAGES).length + Object.keys(QUIZ_SOUNDS).length;
 
-  const start = () => {
+  const start = (who = player) => {
+    if (!who) return;
+    setPlayer(who);
     setRound(makeRound(Object.keys(QUIZ_IMAGES), Object.keys(QUIZ_SOUNDS)));
     setI(0);
     setScore(0);
@@ -30,8 +38,8 @@ export default function Quiz() {
   const done = round && i >= round.length;
 
   useEffect(() => {
-    if (done && round && score > best) setSetting('quizBest', String(score));
-  }, [done, round, score, best, setSetting]);
+    if (done && round && player && score > best) setSetting(`quizBest:${player}`, String(score));
+  }, [done, round, score, best, player, setSetting]);
 
   function choose(id: string) {
     if (!q || picked) return;
@@ -43,6 +51,7 @@ export default function Quiz() {
   }
 
   if (!round) {
+    const who = [...data.hunters.map((h) => ({ id: h.id, name: h.name, color: h.color })), { id: NO_HUNTER, name: '🧒 No hunter – N/A', color: C.muted }];
     return (
       <Screen title="DUCK ID QUIZ">
         <Card style={{ gap: 12, alignItems: 'center' }}>
@@ -51,10 +60,23 @@ export default function Quiz() {
           <Body style={{ textAlign: 'center' }}>
             See a photo or hear a call, then pick the bird from seven choices. Ten questions a round.
           </Body>
-          {best ? <Pixel size={9} color={C.muted}>{`BEST: ${best}/10`}</Pixel> : null}
-          <Btn label="START" onPress={start} disabled={available === 0} style={{ alignSelf: 'stretch' }} />
           {available === 0 ? <Body muted>Quiz pictures are still being added.</Body> : null}
         </Card>
+        <Pixel size={10} color={C.muted}>WHO'S TAKING THE QUIZ?</Pixel>
+        <View style={{ gap: 8 }}>
+          {who.map((p) => (
+            <Pressable
+              key={p.id}
+              disabled={available === 0}
+              onPress={() => start(p.id)}
+              style={[styles.choice, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderLeftWidth: 8, borderLeftColor: p.color }]}
+            >
+              <Text style={styles.choiceTxt}>{p.name}</Text>
+              {bestOf(p.id) ? <Pixel size={8} color={C.muted}>{`BEST ${bestOf(p.id)}/10`}</Pixel> : null}
+            </Pressable>
+          ))}
+        </View>
+        {playerHint(data.hunters.length)}
       </Screen>
     );
   }
@@ -66,15 +88,17 @@ export default function Quiz() {
           <Pixel size={10} color={C.muted}>YOU SCORED</Pixel>
           <Pixel size={40}>{`${score}/${round.length}`}</Pixel>
           <Pixel size={12} color={C.orange}>{quizRank(score, round.length).toUpperCase()}</Pixel>
+          <Pixel size={9} color={C.muted}>{playerName.toUpperCase()}</Pixel>
           {score > best ? <Pixel size={9} color={C.marsh}>NEW BEST!</Pixel> : null}
-          <Btn label="PLAY AGAIN" onPress={start} style={{ alignSelf: 'stretch' }} />
+          <Btn label="PLAY AGAIN" onPress={() => start()} style={{ alignSelf: 'stretch' }} />
+          <Btn label="SWITCH PLAYER" kind="secondary" onPress={() => setRound(null)} style={{ alignSelf: 'stretch' }} />
         </Card>
       </Screen>
     );
   }
 
   return (
-    <Screen title="DUCK ID QUIZ" right={<Pixel size={9} color={C.muted}>{`${i + 1}/${round.length} · ${score}✓`}</Pixel>}>
+    <Screen title="DUCK ID QUIZ" right={<Pixel size={9} color={C.muted}>{`${playerName.toUpperCase()} · ${i + 1}/${round.length} · ${score}✓`}</Pixel>}>
       <Prompt q={q} />
       <View style={{ gap: 8 }}>
         {q.choices.map((id) => {
@@ -102,6 +126,10 @@ export default function Quiz() {
       ) : null}
     </Screen>
   );
+}
+
+function playerHint(hunters: number) {
+  return hunters === 0 ? <Body muted>Add hunters to keep a best score for each of them.</Body> : null;
 }
 
 function Prompt({ q }: { q: Question }) {
