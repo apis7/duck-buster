@@ -737,26 +737,6 @@
     "note": "repeated nasal 'took-took' calls"
   },
   {
-    "code": "bwte",
-    "kind": "audio",
-    "file": "assets/quiz/audio/bwte.mp3",
-    "sourceUrl": "https://xeno-canto.org/179673",
-    "author": "Jonathon Jongsma",
-    "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "note": "hen quacks/calls from marsh, parabolic recording"
-  },
-  {
-    "code": "gwte",
-    "kind": "audio",
-    "file": "assets/quiz/audio/gwte.mp3",
-    "sourceUrl": "https://www.inaturalist.org/observations/346013652",
-    "author": "Kalvin Chan",
-    "license": "CC0 1.0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "note": "drake 'crick' peeping whistles; iNaturalist ID Anas crecca, recorded in North America (American Green-winged Teal)"
-  },
-  {
     "code": "fuwd",
     "kind": "audio",
     "file": "assets/quiz/audio/fuwd.mp3",
@@ -960,6 +940,26 @@
     "code": "wodu",
     "kind": "audio",
     "file": "assets/quiz/audio/wodu.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "bwte",
+    "kind": "audio",
+    "file": "assets/quiz/audio/bwte.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "gwte",
+    "kind": "audio",
+    "file": "assets/quiz/audio/gwte.mp3",
     "sourceUrl": "",
     "author": "",
     "license": "Open source",
