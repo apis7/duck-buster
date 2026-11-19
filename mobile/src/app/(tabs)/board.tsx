@@ -3,17 +3,20 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 
 import { AdBanner } from '@/ads/ads';
+import { awardsOpen } from '@/domain/archive';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { gameLeaders } from '@/domain/gameStats';
 import { formatMeat } from '@/domain/meat';
 import { hunterStats, partyMembers, partyRaceSeries, partyStats, raceSeries, seasonsIn } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { Bar, Body, Btn, Card, Chip, Dot, Explainer, Pixel, Screen, Section } from '@/ui/kit';
+import { useDialog } from '@/ui/Dialog';
 import { RaceChart } from '@/ui/RaceChart';
 import { C, MEDALS } from '@/ui/theme';
 
 export default function Board() {
-  const { data, titleOf } = useStore();
+  const { data, titleOf, settings, setSetting } = useStore();
+  const ask = useDialog();
   const { width } = useWindowDimensions();
   const seasons = useMemo(() => {
     const s = seasonsIn(data);
@@ -55,6 +58,26 @@ export default function Board() {
         : data.hunters.map((h) => ({ color: h.color, points: raceSeries(data, h.id, season) }));
   const club = [...rows].sort((a, b) => b.s.greenheads - a.s.greenheads).filter((r) => r.s.greenheads > 0);
   const henHouse = [...rows].sort((a, b) => b.s.hens - a.s.hens).filter((r) => r.s.hens > 0);
+
+  const awardsSeason = season ?? currentSeason();
+  const awardsKey = `awardsEarly:${awardsSeason}`;
+  const awardsReady = awardsOpen(awardsSeason) || settings[awardsKey] === '1';
+  const openAwards = async () => {
+    if (!awardsReady) {
+      const v = await ask({
+        icon: '🏆',
+        title: 'Awards Night opens Feb 1',
+        message: 'It’s the end-of-season ceremony, so it waits until the duck season is over. Season over early for your crew?',
+        buttons: [
+          { label: 'Season’s over — hold it now', value: 'open', kind: 'primary' },
+          { label: 'Not yet', value: 'no' },
+        ],
+      });
+      if (v !== 'open') return;
+      await setSetting(awardsKey, '1');
+    }
+    router.push({ pathname: '/awards', params: { season: String(awardsSeason) } });
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -183,7 +206,7 @@ export default function Board() {
             onPress={() => router.push({ pathname: '/rivalry', params: { mode: byParty ? 'parties' : 'hunters' } })}
             disabled={byParty ? data.parties.length < 2 : data.hunters.length < 2}
           />
-          <Btn label="🏆 AWARDS NIGHT" kind="secondary" onPress={() => router.push({ pathname: '/awards', params: { season: String(season ?? currentSeason()) } })} />
+          <Btn label={awardsReady ? '🏆 AWARDS NIGHT' : '🔒 AWARDS NIGHT · FEB 1'} kind="secondary" onPress={openAwards} />
           <Btn label="🎁 SEASON WRAPPED" kind="secondary" onPress={() => router.push({ pathname: '/wrapped', params: { season: String(season ?? currentSeason()) } })} />
           <Btn label="🗄️ PAST SEASONS" kind="secondary" onPress={() => router.push('/seasons')} />
         </View>

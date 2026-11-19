@@ -28,6 +28,15 @@ export function newlyArchived(data: Data, lastSeen: number | null, now = new Dat
   return latest != null && (lastSeen == null || latest > lastSeen) ? latest : null;
 }
 
+/**
+ * Awards Night is for when the shooting's done: it opens Feb 1, after duck seasons
+ * close, and is always open for archived seasons. A crew whose season ends early
+ * can open it sooner (the board asks first).
+ */
+export function awardsOpen(season: number, now = new Date()): boolean {
+  return season < currentSeason(now) || now >= new Date(season + 1, 1, 1);
+}
+
 /** Season window as timestamps, for placing badge celebrations in a season. */
 export function seasonWindow(season: number): { start: number; end: number } {
   return { start: new Date(season, 6, 1).getTime(), end: new Date(season + 1, 6, 1).getTime() };

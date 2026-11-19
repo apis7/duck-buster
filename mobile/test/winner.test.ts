@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { archivedSeasons, isLockedDate, newlyArchived, seasonBadges, shouldRemindBackup } from '@/domain/archive';
+import { archivedSeasons, awardsOpen, isLockedDate, newlyArchived, seasonBadges, shouldRemindBackup } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
 import { earnedBadges } from '@/domain/badges';
 import { gameLeaders } from '@/domain/gameStats';
@@ -112,5 +112,14 @@ describe('season badges', () => {
     const award = seasonAwards(d, 2026, badges).find((r) => r.award.id === 'badge_collector');
     expect(award?.winners).toEqual(['dad']);
     expect(seasonAwards(d, 2026).some((r) => r.award.id === 'badge_collector')).toBe(false);
+  });
+});
+
+describe('awardsOpen', () => {
+  it('opens Feb 1 for the current season, and always for past seasons', () => {
+    expect(awardsOpen(2026, new Date(2026, 10, 19))).toBe(false);
+    expect(awardsOpen(2026, new Date(2027, 0, 31))).toBe(false);
+    expect(awardsOpen(2026, new Date(2027, 1, 1))).toBe(true);
+    expect(awardsOpen(2025, new Date(2026, 10, 19))).toBe(true);
   });
 });
