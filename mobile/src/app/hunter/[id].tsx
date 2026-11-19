@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { archivedSeasons } from '@/domain/archive';
+import { archivedSeasons, hasPastSeasons } from '@/domain/archive';
 import { BADGE_BY_ID, BADGES } from '@/domain/badges';
 import { honorsFor, HONORS } from '@/domain/honors';
 import { speciesLabel, speciesLeads } from '@/domain/leads';
@@ -19,7 +19,9 @@ import { C } from '@/ui/theme';
 export default function HunterProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, badgesFor, titleOf } = useStore();
-  const [allTime, setAllTime] = useState(false);
+  const [allTimePicked, setAllTime] = useState(false);
+  const history = hasPastSeasons(data);
+  const allTime = history && allTimePicked;
   const hunter = data.hunters.find((h) => h.id === id);
   if (!hunter) return <SubScreen title="HUNTER"><Body>Hunter not found.</Body></SubScreen>;
 
@@ -66,10 +68,12 @@ export default function HunterProfile() {
         </Card>
       ) : null}
 
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} />
-        <Chip label="ALL TIME" on={allTime} onPress={() => setAllTime(true)} />
-      </View>
+      {history ? (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} />
+          <Chip label="ALL TIME" on={allTime} onPress={() => setAllTime(true)} />
+        </View>
+      ) : null}
 
       <Card style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 6 }}>
         {stat('BIRDS', s.birds)}

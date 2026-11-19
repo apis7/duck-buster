@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 
 import { AdBanner } from '@/ads/ads';
-import { awardsOpen } from '@/domain/archive';
+import { awardsOpen, hasPastSeasons } from '@/domain/archive';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { gameLeaders } from '@/domain/gameStats';
 import { formatMeat } from '@/domain/meat';
@@ -108,7 +108,7 @@ export default function Board() {
           {seasons.map((s) => (
             <Chip key={s} label={seasonLabel(s)} on={season === s} onPress={() => setSeason(s)} />
           ))}
-          <Chip label="ALL TIME" on={season == null} onPress={() => setSeason(null)} />
+          {hasPastSeasons(data) ? <Chip label="ALL TIME" on={season == null} onPress={() => setSeason(null)} /> : null}
         </ScrollView>
 
         {data.hunters.length === 0 ? <Body muted>Add hunters and log a hunt to get on the board.</Body> : null}

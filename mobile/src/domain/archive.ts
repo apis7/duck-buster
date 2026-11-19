@@ -22,6 +22,14 @@ export function archivedSeasons(data: Data, now = new Date()): number[] {
   return Array.from(new Set(data.hunts.map((h) => seasonOf(h.date)).filter((s) => s < cur))).sort((a, b) => b - a);
 }
 
+/**
+ * "All time" only means something once there's a finished season to add to the
+ * current one; until then every all-time view and label stays hidden.
+ */
+export function hasPastSeasons(data: Data, now = new Date()): boolean {
+  return archivedSeasons(data, now).length > 0;
+}
+
 /** The archive announcement to show, if a season closed since the user last saw one. */
 export function newlyArchived(data: Data, lastSeen: number | null, now = new Date()): number | null {
   const latest = archivedSeasons(data, now)[0];

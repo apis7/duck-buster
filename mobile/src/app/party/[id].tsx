@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import { formatMeat } from '@/domain/meat';
+import { hasPastSeasons } from '@/domain/archive';
 import { currentSeason, prettyDate, seasonLabel } from '@/domain/season';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { hunterStats, partyMembers, partyStats } from '@/domain/stats';
@@ -15,7 +16,9 @@ import { C } from '@/ui/theme';
 export default function PartyProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data } = useStore();
-  const [allTime, setAllTime] = useState(false);
+  const [allTimePicked, setAllTime] = useState(false);
+  const history = hasPastSeasons(data);
+  const allTime = history && allTimePicked;
   const party = data.parties.find((p) => p.id === id);
   if (!party) return <SubScreen title="PARTY"><Body>Party not found.</Body></SubScreen>;
 
@@ -37,10 +40,12 @@ export default function PartyProfile() {
 
   return (
     <SubScreen title={party.name.toUpperCase()}>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} color={party.color} />
-        <Chip label="ALL TIME" on={allTime} onPress={() => setAllTime(true)} color={party.color} />
-      </View>
+      {history ? (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} color={party.color} />
+          <Chip label="ALL TIME" on={allTime} onPress={() => setAllTime(true)} color={party.color} />
+        </View>
+      ) : null}
 
       <Card style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 6, borderColor: party.color }}>
         {stat('BIRDS', s.birds)}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { AdBanner } from '@/ads/ads';
+import { hasPastSeasons } from '@/domain/archive';
 import { speciesLeader } from '@/domain/leads';
 import { currentSeason, prettyDate, seasonLabel } from '@/domain/season';
 import { GROUP_LABEL, SPECIES, SPECIES_BY_ID, type Species } from '@/domain/species';
@@ -98,7 +99,7 @@ function Detail({ s, entry, hunters, onClose }: { s: Species; entry?: DexEntry; 
   const leaderLine = (label: string, l: ReturnType<typeof speciesLeader>) =>
     l ? `${label}: ${l.hunterIds.map((id) => hunters.get(id)?.name ?? '?').join(' & ')}${l.hunterIds.length > 1 ? ' (tied)' : ''} · ${l.count}` : null;
   const seasonLead = leaderLine(seasonLabel(season), speciesLeader(data, s.id, { season }));
-  const allTimeLead = leaderLine('All time', speciesLeader(data, s.id));
+  const allTimeLead = hasPastSeasons(data) ? leaderLine('All time', speciesLeader(data, s.id)) : null;
   return (
     <View style={[styles.detail, { borderColor: found ? RARITY_BORDER[s.rarity] : C.navy }]}>
       <PixelBird species={s} size={160} locked={!found} />

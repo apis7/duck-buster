@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
+import { hasPastSeasons } from '@/domain/archive';
 import { hunterStats } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { useDialog } from '@/ui/Dialog';
@@ -13,6 +14,7 @@ const inputStyle = { borderWidth: 2, borderColor: C.navy, padding: 10, fontSize:
 
 export default function Hunters() {
   const { data, addHunter, renameHunter, deleteHunter, titleOf, setHunterParty } = useStore();
+  const history = hasPastSeasons(data);
   const [partyFor, setPartyFor] = useState<string | null>(null);
   const ask = useDialog();
   const [name, setName] = useState('');
@@ -71,7 +73,7 @@ export default function Hunters() {
                 <View style={{ flex: 1 }}>
                   <Pixel size={11}>{h.name.toUpperCase()}</Pixel>
                   <Body muted style={{ fontSize: 13 }}>
-                    {`${titleOf(h.id).name} · ${s.birds} birds all time${party ? ` · ${party.name}` : ''}`}
+                    {`${titleOf(h.id).name} · ${s.birds} birds${history ? ' all time' : ''}${party ? ` · ${party.name}` : ''}`}
                   </Body>
                 </View>
               </Pressable>

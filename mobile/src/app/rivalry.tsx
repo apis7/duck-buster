@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { seasonBadges } from '@/domain/archive';
+import { hasPastSeasons, seasonBadges } from '@/domain/archive';
 import { BADGE_BY_ID } from '@/domain/badges';
 import { speciesLeads, withLeads } from '@/domain/leads';
 import { currentSeason, seasonLabel } from '@/domain/season';
@@ -26,7 +26,9 @@ export default function Rivalry() {
   const [bId, setB] = useState<string | undefined>(undefined);
   const a = sides.some((x) => x.id === aId) ? aId : sides[0]?.id;
   const b = sides.some((x) => x.id === bId) && bId !== a ? bId : sides.find((x) => x.id !== a)?.id;
-  const [allTime, setAllTime] = useState(false);
+  const [allTimePicked, setAllTime] = useState(false);
+  const history = hasPastSeasons(data);
+  const allTime = history && allTimePicked;
   const ha = sides.find((h) => h.id === a);
   const hb = sides.find((h) => h.id === b);
   const season = currentSeason();
@@ -67,10 +69,12 @@ export default function Rivalry() {
       {picker(a, setA, b)}
       <Pixel size={12} style={{ textAlign: 'center' }}>VS</Pixel>
       {picker(b, setB, a)}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} />
-        <Chip label="ALL TIME" on={allTime} onPress={() => setAllTime(true)} />
-      </View>
+      {history ? (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Chip label={seasonLabel(season)} on={!allTime} onPress={() => setAllTime(false)} />
+          <Chip label="ALL TIME" on={allTime} onPress={() => setAllTime(true)} />
+        </View>
+      ) : null}
 
       {r && ha && hb ? (
         <Card style={{ gap: 12, backgroundColor: C.navyDark }}>
