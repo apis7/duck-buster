@@ -1,3 +1,5 @@
+import type { SlugfestCard } from './slugfest';
+
 /** Plain data shapes shared by the database layer, the domain rules and the QR transfer. */
 
 export type Sex = 'D' | 'H' | 'U';
@@ -81,6 +83,8 @@ export type Data = {
   huntHunters: HuntHunter[];
   harvests: Harvest[];
   gameScores: GameScore[];
+  /** Other crews' Slugfest season cards. Kept apart: never part of your own stats. */
+  slugfest: SlugfestCard[];
 };
 
-export const EMPTY_DATA: Data = { hunters: [], parties: [], customSpecies: [], hunts: [], huntHunters: [], harvests: [], gameScores: [] };
+export const EMPTY_DATA: Data = { hunters: [], parties: [], customSpecies: [], hunts: [], huntHunters: [], harvests: [], gameScores: [], slugfest: [] };

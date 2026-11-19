@@ -5,6 +5,7 @@ import * as db from '@/db/database';
 import { BADGE_BY_ID, earnedBadges, type Badge } from '@/domain/badges';
 import { hunterStats } from '@/domain/stats';
 import { titleFor, xpFor } from '@/domain/titles';
+import type { SlugfestCard } from '@/domain/slugfest';
 import { registerCustomSpecies } from '@/domain/species';
 import { EMPTY_DATA, type CustomSpecies, type Data, type GameScore, type Harvest, type Hunter, type Party } from '@/domain/types';
 
@@ -49,6 +50,11 @@ type Store = {
   addCustomSpecies: (name: string, sexed: boolean) => Promise<CustomSpecies>;
   /** Save the hunt winner's round; returns any badges it just earned. */
   saveGameScore: (g: Omit<GameScore, 'id' | 'createdAt'>) => Promise<NewBadge[]>;
+  /** Other crews' Slugfest cards: add (replacing that crew's copy of the season) or remove. */
+  addSlugCard: (c: SlugfestCard) => Promise<void>;
+  removeSlugCard: (crewId: string, season: number) => Promise<void>;
+  /** This phone's crew for the Slugfest: a stable id plus the name it goes by. */
+  crew: { id: string; name: string };
   /** When badges were first earned, for the season archive. */
   celebratedAt: db.Loaded['celebratedAt'];
   deleteHunter: (id: string) => Promise<void>;
@@ -267,6 +273,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [data, celebrated],
   );
 
+  const addSlugCard = useCallback(async (c: SlugfestCard) => {
+    await db.saveSlugCard(c);
+    setData((d) => ({ ...d, slugfest: [...d.slugfest.filter((x) => !(x.crewId === c.crewId && x.season === c.season)), c] }));
+  }, []);
+
+  const removeSlugCard = useCallback(async (crewId: string, season: number) => {
+    await db.deleteSlugCard(crewId, season);
+    setData((d) => ({ ...d, slugfest: d.slugfest.filter((x) => !(x.crewId === crewId && x.season === season)) }));
+  }, []);
+
+  // A stable id for this phone's crew, made once; the name lives in settings too.
+  useEffect(() => {
+    if (ready && !settings.crewId) {
+      const id = randomUUID();
+      db.writeSetting('crewId', id).then(() => setSettings((s) => ({ ...s, crewId: id })));
+    }
+  }, [ready, settings.crewId]);
+  const crew = useMemo(() => ({ id: settings.crewId ?? '', name: settings.crewName ?? '' }), [settings.crewId, settings.crewName]);
+
   const deleteHunt = useCallback(async (id: string) => {
     await db.deleteHuntRows(id);
     setData((d) => ({
@@ -308,6 +333,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ready, data, highScores, settings, usage,
       addHunter, addHunters, renameHunter, setHunterParty, deleteHunter,
       draftParty, addParty, updateParty, deleteParty, addCustomSpecies, saveGameScore, celebratedAt,
+      addSlugCard, removeSlugCard, crew,
       saveHunt, deleteHunt, addHighScore, setSetting, importData,
       badgesFor, titleOf,
     }),
@@ -315,6 +341,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ready, data, highScores, settings, usage,
       addHunter, addHunters, renameHunter, setHunterParty, deleteHunter,
       draftParty, addParty, updateParty, deleteParty, addCustomSpecies, saveGameScore, celebratedAt,
+      addSlugCard, removeSlugCard, crew,
       saveHunt, deleteHunt, addHighScore, setSetting, importData,
       badgesFor, titleOf,
     ],

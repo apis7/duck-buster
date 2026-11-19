@@ -1,5 +1,6 @@
 import { strFromU8, strToU8 } from 'fflate';
 
+import { parseCard } from '@/domain/slugfest';
 import type { Data, Harvest } from '@/domain/types';
 
 /**
@@ -36,6 +37,14 @@ export function snapshotFromBytes(bytes: Uint8Array): Snapshot {
   d.parties ??= [];
   d.customSpecies ??= [];
   d.gameScores ??= [];
+  // Other crews' Slugfest cards ride along in backups; drop any that don't parse.
+  d.slugfest = (Array.isArray(d.slugfest) ? d.slugfest : []).flatMap((c) => {
+    try {
+      return [parseCard(c)];
+    } catch {
+      return [];
+    }
+  });
   for (const h of d.hunters ?? []) h.partyId ??= null;
   const ok =
     Array.isArray(d.parties) && d.parties.every((p) => isStr(p.id) && isStr(p.name) && isStr(p.color) && isNum(p.createdAt)) &&

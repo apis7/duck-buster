@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
+import { parseCard, type SlugfestCard } from '@/domain/slugfest';
 import type { CustomSpecies, Data, GameScore, Harvest, Hunt, HuntHunter, Hunter, Party } from '@/domain/types';
 
 /**
@@ -92,6 +93,16 @@ const MIGRATIONS: string[][] = [
       created_at INTEGER NOT NULL
     );`,
   ],
+  // 4: other crews' Slugfest season cards, one per crew per season.
+  [
+    `CREATE TABLE IF NOT EXISTS slugfest_cards (
+      crew_id TEXT NOT NULL,
+      season INTEGER NOT NULL,
+      json TEXT NOT NULL,
+      received_at INTEGER NOT NULL,
+      PRIMARY KEY (crew_id, season)
+    );`,
+  ],
 ];
 
 export async function migrate(): Promise<void> {
@@ -122,7 +133,7 @@ export type Loaded = {
 export const celebratedKey = (hunterId: string, badgeId: string) => `${hunterId}:${badgeId}`;
 
 export async function loadAll(): Promise<Loaded> {
-  const [hunters, parties, customSpecies, hunts, huntHunters, harvests, gameScores, celebrated, highScores, settings] = await Promise.all([
+  const [hunters, parties, customSpecies, hunts, huntHunters, harvests, gameScores, slugRows, celebrated, highScores, settings] = await Promise.all([
     db.getAllAsync<{ id: string; name: string; color: string; party_id: string | null; created_at: number }>('SELECT * FROM hunters ORDER BY created_at'),
     db.getAllAsync<{ id: string; name: string; color: string; created_at: number }>('SELECT * FROM parties ORDER BY created_at'),
     db.getAllAsync<{ id: string; name: string; sexed: number; created_at: number }>('SELECT * FROM custom_species ORDER BY name'),
@@ -132,6 +143,7 @@ export async function loadAll(): Promise<Loaded> {
       'SELECT * FROM harvests',
     ),
     db.getAllAsync<Record<string, string | number>>('SELECT * FROM game_scores ORDER BY date'),
+    db.getAllAsync<{ json: string }>('SELECT json FROM slugfest_cards ORDER BY received_at'),
     db.getAllAsync<{ hunter_id: string; badge_id: string; at: number }>('SELECT hunter_id, badge_id, at FROM celebrated_badges'),
     db.getAllAsync<{ id: string; initials: string; score: number; created_at: number }>(
       'SELECT * FROM high_scores ORDER BY score DESC, created_at ASC LIMIT 10',
@@ -155,6 +167,13 @@ export async function loadAll(): Promise<Loaded> {
         banded: r.banded,
       })),
       gameScores: gameScores.map(gameFromRow),
+      slugfest: slugRows.flatMap((r) => {
+        try {
+          return [parseCard(JSON.parse(r.json))];
+        } catch {
+          return [];
+        }
+      }),
     },
     celebratedAt: celebrated.map((c) => ({ hunterId: c.hunter_id, badgeId: c.badge_id, at: c.at })),
     celebrated: new Set(celebrated.map((c) => celebratedKey(c.hunter_id, c.badge_id))),
@@ -260,6 +279,17 @@ export async function insertGameScore(g: GameScore): Promise<void> {
   );
 }
 
+export async function saveSlugCard(c: SlugfestCard): Promise<void> {
+  await db.runAsync(
+    'INSERT OR REPLACE INTO slugfest_cards (crew_id, season, json, received_at) VALUES (?, ?, ?, ?)',
+    c.crewId, c.season, JSON.stringify(c), Date.now(),
+  );
+}
+
+export async function deleteSlugCard(crewId: string, season: number): Promise<void> {
+  await db.runAsync('DELETE FROM slugfest_cards WHERE crew_id = ? AND season = ?', crewId, season);
+}
+
 export async function insertHighScore(s: HighScore): Promise<void> {
   await db.runAsync('INSERT INTO high_scores (id, initials, score, created_at) VALUES (?, ?, ?, ?)', s.id, s.initials, s.score, s.createdAt);
 }
@@ -272,13 +302,14 @@ export async function writeSetting(key: string, value: string): Promise<void> {
 export async function importRows(incoming: Data, mode: 'merge' | 'replace'): Promise<void> {
   await db.withTransactionAsync(async () => {
     if (mode === 'replace') {
-      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'parties', 'custom_species', 'game_scores', 'celebrated_badges'])
+      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'parties', 'custom_species', 'game_scores', 'slugfest_cards', 'celebrated_badges'])
         await db.execAsync(`DELETE FROM ${t};`);
     }
     for (const p of incoming.parties) await insertParty(p);
     for (const c of incoming.customSpecies) await insertCustomSpecies(c);
     for (const h of incoming.hunters) await insertHunter(h);
     for (const g of incoming.gameScores) await insertGameScore(g);
+    for (const c of incoming.slugfest) await saveSlugCard(c);
     for (const hunt of incoming.hunts) {
       await writeHuntRows(
         hunt,

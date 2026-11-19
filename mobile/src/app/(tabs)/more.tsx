@@ -77,6 +77,7 @@ export default function More() {
         <Row icon="🗄️" label="Past seasons" onPress={() => router.push('/seasons')} />
         <Row icon="📤" label="Send to a phone" onPress={() => router.push('/transfer-send')} />
         <Row icon="📥" label="Receive from a phone" onPress={() => router.push('/transfer-receive')} />
+        <Row icon="🥊" label="Duck Season Slugfest" onPress={() => router.push('/slugfest')} />
       </Card>
 
       <Section title="Backup">
