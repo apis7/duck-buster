@@ -1,9 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { seasonWindow } from '@/domain/archive';
+import { seasonBadges } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
-import { BADGE_BY_ID } from '@/domain/badges';
 import { gameLeaders } from '@/domain/gameStats';
 import { HONORS, seasonHonors } from '@/domain/honors';
 import { formatMeat } from '@/domain/meat';
@@ -11,6 +10,7 @@ import { seasonLabel } from '@/domain/season';
 import { hunterStats, partyStats } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { Body, Btn, Card, Dot, Pixel, Section } from '@/ui/kit';
+import { SeasonBadges } from '@/ui/SeasonBadges';
 import { SubScreen } from '@/ui/SubScreen';
 import { C, MEDALS } from '@/ui/theme';
 
@@ -31,10 +31,9 @@ export default function SeasonArchive() {
     .filter((r) => r.s.hunts > 0)
     .sort((a, b) => b.s.birds - a.s.birds);
   const leaders = gameLeaders(data, scope);
-  const awards = seasonAwards(data, season);
+  const seasonBadgeMap = seasonBadges(celebratedAt, season);
+  const awards = seasonAwards(data, season, seasonBadgeMap);
   const honors = seasonHonors(data, season);
-  const { start, end } = seasonWindow(season);
-  const badges = celebratedAt.filter((c) => c.at >= start && c.at < end && BADGE_BY_ID[c.badgeId]);
 
   return (
     <SubScreen title={`${seasonLabel(season)} SEASON`}>
@@ -116,15 +115,7 @@ export default function SeasonArchive() {
         </Section>
       ) : null}
 
-      {badges.length ? (
-        <Section title={`Badges earned (${badges.length})`}>
-          <Card style={{ gap: 6 }}>
-            {badges.map((b) => (
-              <Body key={`${b.hunterId}-${b.badgeId}`}>{`${BADGE_BY_ID[b.badgeId].icon} ${BADGE_BY_ID[b.badgeId].name} — ${names.get(b.hunterId)?.name ?? '?'}`}</Body>
-            ))}
-          </Card>
-        </Section>
-      ) : null}
+      <SeasonBadges badges={seasonBadgeMap} names={names} />
 
       <Btn label="🎁 SEASON WRAPPED" kind="secondary" onPress={() => router.push({ pathname: '/wrapped', params: { season: String(season) } })} />
       <Btn label="🏆 AWARDS NIGHT" kind="secondary" onPress={() => router.push({ pathname: '/awards', params: { season: String(season) } })} />

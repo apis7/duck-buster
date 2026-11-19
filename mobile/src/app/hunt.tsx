@@ -224,16 +224,48 @@ export default function LogHunt() {
   }
 
   // ── Step 2 ───────────────────────────────────────────────────────────────
+  /**
+   * The first kind takes the whole count (it's usually all one kind). After that,
+   * each tap adds one of that kind and — to keep the total at the hunter's count —
+   * takes one back from the biggest other kind.
+   */
   function addKind(hid: string, speciesId: string) {
     Haptics.selectionAsync().catch(() => {});
     patch(hid, (e) => {
-      const found = e.lines.find((l) => l.speciesId === speciesId);
-      if (found) return { lines: e.lines.map((l) => (l.speciesId === speciesId ? { ...l, count: l.count + 1 } : l)) };
-      // A new kind starts at whatever's left to account for — usually it's all one kind.
-      const left = Math.max(1, (e.target ?? 0) - totalOf(e.lines));
-      return { lines: [...e.lines, { speciesId, count: left, drakes: 0, banded: 0 }] };
+      const target = e.target ?? 0;
+      if (!e.lines.length) return { lines: [{ speciesId, count: Math.max(1, target), drakes: 0, banded: 0 }] };
+      const lines = e.lines.map((l) => ({ ...l }));
+      const before = totalOf(lines);
+      const found = lines.find((l) => l.speciesId === speciesId);
+      if (found) found.count += 1;
+      else lines.push({ speciesId, count: 1, drakes: 0, banded: 0 });
+      if (before + 1 > target) {
+        const donor = lines.filter((l) => l.speciesId !== speciesId && l.count > 1).sort((a, b) => b.count - a.count)[0];
+        if (donor) {
+          donor.count -= 1;
+          donor.drakes = Math.min(donor.drakes, donor.count);
+          donor.banded = Math.min(donor.banded, donor.count * MAX_BANDS_PER_BIRD);
+        }
+      }
+      return { lines };
     });
     setQuery('');
+  }
+
+  /** What each unfinished hunter still needs, in plain words. */
+  function whatsLeft(): string[] {
+    return pending.map((hid) => {
+      const e = entries[hid] ?? newEntry();
+      const name = hunterById.get(hid)?.name ?? '?';
+      if (e.step === 'count') return `${name} still needs a bird count (or SKUNKED).`;
+      if (e.step === 'kinds') {
+        const t = totalOf(e.lines);
+        return t === e.target
+          ? `${name} still needs to tap COMPLETE on the kinds.`
+          : `${name} still needs to pick which kinds — ${t} of ${e.target} entered.`;
+      }
+      return `${name} still needs to say how many were drakes or hens.`;
+    });
   }
 
   // ── Date, save, delete ───────────────────────────────────────────────────
@@ -271,7 +303,17 @@ export default function LogHunt() {
       return;
     }
     if (pending.length) {
-      setActive(pending[0]);
+      const first = hunterById.get(pending[0])?.name ?? '';
+      const go = await ask({
+        icon: '📝',
+        title: pending.length === 1 ? 'One hunter to finish' : `${pending.length} hunters to finish`,
+        message: whatsLeft().join('\n'),
+        buttons: [
+          { label: `Go to ${first}`, value: 'go', kind: 'primary' },
+          { label: 'OK', value: 'ok' },
+        ],
+      });
+      if (go === 'go') setActive(pending[0]);
       return;
     }
     if (data.hunts.some((h) => h.date === date && h.id !== existing?.id)) return pickDate(date);
@@ -579,7 +621,7 @@ export default function LogHunt() {
           <Btn label="BACK" kind="secondary" onPress={() => router.back()} />
         ) : (
           <Btn
-            label={saving ? 'SAVING…' : pending.length ? `${pending.length} ${pending.length === 1 ? 'HUNTER' : 'HUNTERS'} LEFT ›` : 'FINALIZE HUNT 🏆'}
+            label={saving ? 'SAVING…' : pending.length ? `${pending.length} ${pending.length === 1 ? 'HUNTER' : 'HUNTERS'} TO FINISH ›` : 'FINALIZE HUNT 🏆'}
             kind={pending.length ? 'secondary' : 'primary'}
             onPress={save}
             disabled={saving}

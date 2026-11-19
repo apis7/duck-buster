@@ -4,11 +4,13 @@ import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { play } from '@/audio/sfx';
+import { seasonBadges } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
 import { HONORS, seasonHonors } from '@/domain/honors';
 import { currentSeason, seasonLabel } from '@/domain/season';
 import { useStore } from '@/state/store';
 import { Body, Btn, Pixel } from '@/ui/kit';
+import { SeasonBadges } from '@/ui/SeasonBadges';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
 
@@ -16,10 +18,11 @@ import { C } from '@/ui/theme';
 export default function Awards() {
   const params = useLocalSearchParams<{ season?: string }>();
   const season = Number(params.season) || currentSeason();
-  const { data } = useStore();
+  const { data, celebratedAt } = useStore();
+  const badges = useMemo(() => seasonBadges(celebratedAt, season), [celebratedAt, season]);
   // Awards, then the roast, then the season titles — saving the Grand Poombah for last.
   const results = useMemo(() => {
-    const awards = seasonAwards(data, season).map((r) => ({
+    const awards = seasonAwards(data, season, badges).map((r) => ({
       key: r.award.id, icon: r.award.icon, title: r.award.title, winners: r.winners, text: r.text, kind: r.award.roast ? 'roast' : 'award',
     }));
     const order = ['coots', 'third', 'second', 'first'] as const;
@@ -31,7 +34,7 @@ export default function Awards() {
         text: h.id === 'coots' ? `${h.value} coots. The ditch chickens fear you.` : `${HONORS[h.id].why} · ${h.value} points`, kind: 'title',
       }));
     return [...awards, ...titles];
-  }, [data, season]);
+  }, [data, season, badges]);
   const [shown, setShown] = useState(0);
   const names = new Map(data.hunters.map((h) => [h.id, h]));
 
@@ -92,7 +95,10 @@ export default function Awards() {
           </View>
         </Pressable>
       ) : results.length ? (
-        <Btn label="START OVER" kind="secondary" onPress={() => setShown(0)} />
+        <>
+          <SeasonBadges badges={badges} names={names} dark />
+          <Btn label="START OVER" kind="secondary" onPress={() => setShown(0)} />
+        </>
       ) : null}
     </SubScreen>
   );

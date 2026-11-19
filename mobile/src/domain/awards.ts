@@ -20,7 +20,7 @@ export type AwardDef = {
   lowest?: boolean;
   /** Fewest qualifying value to hand the award out (highest-wins awards). */
   min?: number;
-  metric: (s: HunterStats, ctx: { firstEverSeason: number | null; season: number; game: GameStats }) => number | null;
+  metric: (s: HunterStats, ctx: { firstEverSeason: number | null; season: number; game: GameStats; badges: number | null }) => number | null;
   describe: (value: number) => string;
 };
 
@@ -51,6 +51,8 @@ export const AWARDS: AwardDef[] = [
     metric: (s) => s.geese, describe: (v) => n(v, 'goose', 'geese') },
   { id: 'arcade_champ', title: 'Arcade Champion', icon: '🕹️', min: 1,
     metric: (_s, ctx) => (ctx.game.games ? ctx.game.total : null), describe: (v) => `${v} points in the duck shoot this season` },
+  { id: 'badge_collector', title: 'Badge Collector', icon: '🎖️', min: 1,
+    metric: (_s, ctx) => ctx.badges, describe: (v) => `${v} ${v === 1 ? 'badge' : 'badges'} earned this season` },
   { id: 'freezer_filler', title: 'Freezer Filler', icon: '🧊', min: 1,
     metric: (s) => Math.round(s.meatOz), describe: (v) => `${formatMeat(v)} of meat in the freezer` },
   { id: 'bird_nerd', title: 'Bird Nerd of the Year', icon: '📚', min: 2,
@@ -84,7 +86,8 @@ export type AwardResult = {
   text: string;
 };
 
-export function seasonAwards(data: Data, season: number): AwardResult[] {
+/** `badges`: badges each hunter earned this season (see archive.seasonBadges); without it, no Badge Collector. */
+export function seasonAwards(data: Data, season: number, badges?: Map<string, string[]>): AwardResult[] {
   const firstSeason = new Map<string, number>();
   for (const h of data.hunters) {
     const s = hunterStats(data, h.id);
@@ -98,7 +101,15 @@ export function seasonAwards(data: Data, season: number): AwardResult[] {
   const results: AwardResult[] = [];
   for (const award of AWARDS) {
     const scored = field
-      .map((e) => ({ id: e.id, v: award.metric(e.stats, { firstEverSeason: firstSeason.get(e.id) ?? null, season, game: e.game }) }))
+      .map((e) => ({
+        id: e.id,
+        v: award.metric(e.stats, {
+          firstEverSeason: firstSeason.get(e.id) ?? null,
+          season,
+          game: e.game,
+          badges: badges ? (badges.get(e.id)?.length ?? 0) : null,
+        }),
+      }))
       .filter((e): e is { id: string; v: number } => e.v != null);
     if (scored.length === 0) continue;
     const values = scored.map((e) => e.v);

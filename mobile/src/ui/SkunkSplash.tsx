@@ -11,7 +11,7 @@ export function SkunkSplash({ name, message, onDismiss }: { name: string; messag
 
   useEffect(() => {
     // The skunk is allowed to hop. It's the one exception to the calm animations.
-    hop.set(withRepeat(withSequence(withSpring(-14, { damping: 6 }), withTiming(0, { duration: 260 })), 4));
+    hop.set(withRepeat(withSequence(withSpring(-34, { damping: 4, stiffness: 320 }), withTiming(0, { duration: 180 })), 7));
     const t = setTimeout(onDismiss, 6000);
     return () => clearTimeout(t);
   }, [hop, onDismiss]);

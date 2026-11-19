@@ -32,7 +32,7 @@ export default function Winner() {
   }, [winner]);
 
   const leave = () => {
-    router.dismissTo('/');
+    router.dismissTo('/(tabs)');
     maybeShowInterstitial();
   };
 

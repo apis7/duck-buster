@@ -29,7 +29,7 @@ export default function Round() {
   const name = winner ? (data.hunters.find((h) => h.id === winner.hunterId)?.name ?? '') : '';
 
   const done = () => {
-    router.dismissTo('/');
+    router.dismissTo('/(tabs)');
     maybeShowInterstitial();
   };
 

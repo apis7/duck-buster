@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { archivedSeasons, isLockedDate, newlyArchived, shouldRemindBackup } from '@/domain/archive';
+import { archivedSeasons, isLockedDate, newlyArchived, seasonBadges, shouldRemindBackup } from '@/domain/archive';
 import { seasonAwards } from '@/domain/awards';
 import { earnedBadges } from '@/domain/badges';
 import { gameLeaders } from '@/domain/gameStats';
@@ -90,5 +90,27 @@ describe('archive', () => {
     expect(shouldRemindBackup(e, null, new Date(2027, 0, 27))).toBe(true);
     expect(shouldRemindBackup(e, new Date(2027, 0, 26).getTime(), new Date(2027, 0, 27))).toBe(false);
     expect(shouldRemindBackup(e, null, new Date(2026, 10, 27))).toBe(false);
+  });
+});
+
+describe('season badges', () => {
+  it('Badge Collector goes to whoever earned the most badges that season', () => {
+    const d = makeData();
+    d.hunt('2026-10-01', ['dad', 'kid']);
+    const at = new Date(2026, 9, 5).getTime();
+    const badges = seasonBadges(
+      [
+        { hunterId: 'dad', badgeId: 'jewelry', at },
+        { hunterId: 'dad', badgeId: 'teal_deal', at },
+        { hunterId: 'kid', badgeId: 'skunked', at },
+        { hunterId: 'kid', badgeId: 'greenhead', at: new Date(2025, 9, 5).getTime() }, // last season
+      ],
+      2026,
+    );
+    expect(badges.get('dad')).toEqual(['jewelry', 'teal_deal']);
+    expect(badges.get('kid')).toEqual(['skunked']);
+    const award = seasonAwards(d, 2026, badges).find((r) => r.award.id === 'badge_collector');
+    expect(award?.winners).toEqual(['dad']);
+    expect(seasonAwards(d, 2026).some((r) => r.award.id === 'badge_collector')).toBe(false);
   });
 });

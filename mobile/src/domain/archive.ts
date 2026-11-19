@@ -33,6 +33,19 @@ export function seasonWindow(season: number): { start: number; end: number } {
   return { start: new Date(season, 6, 1).getTime(), end: new Date(season + 1, 6, 1).getTime() };
 }
 
+export type Celebration = { hunterId: string; badgeId: string; at: number };
+
+/** Badges each hunter earned during a season, from when each was first celebrated. */
+export function seasonBadges(celebrated: Celebration[], season: number): Map<string, string[]> {
+  const { start, end } = seasonWindow(season);
+  const out = new Map<string, string[]>();
+  for (const c of celebrated) {
+    if (c.at < start || c.at >= end) continue;
+    out.set(c.hunterId, [...(out.get(c.hunterId) ?? []), c.badgeId]);
+  }
+  return out;
+}
+
 /**
  * Nudge to save a backup once the winter's hunting is done: the season has hunts,
  * it's between January and June, the last hunt was at least five days ago, and
