@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View, type GestureResponderEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { play, preload } from '@/audio/sfx';
@@ -26,7 +26,12 @@ type Phase = 'whirl' | 'count' | 'play' | 'summary';
 export type GameMode = 'practice' | 'hunt';
 
 const SKIP_TAPS = 7;
-const MARAUDER_HOLD_MS = 5000;
+/** Hold the duck this long and it starts blinking and counting down… */
+const HOLD_WARN_MS = 4000;
+/** …one beat per number of the 3-2-1. */
+const HOLD_TICK_MS = 600;
+/** A press longer than this isn't a skip tap. */
+const TAP_MAX_MS = 500;
 
 export function IntroFlow({
   mode = 'practice', intro = true, playerName, onDone, onResult,
@@ -47,6 +52,9 @@ export function IntroFlow({
   const [taps, setTaps] = useState(0);
   const [marauder, setMarauder] = useState(false);
   const justHeld = useRef(false);
+  const holdStart = useRef(0);
+  const holdTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [holdCount, setHoldCount] = useState<number | null>(null);
 
   // The scene is laid out in "game units" and scaled up as one on wide screens.
   const scale = gameScale(width);
@@ -86,8 +94,39 @@ export function IntroFlow({
     setPhase('count');
   }
 
+  function clearHold() {
+    holdTimers.current.forEach(clearTimeout);
+    holdTimers.current = [];
+    setHoldCount(null);
+  }
+
+  // Hold the duck: at 4 s it blinks and counts down 3-2-1; let go to back out.
+  function holdIn(e: GestureResponderEvent) {
+    holdStart.current = e.nativeEvent.timestamp;
+    if (marauder) return;
+    clearHold();
+    const at = (ms: number, fn: () => void) => holdTimers.current.push(setTimeout(fn, ms));
+    [3, 2, 1].forEach((n, i) =>
+      at(HOLD_WARN_MS + i * HOLD_TICK_MS, () => {
+        setHoldCount(n);
+        play('beep');
+      }),
+    );
+    at(HOLD_WARN_MS + 3 * HOLD_TICK_MS, () => {
+      clearHold();
+      enterMarauderMode();
+    });
+  }
+
+  function holdOut(e: GestureResponderEvent) {
+    if (e.nativeEvent.timestamp - holdStart.current > TAP_MAX_MS) justHeld.current = true;
+    clearHold();
+  }
+
+  useEffect(() => () => holdTimers.current.forEach(clearTimeout), []);
+
   function tapDuck() {
-    // Letting go after the 5-second hold isn't a skip tap.
+    // Letting go after a long hold isn't a skip tap.
     if (justHeld.current) {
       justHeld.current = false;
       return;
@@ -126,6 +165,14 @@ export function IntroFlow({
         />
       ) : null}
 
+      {holdCount != null ? (
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.center]}>
+          <Pixel size={14} color="#FF5A4E">MARAUDER MODE IN</Pixel>
+          <Pixel size={80} color="#FF5A4E" style={{ lineHeight: 100 }}>{`${holdCount}`}</Pixel>
+          <Pixel size={8} color="rgba(255,255,255,0.7)">KEEP HOLDING…</Pixel>
+        </View>
+      ) : null}
+
       {phase === 'whirl' ? <IntroScene width={vw} height={vh} scale={scale} /> : null}
 
       {phase === 'count' ? (
@@ -158,16 +205,34 @@ export function IntroFlow({
       {phase !== 'summary' && !huntRound ? (
         <Pressable
           onPress={tapDuck}
-          onLongPress={marauder ? undefined : enterMarauderMode}
-          delayLongPress={MARAUDER_HOLD_MS}
+          onPressIn={holdIn}
+          onPressOut={holdOut}
           style={[styles.skipZone, { paddingTop: insets.top + 8 }]}
         >
-          <PixelBird species={SPECIES_BY_ID.mall} size={44 * scale} />
+          <BlinkingDuck blinking={holdCount != null} size={44 * scale} />
           <Pixel size={7 * scale} color="rgba(255,255,255,0.55)">
             {taps > 0 ? `skip: ${SKIP_TAPS - taps} more` : 'tap duck 7× to skip'}
           </Pixel>
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+/** The duck up top; blinks while the Marauder countdown runs. */
+function BlinkingDuck({ blinking, size }: { blinking: boolean; size: number }) {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    if (!blinking) return;
+    const t = setInterval(() => setOn((v) => !v), 110);
+    return () => {
+      clearInterval(t);
+      setOn(true);
+    };
+  }, [blinking]);
+  return (
+    <View style={{ opacity: blinking && !on ? 0.1 : 1 }}>
+      <PixelBird species={SPECIES_BY_ID.mall} size={size} />
     </View>
   );
 }
