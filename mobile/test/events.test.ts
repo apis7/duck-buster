@@ -134,7 +134,7 @@ describe('feast days', () => {
     expect(s.score).toBe(39);
   });
 
-  it('St. Hubert: shoot the stag and the score is halved; let it pass and points double', () => {
+  it('St. Hubert: shoot the stag and the score is halved; let it pass and points triple', () => {
     const a = game({ hubert: true });
     a.score = 20;
     const stag = makeBird(a, 'stag', 0, 0, 0);
@@ -150,7 +150,29 @@ describe('feast days', () => {
     const d = makeBird(b, 'duck', 0, 0, 0);
     b.birds.push(d);
     applyHit(b, d, 'ko', 0, 0);
-    expect(b.score).toBe(6);
+    expect(b.score).toBe(9);
+    expect(b.bonuses['St. Hubert’s blessing ×3']).toBe(6);
+  });
+
+  it('the summary rows add up to the score', () => {
+    const s = game({ hubert: true, partridge: true, candles: true });
+    s.score = 0;
+    const p = makeBird(s, 'partridge', 0, 0, 0);
+    s.birds.push(p);
+    applyHit(s, p, 'body', 0, 0);
+    const d = makeBird(s, 'duck', 0, 0, 0);
+    s.birds.push(d);
+    applyHit(s, d, 'body', 0, 0);
+    applyHit(s, d, 'body', 0, 0);
+    const stag = makeBird(s, 'stag', 0, 0, 0);
+    s.birds.push(stag);
+    applyHit(s, stag, 'body', 0, 0);
+    while (!s.over || !s.finalized) step(s, 1 / 60);
+    const rows = Object.values(s.tally).reduce((a, r) => a + r.pts, 0);
+    const bonus = Object.values(s.bonuses).reduce((a, v) => a + v, 0);
+    expect(rows + bonus).toBe(s.score);
+    expect(s.bonuses['Partridge in a pear tree ×1.5']).toBeGreaterThan(0);
+    expect(Object.values(s.tally).some((r) => r.hits === 2)).toBe(true);
   });
 
   it('Candlemas: lit candles pay +2 each at the end; misses blow them out', () => {

@@ -63,6 +63,8 @@ export const CANDLES = 8;
 export const CANDLE_POINTS = 2;
 /** St. Isidore's angel takes this long to plough across. */
 export const ANGEL_SECONDS = 9;
+/** St. Hubert's blessing multiplier once the stag has passed. */
+export const HUBERT_MULTIPLIER = 3;
 
 /** Holiday birds (see events.ts). */
 export const ROOSTER_POINTS = 4;
@@ -197,6 +199,10 @@ export type GameState = {
   misses: number;
   /** End-of-round bonuses have been added. */
   finalized: boolean;
+  /** Per bird type: knockout hits, other hits, points — for the summary. */
+  tally: Record<string, { ko: number; hits: number; pts: number }>;
+  /** Holiday and seasonal bonus points by source (negative for penalties). */
+  bonuses: Record<string, number>;
   over: boolean;
 };
 
@@ -251,6 +257,8 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     blessed: false,
     misses: 0,
     finalized: false,
+    tally: {},
+    bonuses: {},
     over: false,
   };
 }
@@ -539,6 +547,26 @@ function popup(s: GameState, b: Bird, pts: number): void {
   s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: s.marauder ? POPUP_LIFE * 0.55 : POPUP_LIFE, label });
 }
 
+/** The summary's name for a bird type (drakes and hens together). */
+function tallyName(b: Bird): string {
+  'worklet';
+  if (b.kind === 'duck') return FLOCK_SPECIES[b.species].name;
+  return birdName(b);
+}
+
+function tallyFor(s: GameState, b: Bird): { ko: number; hits: number; pts: number } {
+  'worklet';
+  const key = tallyName(b);
+  if (!s.tally[key]) s.tally[key] = { ko: 0, hits: 0, pts: 0 };
+  return s.tally[key];
+}
+
+function addBonus(s: GameState, label: string, delta: number): void {
+  'worklet';
+  if (delta === 0) return;
+  s.bonuses[label] = (s.bonuses[label] ?? 0) + delta;
+}
+
 function knockDown(b: Bird): void {
   'worklet';
   b.alive = false;
@@ -553,6 +581,9 @@ function knockDown(b: Bird): void {
 export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number, by: number): number {
   'worklet';
   s.hits++;
+  const t = tallyFor(s, b);
+  if (zone === 'ko' && KO_FRACTION[b.kind] < 1) t.ko++;
+  else t.hits++;
   let down = false;
   if (b.kind === 'partridge') {
     b.earned = PARTRIDGE_POINTS;
@@ -582,7 +613,9 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
     // You shot St. Hubert's stag. Penance: your score is cut in half.
     b.earned = 0;
     down = true;
-    s.score = Math.floor(s.score / 2);
+    const halved = Math.floor(s.score / 2);
+    addBonus(s, 'St. Hubert penance (score halved)', halved - s.score);
+    s.score = halved;
     burst(s, bx, by, 20, ['#F4F2EC', '#FFD84A'], 220);
     s.events.push({ k: 'penance' });
   } else if (b.kind === 'eagle') {
@@ -634,18 +667,36 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   }
   if (!down) return 0;
   if (b.kind === 'duck') b.earned += FLOCK_SPECIES[b.species].bonus ?? 0;
+  // Holiday and feast-day modifiers, each one booked so the summary can show it.
+  // The bird's own row gets its base points; the modifiers are booked as bonuses,
+  // so the summary's rows always add up to the score.
+  t.pts += b.earned;
+  let e = b.earned;
+  let before = e;
   // The partridge's 1.5× window (not on the partridge itself, and never on a coot's −1).
-  if (b.kind !== 'partridge' && b.earned > 0 && s.t < s.multUntil) b.earned = Math.round(b.earned * PARTRIDGE_MULTIPLIER);
+  if (b.kind !== 'partridge' && e > 0 && s.t < s.multUntil) e = Math.round(e * PARTRIDGE_MULTIPLIER);
+  addBonus(s, 'Partridge in a pear tree ×1.5', e - before);
+  before = e;
   // New Year's: the last 3 seconds count double.
-  if (s.fx.midnight && b.earned > 0 && s.t >= GAME_SECONDS - 3) b.earned *= 2;
+  if (s.fx.midnight && e > 0 && s.t >= GAME_SECONDS - 3) e *= 2;
+  addBonus(s, 'Midnight ×2', e - before);
+  before = e;
   // Martinmas / Michaelmas: geese are worth triple.
-  if (s.fx.geeseFeast && b.kind === 'goose') b.earned *= 3;
+  if (s.fx.geeseFeast && b.kind === 'goose') e *= 3;
+  addBonus(s, 'Feast-day geese ×3', e - before);
+  before = e;
   // St. Isidore: +1 for every bird dropped while the angel ploughs.
-  if (b.earned > 0 && angelX(s) != null && b.kind !== 'stag') b.earned += 1;
-  // St. Hubert's blessing: ×2 after the stag has passed.
-  if (s.blessed && b.earned > 0) b.earned *= 2;
+  if (e > 0 && angelX(s) != null && b.kind !== 'stag') e += 1;
+  addBonus(s, 'St. Isidore +1', e - before);
+  before = e;
+  // St. Hubert's blessing: ×3 after the stag has passed.
+  if (s.blessed && e > 0) e *= HUBERT_MULTIPLIER;
+  addBonus(s, 'St. Hubert’s blessing ×3', e - before);
+  before = e;
   // Fridays in Lent: no meat. Every bird is −1.
-  if (s.fx.lent && b.kind !== 'stag' && b.kind !== 'eagle') b.earned = -1;
+  if (s.fx.lent && b.kind !== 'stag' && b.kind !== 'eagle') e = -1;
+  addBonus(s, 'Lenten Friday (no meat)', e - before);
+  b.earned = e;
   // Opening Day: blaze-orange confetti on every bird.
   if (s.fx.opener) burst(s, b.x + b.w / 2, b.y + b.h / 2, 12, ['#FF6A00', '#FFFFFF', '#FF9A3C'], 240);
   if (b.sit === 2) s.events.push({ k: 'sitting' });
@@ -855,6 +906,7 @@ export function step(s: GameState, dt: number): void {
     if (s.fx.candles) {
       const lit = candlesLit(s);
       s.score += lit * CANDLE_POINTS;
+      addBonus(s, `Candlemas: ${lit} candles still lit`, lit * CANDLE_POINTS);
       s.events.push({ k: 'candles', lit });
     }
   }

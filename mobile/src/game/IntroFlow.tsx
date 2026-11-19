@@ -266,6 +266,42 @@ function Stats({ result }: { result: GameResult }) {
   );
 }
 
+/** Where the points came from: each bird type, then every holiday or seasonal bonus. */
+function Breakdown({ result }: { result: GameResult }) {
+  const rows = Object.entries(result.tally).sort((a, b) => b[1].pts - a[1].pts || a[0].localeCompare(b[0]));
+  const bonuses = Object.entries(result.bonuses);
+  if (!rows.length && !bonuses.length) return null;
+  const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+  return (
+    <View style={styles.breakdown}>
+      <View style={styles.bdRow}>
+        <Pixel size={7} color={C.navySoft} style={{ flex: 1 }}>BIRD</Pixel>
+        <Pixel size={7} color={C.navySoft} style={styles.bdNum}>KO</Pixel>
+        <Pixel size={7} color={C.navySoft} style={styles.bdNum}>HIT</Pixel>
+        <Pixel size={7} color={C.navySoft} style={styles.bdNum}>PTS</Pixel>
+      </View>
+      {rows.map(([name, r]) => (
+        <View key={name} style={styles.bdRow}>
+          <Pixel size={8} color={C.white} style={{ flex: 1 }}>{name}</Pixel>
+          <Pixel size={8} color={C.white} style={styles.bdNum}>{`${r.ko}`}</Pixel>
+          <Pixel size={8} color={C.white} style={styles.bdNum}>{`${r.hits}`}</Pixel>
+          <Pixel size={8} color={r.pts < 0 ? C.orange : C.white} style={styles.bdNum}>{signed(r.pts)}</Pixel>
+        </View>
+      ))}
+      {result.bands ? (
+        <Pixel size={8} color={C.gold} style={{ marginTop: 4 }}>{`BANDS ${result.bands} (POINTS DOUBLED)`}</Pixel>
+      ) : null}
+      {bonuses.length ? <Pixel size={7} color={C.navySoft} style={{ marginTop: 6 }}>BONUSES</Pixel> : null}
+      {bonuses.map(([label, pts]) => (
+        <View key={label} style={styles.bdRow}>
+          <Pixel size={8} color={pts < 0 ? C.orange : C.gold} style={{ flex: 1, lineHeight: 13 }}>{label.toUpperCase()}</Pixel>
+          <Pixel size={8} color={pts < 0 ? C.orange : C.gold} style={styles.bdNum}>{signed(pts)}</Pixel>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** You're probably still mid-shot when the buzzer goes: ignore taps for a second. */
 function useArmed(onArm?: () => void) {
   const [armed, setArmed] = useState(false);
@@ -321,6 +357,7 @@ function PracticeSummary({ result, onAgain, onDone, dayNames }: { result: GameRe
           <Pixel size={48} color={C.white} style={{ lineHeight: 64 }}>{`${result.score}`}</Pixel>
           <Stats result={result} />
           <DayLine names={dayNames} />
+          <Breakdown result={result} />
           <Pixel size={8} color={C.navySoft} style={{ textAlign: 'center', marginTop: 6 }}>
             {'Practice only. Win a hunt to play\nthe round that counts.'}
           </Pixel>
@@ -376,23 +413,29 @@ function RoundSummary({ result, playerName, onDone, dayNames }: { result: GameRe
   const insets = useSafeAreaInsets();
   const armed = useArmed();
   return (
-    <View pointerEvents={armed ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,31,61,0.94)', paddingTop: insets.top + 70, paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }]}>
-      <View style={{ alignItems: 'center', gap: 10 }}>
-        <Pixel size={12} color={C.gold}>{`${playerName.toUpperCase()}'S ROUND`}</Pixel>
-        <Pixel size={56} color={C.white} style={{ lineHeight: 72 }}>{`${result.score}`}</Pixel>
-        <Stats result={result} />
-        <DayLine names={dayNames} />
-        <Pixel size={9} color={C.orange} style={{ textAlign: 'center', marginTop: 10 }}>
-          {'SAVED TO THE SEASON.\nCHECK THE BRAGGING BOARD.'}
-        </Pixel>
-      </View>
-      <View style={{ flex: 1 }} />
-      <Btn label="DONE" onPress={onDone} />
+    <View pointerEvents={armed ? 'auto' : 'none'} style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(11,31,61,0.94)' }]}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 50, paddingBottom: insets.bottom + 20, paddingHorizontal: 22 }}>
+        <View style={{ alignItems: 'center', gap: 10 }}>
+          <Pixel size={12} color={C.gold}>{`${playerName.toUpperCase()}'S ROUND`}</Pixel>
+          <Pixel size={56} color={C.white} style={{ lineHeight: 72 }}>{`${result.score}`}</Pixel>
+          <Stats result={result} />
+          <DayLine names={dayNames} />
+          <Breakdown result={result} />
+          <Pixel size={9} color={C.orange} style={{ textAlign: 'center', marginTop: 10 }}>
+            {'SAVED TO THE SEASON.\nCHECK THE BRAGGING BOARD.'}
+          </Pixel>
+        </View>
+        <View style={{ flex: 1, minHeight: 20 }} />
+        <Btn label="DONE" onPress={onDone} />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  breakdown: { alignSelf: 'stretch', marginTop: 10, gap: 5, borderWidth: 2, borderColor: C.navy, padding: 10, backgroundColor: 'rgba(0,0,0,0.25)' },
+  bdRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  bdNum: { width: 36, textAlign: 'right' },
   center: { alignItems: 'center', justifyContent: 'center' },
   skipZone: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center', paddingBottom: 10, gap: 2 },
   initials: {

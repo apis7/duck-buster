@@ -19,7 +19,13 @@ import { GUN_H, GUN_W } from './sprites';
 import { NO_FX, type GameFx } from './events';
 import type { Theme } from './theme';
 
-export type GameResult = { score: number; shots: number; hits: number; kos: number; geese: number; swans: number; coots: number; bands: number; downs: number };
+export type GameResult = {
+  score: number; shots: number; hits: number; kos: number; geese: number; swans: number; coots: number; bands: number; downs: number;
+  /** Per bird type: knockout hits, other hits, base points. */
+  tally: Record<string, { ko: number; hits: number; pts: number }>;
+  /** Holiday and seasonal bonuses (negative for penalties). Rows + bonuses = score. */
+  bonuses: Record<string, number>;
+};
 
 /** Touches that start within this radius of the gun pick it up. */
 const GRAB_RADIUS = 80;
@@ -218,7 +224,7 @@ export function GameView({
           break;
         case 'blessing':
           play('celebrate');
-          showBanner('ST. HUBERT’S BLESSING\n×2 FOR THE REST OF THE ROUND', C.gold, false, 2000);
+          showBanner('ST. HUBERT’S BLESSING\n×3 FOR THE REST OF THE ROUND', C.gold, false, 2000);
           break;
         case 'candles':
           if (e.k === 'candles' && e.lit > 0) showBanner(`${e.lit} CANDLES STILL LIT\n+${e.lit * 2}`, C.gold, false, 1800);
@@ -292,7 +298,7 @@ export function GameView({
     }
     if (finished(s)) {
       live.set(false);
-      scheduleOnRN(finish, { score: s.score, shots: s.shots, hits: s.hits, kos: s.kos, geese: s.geese, swans: s.swans, coots: s.coots, bands: s.bands, downs: s.downs });
+      scheduleOnRN(finish, { score: s.score, shots: s.shots, hits: s.hits, kos: s.kos, geese: s.geese, swans: s.swans, coots: s.coots, bands: s.bands, downs: s.downs, tally: { ...s.tally }, bonuses: { ...s.bonuses } });
     }
   });
 
@@ -615,7 +621,7 @@ export function GameView({
       <View pointerEvents="none" style={[styles.hud, { top: (skyTop - 56) * scale }]}>
         <Pixel size={16 * scale} color={marauder ? '#FF5A4E' : C.white}>{`${hud.score}`}</Pixel>
         {hud.mult > 0 ? <Pixel size={11 * scale} color={C.gold}>{`×1.5 ${hud.mult}s`}</Pixel> : null}
-        {hud.blessed ? <Pixel size={11 * scale} color={C.gold}>{'×2 ✝'}</Pixel> : null}
+        {hud.blessed ? <Pixel size={11 * scale} color={C.gold}>{'×3 ✝'}</Pixel> : null}
         <Pixel size={11 * scale} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
       </View>
       {reloadingNow ? (

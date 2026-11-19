@@ -24,7 +24,7 @@ import { themeFor, THEMES, type Theme } from './theme';
  *
  * Feast days (domain/calendar.ts):
  *  - St. Hubert (Nov 3): a white stag with a cross walks the bank. Let it pass:
- *    ×2 for the rest of the round. Shoot it: PENANCE, score halved.
+ *    ×3 for the rest of the round. Shoot it: PENANCE, score halved.
  *  - Martinmas (Nov 11) and Michaelmas (Sep 29): geese are worth 3× and show up
  *    a quarter more often.
  *  - Fridays in Lent: no meat — every bird scores −1.
