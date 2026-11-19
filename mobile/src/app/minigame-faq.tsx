@@ -81,6 +81,11 @@ export default function MinigameFaq() {
         <Body>Mergansers come through alone, fast and low. Worth the bonus.</Body>
       </Q>
 
+      <Q q="Why does the marsh look different?">
+        <Body>It follows South Dakota's seasons: green in spring and summer, yellowing in early fall, brown and orange in the fall, snow in winter — and Christmas trees from Christmas through the twelve days after.</Body>
+        <Body>During those twelve days, keep an eye out for a partridge in a pear tree. Drop it for 5 points, and every point for the next 5 seconds counts 1.5×.</Body>
+      </Q>
+
       <Q q="Sitting ducks?">
         <Body>Shoot a duck sitting on the water and you still get every point. You'll also get mocked. Sky-busting is the honorable way.</Body>
       </Q>

@@ -230,6 +230,32 @@ export const COOT_W = 12;
 export const COOT_H = 9;
 export const COOT: Palette = { H: '#1E1E1E', E: '#A83A2A', W: '#F4F4F4', S: '#3A3A40', D: '#2A2A30', F: '#8AA84A' };
 
+/* ── The partridge in a pear tree (Christmas + 12 days): o face · E eye · K beak · g body · b bars · f feet · L leaves · Y pears · T trunk ── */
+
+export const PARTRIDGE_TREE: Grid = [
+  '......oo........',
+  '.....oEoK.......',
+  '...ggggo........',
+  '..gggggg........',
+  '...gbgbg........',
+  '....LLfLLLLL....',
+  '..LLLLYLLLLLLL..',
+  '.LLLLLLLLYLLLLL.',
+  'LLLYLLLLLLLLLLLL',
+  'LLLLLLLLLLLYLLLL',
+  '.LLLLLYLLLLLLLL.',
+  '..LLLLLLLLLLLL..',
+  '....LLLLLLLL....',
+  '......TTT.......',
+  '......TTT.......',
+  '.....TTTTT......',
+];
+export const PARTRIDGE_W = 16;
+export const PARTRIDGE_H = 16;
+export const PARTRIDGE_PALETTE: Palette = {
+  o: '#E07A3A', E: '#111111', K: '#555555', g: '#8A8A80', b: '#8A3A24', f: '#C08060', L: '#3E7A2E', Y: '#E8D24A', T: '#5A3A1E',
+};
+
 /* ── Retriever, facing right: Y coat · L ear · E eye · N nose ── */
 
 export const DOG: Grid = [

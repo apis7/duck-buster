@@ -10,12 +10,13 @@ import { Pixel } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
 import {
-  aimToward, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
+  aimToward, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, multLeft, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
   type Bird, type GameEvent, type GameState,
 } from './engine';
 import type { GameLayout } from './layout';
-import { backgroundPicture, foregroundPicture, gamePictures, type GamePictures } from './pictures';
+import { backgroundPicture, foregroundPicture, gamePictures, sceneTheme, type GamePictures } from './pictures';
 import { GUN_H, GUN_W } from './sprites';
+import type { Theme } from './theme';
 
 export type GameResult = { score: number; shots: number; hits: number; kos: number; geese: number; swans: number; coots: number; bands: number; downs: number };
 
@@ -50,6 +51,7 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
   if (b.kind === 'goose') flap = b.banded ? pics.bandedGoose : pics.goose;
   else if (b.kind === 'swan') flap = pics.swan;
   else if (b.kind === 'coot') flap = pics.coot;
+  else if (b.kind === 'partridge') flap = { up: pics.partridge, down: pics.partridge };
   else flap = b.hen ? pics.ducks[b.species].hen : pics.ducks[b.species].drake;
   const pic = b.kind === 'duck' && b.sit === 2 && b.alive ? (flap as GamePictures['ducks'][number]['drake']).sit : up ? flap.up : flap.down;
   const scale = b.kind === 'duck' ? b.w / 48 : 1;
@@ -73,18 +75,34 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
  * thread; the JS thread hears about events (sounds, banners) and the end.
  */
 export function GameView({
-  width, height, scale, layout, running, onEnd, marauder = false,
-}: { width: number; height: number; scale: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void; marauder?: boolean }) {
+  width, height, scale, layout, running, onEnd, marauder = false, theme,
+}: {
+  width: number;
+  height: number;
+  scale: number;
+  layout: GameLayout;
+  running: boolean;
+  onEnd: (r: GameResult) => void;
+  marauder?: boolean;
+  /** The season's marsh (fall colors, snow, Christmas trees…). */
+  theme: Theme;
+}) {
+  const scene = sceneTheme(theme, marauder);
+  const snowing = scene.snow;
   const { gunY, skyTop } = layout;
   const pics = useMemo(() => gamePictures(), []);
-  const initial = useMemo(() => newGame(width, height, layout, marauder), [width, height, layout, marauder]);
-  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop, marauder), [width, height, layout, marauder]);
-  const fg = useMemo(() => foregroundPicture(width, height, initial.groundY, marauder), [width, height, initial.groundY, marauder]);
+  const initial = useMemo(
+    () => newGame(width, height, layout, marauder, theme.partridge && !marauder),
+    [width, height, layout, marauder, theme.partridge],
+  );
+  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop, scene), [width, height, layout, scene]);
+  const fg = useMemo(() => foregroundPicture(width, height, initial.groundY, scene), [width, height, initial.groundY, scene]);
   const state = useSharedValue<GameState>(initial);
   const live = useSharedValue(false);
   const lastScore = useSharedValue(0);
   const lastLeft = useSharedValue(GAME_SECONDS);
-  const [hud, setHud] = useState({ score: 0, left: GAME_SECONDS });
+  const lastMult = useSharedValue(0);
+  const [hud, setHud] = useState({ score: 0, left: GAME_SECONDS, mult: 0 });
   const [banner, setBanner] = useState<Banner | null>(null);
   const [reloadingNow, setReloadingNow] = useState(false);
   const ended = useRef(false);
@@ -104,7 +122,7 @@ export function GameView({
     later(ms, () => setBanner((b) => (b?.key === key ? null : b)));
   };
 
-  const onHud = (score: number, left: number) => setHud({ score, left });
+  const onHud = (score: number, left: number, mult: number) => setHud({ score, left, mult });
 
   const onEvents = (events: GameEvent[]) => {
     for (const e of events) {
@@ -135,6 +153,10 @@ export function GameView({
           break;
         }
         case 'dog': play('woof'); break;
+        case 'partridge':
+          play('celebrate');
+          showBanner('A PARTRIDGE IN A PEAR TREE!\n×1.5 FOR 5 SECONDS', C.gold, false, 1800);
+          break;
         case 'sitting':
           play('wrong');
           showBanner(SITTING_JABS[Math.floor(Math.random() * SITTING_JABS.length)], '#FFB199');
@@ -178,10 +200,12 @@ export function GameView({
     if (events.length) scheduleOnRN(onEvents, events);
     const s = state.value;
     const left = Math.max(0, Math.ceil(GAME_SECONDS - s.t));
-    if (s.score !== lastScore.value || left !== lastLeft.value) {
+    const mult = multLeft(s);
+    if (s.score !== lastScore.value || left !== lastLeft.value || mult !== lastMult.value) {
       lastScore.value = s.score;
       lastLeft.value = left;
-      scheduleOnRN(onHud, s.score, left);
+      lastMult.value = mult;
+      scheduleOnRN(onHud, s.score, left, mult);
     }
     if (finished(s)) {
       live.set(false);
@@ -255,6 +279,20 @@ export function GameView({
         canvas.drawRect(Skia.XYWHRect(p.x, p.y, 4, 4), paint);
       }
       paint.setAlphaf(1);
+
+      // Snow drifting down, from the clock alone (no state to keep).
+      if (snowing) {
+        paint.setColor(Skia.Color('#FFFFFF'));
+        paint.setAlphaf(0.85);
+        for (let i = 0; i < 60; i++) {
+          const fall = 28 + (i % 7) * 9;
+          const y = (i * 53 + s.t * fall) % s.height;
+          const x = (i * 97 + Math.sin(s.t * 1.3 + i) * 14 + s.width * 4) % s.width;
+          const size = i % 3 === 0 ? 4 : 3;
+          canvas.drawRect(Skia.XYWHRect(x, y, size, size), paint);
+        }
+        paint.setAlphaf(1);
+      }
 
       paint.setColor(Skia.Color('#FFE29A'));
       for (const b of s.bullets) canvas.drawRect(Skia.XYWHRect(b.x - 3, b.y - 3, 6, 6), paint);
@@ -343,6 +381,7 @@ export function GameView({
       </GestureDetector>
       <View pointerEvents="none" style={[styles.hud, { top: (skyTop - 56) * scale }]}>
         <Pixel size={16 * scale} color={marauder ? '#FF5A4E' : C.white}>{`${hud.score}`}</Pixel>
+        {hud.mult > 0 ? <Pixel size={11 * scale} color={C.gold}>{`×1.5 ${hud.mult}s`}</Pixel> : null}
         <Pixel size={11 * scale} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
       </View>
       {reloadingNow ? (

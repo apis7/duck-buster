@@ -22,11 +22,13 @@
  *  - Goose: damage adds up — 4 KO hits or 10 body hits. KO hit 3 (+1 on the killing
  *    blow → 13 for a clean four), body hit 1 (→ 10). Banded goose: everything ×2.
  *  - Swan: 3 KO hits or 8 body hits. KO hit 4 (→ 12), body hit 1 (→ 8).
+ *  - Partridge in a pear tree (Christmas + the twelve days): 5 points, and every
+ *    point earned in the next 5 seconds counts 1.5×.
  *  A retriever (two for a swan) jumps out of the reeds to fetch a downed goose or swan.
  */
 
 import type { GameLayout } from './layout';
-import { COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
+import { PARTRIDGE_H, PARTRIDGE_W, COOT_H, COOT_W, DOG_H, DOG_W, DUCK_H, DUCK_W, FLOCK_SPECIES, GOOSE_H, GOOSE_W, SWAN_H, SWAN_W } from './sprites';
 
 export const GAME_SECONDS = 12;
 export const PIXEL = 3;
@@ -50,10 +52,17 @@ const GRAVITY = 900;
 export const MIN_AIM = -Math.PI + 0.15;
 export const MAX_AIM = -0.15;
 
-export type BirdKind = 'duck' | 'coot' | 'goose' | 'swan';
+export type BirdKind = 'duck' | 'coot' | 'goose' | 'swan' | 'partridge';
 
 /** Fraction of the bird's width, from the head back, that counts as a knockout hit. */
-export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goose: 0.8, swan: 0.6 };
+export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goose: 0.8, swan: 0.6, partridge: 1 };
+
+/** The partridge: what it's worth, and how long and how much its bonus runs. */
+export const PARTRIDGE_POINTS = 5;
+export const PARTRIDGE_BONUS_SECONDS = 5;
+export const PARTRIDGE_MULTIPLIER = 1.5;
+/** Odds a Christmas-season game has a partridge fly by. */
+export const PARTRIDGE_CHANCE = 0.4;
 
 export const SPECIAL = {
   goose: { koNeeded: 4, bodyNeeded: 10, koPts: 3, bodyPts: 1, koKillBonus: 1 },
@@ -110,6 +119,7 @@ export type GameEvent =
   | { k: 'coot' | 'sitting' }
   /** Marauder Mode: a bird blew apart. */
   | { k: 'pop' }
+  | { k: 'partridge' }
   | { k: 'special'; kind: 'goose' | 'swan'; pts: number; banded: boolean; down: boolean };
 
 export type GameState = {
@@ -153,10 +163,14 @@ export type GameState = {
   bands: number;
   /** Birds knocked down (any kind). */
   downs: number;
+  /** When the partridge flies in (seconds), or Infinity for no partridge this game. */
+  partridgeAt: number;
+  /** Points count 1.5× until this time (seconds). */
+  multUntil: number;
   over: boolean;
 };
 
-export function newGame(width: number, height: number, layout: GameLayout, marauder = false): GameState {
+export function newGame(width: number, height: number, layout: GameLayout, marauder = false, partridgeSeason = false): GameState {
   'worklet';
   const { gunY, skyTop, reedTop } = layout;
   return {
@@ -195,6 +209,8 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     coots: 0,
     bands: 0,
     downs: 0,
+    partridgeAt: partridgeSeason && Math.random() < PARTRIDGE_CHANCE ? 2 + Math.random() * 4 : Infinity,
+    multUntil: 0,
     over: false,
   };
 }
@@ -213,6 +229,12 @@ export function aimToward(s: GameState, x: number, y: number): void {
   const dy = y - s.gunY;
   if (dx * dx + dy * dy < 14 * 14) return;
   s.aim = clampAim(Math.atan2(dy, dx));
+}
+
+/** Seconds of 1.5× left, or 0. */
+export function multLeft(s: GameState): number {
+  'worklet';
+  return s.t < s.multUntil ? Math.ceil(s.multUntil - s.t) : 0;
 }
 
 export function reloading(s: GameState): boolean {
@@ -263,7 +285,15 @@ export function makeBird(s: GameState, kind: BirdKind, x: number, y: number, vx:
   const species = opts.species ?? 0;
   const scale = kind === 'duck' ? FLOCK_SPECIES[species].scale : 1;
   const [gw, gh] =
-    kind === 'goose' ? [GOOSE_W, GOOSE_H] : kind === 'swan' ? [SWAN_W, SWAN_H] : kind === 'coot' ? [COOT_W, COOT_H] : [DUCK_W, DUCK_H];
+    kind === 'goose'
+      ? [GOOSE_W, GOOSE_H]
+      : kind === 'swan'
+        ? [SWAN_W, SWAN_H]
+        : kind === 'coot'
+          ? [COOT_W, COOT_H]
+          : kind === 'partridge'
+            ? [PARTRIDGE_W, PARTRIDGE_H]
+            : [DUCK_W, DUCK_H];
   return {
     id: s.nextId++,
     kind,
@@ -397,6 +427,7 @@ export function birdName(b: Bird): string {
     return b.hen ? `${sp.name} HEN` : sp.name;
   }
   if (b.kind === 'goose') return b.banded ? 'BANDED GOOSE' : 'GOOSE';
+  if (b.kind === 'partridge') return 'PARTRIDGE';
   return b.kind === 'swan' ? 'SWAN' : 'COOT';
 }
 
@@ -427,7 +458,13 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   'worklet';
   s.hits++;
   let down = false;
-  if (b.kind === 'coot') {
+  if (b.kind === 'partridge') {
+    b.earned = PARTRIDGE_POINTS;
+    down = true;
+    s.multUntil = s.t + PARTRIDGE_BONUS_SECONDS;
+    burst(s, bx, by, 34, ['#E8D24A', '#3E7A2E', '#FFFFFF', '#E07A3A'], 300);
+    s.events.push({ k: 'partridge' });
+  } else if (b.kind === 'coot') {
     b.earned = -1;
     down = true;
     s.coots++;
@@ -469,6 +506,8 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   }
   if (!down) return 0;
   if (b.kind === 'duck') b.earned += FLOCK_SPECIES[b.species].bonus ?? 0;
+  // The partridge's 1.5× window (not on the partridge itself, and never on a coot's −1).
+  if (b.kind !== 'partridge' && b.earned > 0 && s.t < s.multUntil) b.earned = Math.round(b.earned * PARTRIDGE_MULTIPLIER);
   if (b.sit === 2) s.events.push({ k: 'sitting' });
   s.downs++;
   if (s.marauder) {
@@ -522,6 +561,11 @@ export function step(s: GameState, dt: number): void {
     if (s.t >= GAME_SECONDS) {
       s.over = true;
       s.aiming = false;
+    }
+    if (s.t >= s.partridgeAt) {
+      s.partridgeAt = Infinity;
+      const y = s.skyTop + (s.skyBottom - s.skyTop) * (0.2 + Math.random() * 0.3);
+      s.birds.push(makeBird(s, 'partridge', -PARTRIDGE_W * PIXEL, y, 80 * Math.max(0.85, s.width / 400)));
     }
     if (s.t >= s.nextFlock && s.t < GAME_SECONDS - 1.2) {
       spawnFlock(s);
@@ -636,5 +680,6 @@ export function wingsUp(b: Bird, t: number): boolean {
   'worklet';
   if (b.sit === 1) return Math.floor(t / 0.07) % 2 === 0;
   const beat = b.kind === 'coot' ? 0.09 : b.kind === 'duck' ? 0.14 : 0.24;
+  if (b.kind === 'partridge') return true;
   return Math.floor((t + b.phase) / beat) % 2 === 0;
 }

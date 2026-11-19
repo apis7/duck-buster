@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, useWindowDimensions, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { play, preload } from '@/audio/sfx';
+import { todayISO } from '@/domain/season';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { useStore } from '@/state/store';
 import { Btn, Pixel } from '@/ui/kit';
@@ -13,6 +14,7 @@ import { Busted } from './Busted';
 import { GameView, type GameResult } from './GameView';
 import { INTRO_MS, IntroScene } from './IntroScene';
 import { gameLayout, gameScale } from './layout';
+import { themeFor } from './theme';
 
 type Phase = 'whirl' | 'count' | 'play' | 'summary';
 
@@ -51,6 +53,8 @@ export function IntroFlow({
   const [round, setRound] = useState(0);
   const [taps, setTaps] = useState(0);
   const [marauder, setMarauder] = useState(false);
+  // The marsh follows the calendar: fall colors, winter snow, Christmas trees and the partridge.
+  const [theme] = useState(() => themeFor(todayISO()));
   const justHeld = useRef(false);
   const holdStart = useRef(0);
   const holdTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -144,10 +148,10 @@ export function IntroFlow({
   }
 
   const huntRound = mode === 'hunt';
-  const theme = marauder ? '#1A0204' : C.navyDark;
+  const backdrop = marauder ? '#1A0204' : C.navyDark;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme }}>
+    <View style={{ flex: 1, backgroundColor: backdrop }}>
       {phase !== 'whirl' && phase !== 'summary' ? (
         <GameView
           key={round}
@@ -156,6 +160,7 @@ export function IntroFlow({
           scale={scale}
           layout={layout}
           marauder={marauder}
+          theme={theme}
           running={phase === 'play'}
           onEnd={(r) => {
             setResult(r);
