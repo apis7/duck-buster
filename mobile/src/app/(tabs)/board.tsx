@@ -198,8 +198,9 @@ export default function Board() {
           </Card>
         </Section>
 
-        <Section title="Duck shoot">
+        <Section title="Duck Shoot Minigame">
           <Card style={{ gap: 8 }}>
+            <Body muted style={{ fontSize: 12 }}>Only the hunt winner's round after each hunt counts here — practice games don't.</Body>
             {shoot.length === 0 ? (
               <Body muted style={{ fontSize: 13 }}>Win a hunt to play the round that counts. Scores land here.</Body>
             ) : null}
