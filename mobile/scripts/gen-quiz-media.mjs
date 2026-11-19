@@ -18,7 +18,7 @@ const credits = existsSync(creditsPath) ? JSON.parse(readFileSync(creditsPath, '
 const entry = (dir, f) => credits.find((x) => x.file === `assets/quiz/${dir}/${f}`) ?? credits.find((x) => x.code === strip(f) && x.kind === (dir === 'img' ? 'image' : 'audio'));
 const credit = (dir, f) => {
   const c = entry(dir, f);
-  return c ? `${c.author || 'Unknown'} · ${c.license}` : '';
+  return c ? [c.author, c.license].filter(Boolean).join(' · ') : '';
 };
 const speciesOf = (f) => strip(f).replace(/_(hen|drake)$/, '');
 const sexOf = (f) => entry('img', f)?.sex ?? (/_hen$/.test(strip(f)) ? 'hen' : /_drake$/.test(strip(f)) ? 'drake' : undefined);

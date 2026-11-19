@@ -707,16 +707,6 @@
     "note": "hen quack series (descending quacks)"
   },
   {
-    "code": "gadw",
-    "kind": "audio",
-    "file": "assets/quiz/audio/gadw.mp3",
-    "sourceUrl": "https://xeno-canto.org/436359",
-    "author": "Joost van Bruggen",
-    "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "note": "gadwall 'nheck' calls, 2-3 birds in flight"
-  },
-  {
     "code": "amwi",
     "kind": "audio",
     "file": "assets/quiz/audio/amwi.mp3",
@@ -767,16 +757,6 @@
     "note": "drake 'crick' peeping whistles; iNaturalist ID Anas crecca, recorded in North America (American Green-winged Teal)"
   },
   {
-    "code": "wodu",
-    "kind": "audio",
-    "file": "assets/quiz/audio/wodu.mp3",
-    "sourceUrl": "https://xeno-canto.org/63109",
-    "author": "Jonathon Jongsma",
-    "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
-    "note": "rising 'oo-eek' squeal calls (hen) from a small group"
-  },
-  {
     "code": "fuwd",
     "kind": "audio",
     "file": "assets/quiz/audio/fuwd.mp3",
@@ -797,16 +777,6 @@
     "note": "whistled flight call (pe-che-che-ne), nocturnal"
   },
   {
-    "code": "redh",
-    "kind": "audio",
-    "file": "assets/quiz/audio/redh.mp3",
-    "sourceUrl": "https://www.inaturalist.org/observations/264016648",
-    "author": "Kalvin Chan",
-    "license": "CC0 1.0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "note": "drake 'meow' courtship calls; faint, urban background noise"
-  },
-  {
     "code": "rndu",
     "kind": "audio",
     "file": "assets/quiz/audio/rndu.mp3",
@@ -825,16 +795,6 @@
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
     "note": "hen rapid pulsed croaking calls; some background"
-  },
-  {
-    "code": "come",
-    "kind": "audio",
-    "file": "assets/quiz/audio/come.mp3",
-    "sourceUrl": "https://www.inaturalist.org/observations/50143011",
-    "author": "Richard Littauer",
-    "license": "CC BY 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-    "note": "low croaking calls (American subspecies, Vermont)"
   },
   {
     "code": "rbme",
@@ -867,16 +827,6 @@
     "note": "hen rapid 'kor-kor' grunts, breeding habitat (Canada, CWS autonomous recorder)"
   },
   {
-    "code": "sngo",
-    "kind": "audio",
-    "file": "assets/quiz/audio/sngo.mp3",
-    "sourceUrl": "https://www.inaturalist.org/observations/106524831",
-    "author": "Tuoichen",
-    "license": "CC BY 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-    "note": "flock 'whouk' honking"
-  },
-  {
     "code": "gwfg",
     "kind": "audio",
     "file": "assets/quiz/audio/gwfg.mp3",
@@ -897,48 +847,123 @@
     "note": "flock 'cronk' flight calls (France)"
   },
   {
-    "code": "mall",
+    "code": "amco",
     "kind": "audio",
-    "file": "assets/quiz/audio/mall.mp3",
-    "sourceUrl": "https://xeno-canto.org/62258",
-    "author": "Jonathon Jongsma",
-    "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+    "file": "assets/quiz/audio/amco.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
   },
   {
-    "code": "nopi",
+    "code": "buff",
     "kind": "audio",
-    "file": "assets/quiz/audio/nopi.mp3",
-    "sourceUrl": "https://xeno-canto.org/730777",
-    "author": "Sonothèque ADVL",
-    "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-  },
-  {
-    "code": "cago",
-    "kind": "audio",
-    "file": "assets/quiz/audio/cago.mp3",
-    "sourceUrl": "https://xeno-canto.org/934272",
-    "author": "Doug Hynes",
-    "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+    "file": "assets/quiz/audio/buff.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
   },
   {
     "code": "cacg",
     "kind": "audio",
     "file": "assets/quiz/audio/cacg.mp3",
-    "sourceUrl": "https://www.inaturalist.org/observations/194297297",
-    "author": "Dan Horowitz",
-    "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
   },
   {
-    "code": "amco",
+    "code": "cago",
     "kind": "audio",
-    "file": "assets/quiz/audio/amco.mp3",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Yellowstone_sound_library_-_American_Coots_-_001.mp3",
-    "author": "NPS & MSU Acoustic Atlas / Jennifer Jerrett",
-    "license": "Public domain",
-    "licenseUrl": ""
+    "file": "assets/quiz/audio/cago.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "canv",
+    "kind": "audio",
+    "file": "assets/quiz/audio/canv.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "come",
+    "kind": "audio",
+    "file": "assets/quiz/audio/come.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "gadw",
+    "kind": "audio",
+    "file": "assets/quiz/audio/gadw.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "mall",
+    "kind": "audio",
+    "file": "assets/quiz/audio/mall.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "nopi",
+    "kind": "audio",
+    "file": "assets/quiz/audio/nopi.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "redh",
+    "kind": "audio",
+    "file": "assets/quiz/audio/redh.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "sngo",
+    "kind": "audio",
+    "file": "assets/quiz/audio/sngo.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
+  },
+  {
+    "code": "wodu",
+    "kind": "audio",
+    "file": "assets/quiz/audio/wodu.mp3",
+    "sourceUrl": "",
+    "author": "",
+    "license": "Open source",
+    "licenseUrl": "",
+    "note": "Supplied by the Duck Buster crew"
   }
 ]
