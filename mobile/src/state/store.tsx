@@ -6,7 +6,7 @@ import { BADGE_BY_ID, earnedBadges, type Badge } from '@/domain/badges';
 import { hunterStats } from '@/domain/stats';
 import { titleFor, xpFor } from '@/domain/titles';
 import { registerCustomSpecies } from '@/domain/species';
-import { EMPTY_DATA, type CustomSpecies, type Data, type Harvest, type Hunter, type Party } from '@/domain/types';
+import { EMPTY_DATA, type CustomSpecies, type Data, type GameScore, type Harvest, type Hunter, type Party } from '@/domain/types';
 
 import { pickPartyColor } from './partyColors';
 
@@ -47,6 +47,10 @@ type Store = {
   updateParty: (id: string, patch: Partial<Pick<Party, 'name' | 'color'>>) => Promise<void>;
   deleteParty: (id: string) => Promise<void>;
   addCustomSpecies: (name: string, sexed: boolean) => Promise<CustomSpecies>;
+  /** Save the hunt winner's round; returns any badges it just earned. */
+  saveGameScore: (g: Omit<GameScore, 'id' | 'createdAt'>) => Promise<NewBadge[]>;
+  /** When badges were first earned, for the season archive. */
+  celebratedAt: db.Loaded['celebratedAt'];
   deleteHunter: (id: string) => Promise<void>;
   saveHunt: (draft: HuntDraft) => Promise<{ huntId: string; newBadges: NewBadge[] }>;
   deleteHunt: (id: string) => Promise<void>;
@@ -63,6 +67,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [data, setData] = useState<Data>(EMPTY_DATA);
   const [celebrated, setCelebrated] = useState<Set<string>>(new Set());
+  const [celebratedAt, setCelebratedAt] = useState<db.Loaded['celebratedAt']>([]);
   const [highScores, setHighScores] = useState<db.HighScore[]>([]);
   const [settings, setSettings] = useState<Record<string, string>>({});
 
@@ -71,6 +76,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     registerCustomSpecies(loaded.data.customSpecies);
     setData(loaded.data);
     setCelebrated(loaded.celebrated);
+    setCelebratedAt(loaded.celebratedAt);
     setHighScores(loaded.highScores);
     setSettings(loaded.settings);
   }, []);
@@ -237,8 +243,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!celebrated.has(db.celebratedKey(hunterId, id))) newBadges.push({ hunterId, badge: BADGE_BY_ID[id] });
       await db.markCelebrated(newBadges.map((b) => ({ hunterId: b.hunterId, badgeId: b.badge.id })));
       setCelebrated((c) => new Set([...c, ...newBadges.map((b) => db.celebratedKey(b.hunterId, b.badge.id))]));
+      setCelebratedAt((c) => [...c, ...newBadges.map((b) => ({ hunterId: b.hunterId, badgeId: b.badge.id, at: Date.now() }))]);
       setData(next);
       return { huntId: hunt.id, newBadges };
+    },
+    [data, celebrated],
+  );
+
+  const saveGameScore = useCallback(
+    async (g: Omit<GameScore, 'id' | 'createdAt'>) => {
+      const row: GameScore = { ...g, id: randomUUID(), createdAt: Date.now() };
+      await db.insertGameScore(row);
+      const next: Data = { ...data, gameScores: [...data.gameScores.filter((x) => x.huntId !== g.huntId), row] };
+      const newBadges: NewBadge[] = earnedBadges(next, g.hunterId)
+        .filter((id) => !celebrated.has(db.celebratedKey(g.hunterId, id)))
+        .map((id) => ({ hunterId: g.hunterId, badge: BADGE_BY_ID[id] }));
+      await db.markCelebrated(newBadges.map((b) => ({ hunterId: b.hunterId, badgeId: b.badge.id })));
+      setCelebrated((c) => new Set([...c, ...newBadges.map((b) => db.celebratedKey(b.hunterId, b.badge.id))]));
+      setCelebratedAt((c) => [...c, ...newBadges.map((b) => ({ hunterId: b.hunterId, badgeId: b.badge.id, at: Date.now() }))]);
+      setData(next);
+      return newBadges;
     },
     [data, celebrated],
   );
@@ -250,6 +274,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       hunts: d.hunts.filter((h) => h.id !== id),
       huntHunters: d.huntHunters.filter((p) => p.huntId !== id),
       harvests: d.harvests.filter((r) => r.huntId !== id),
+      gameScores: d.gameScores.filter((g) => g.huntId !== id),
     }));
   }, []);
 
@@ -282,14 +307,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => ({
       ready, data, highScores, settings, usage,
       addHunter, addHunters, renameHunter, setHunterParty, deleteHunter,
-      draftParty, addParty, updateParty, deleteParty, addCustomSpecies,
+      draftParty, addParty, updateParty, deleteParty, addCustomSpecies, saveGameScore, celebratedAt,
       saveHunt, deleteHunt, addHighScore, setSetting, importData,
       badgesFor, titleOf,
     }),
     [
       ready, data, highScores, settings, usage,
       addHunter, addHunters, renameHunter, setHunterParty, deleteHunter,
-      draftParty, addParty, updateParty, deleteParty, addCustomSpecies,
+      draftParty, addParty, updateParty, deleteParty, addCustomSpecies, saveGameScore, celebratedAt,
       saveHunt, deleteHunt, addHighScore, setSetting, importData,
       badgesFor, titleOf,
     ],

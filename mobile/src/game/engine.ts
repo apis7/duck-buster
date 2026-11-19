@@ -5,6 +5,10 @@
  *
  * Units are screen points; time in seconds.
  *
+ * Murder Mode (the hidden easter egg): a semi-auto shotgun that throws a random
+ * spread of pellets, a sky packed with birds, and clipped popups. Nothing from it
+ * is ever saved.
+ *
  * Keep helpers above the worklets that call them: the worklet compiler captures a
  * worklet's dependencies where it's defined, so a helper declared further down is
  * undefined on the UI thread (it still works under Vitest, which hides the bug).
@@ -33,6 +37,13 @@ export const DOG_PX_H = DOG_H * PIXEL;
 export const BULLET_SPEED = 1100;
 export const GUN_LENGTH = 22 * PIXEL;
 export const CLIP = 3;
+/** Murder Mode: a semi-auto shotgun with a bigger magazine. */
+export const MURDER_CLIP = 8;
+const PELLETS_MIN = 5;
+const PELLETS_MAX = 8;
+/** Half-width of the pellet spread, radians — random per shot, never too wide. */
+const SPREAD_MIN = 0.05;
+const SPREAD_MAX = 0.16;
 export const RELOAD_SECONDS = 0.5;
 const GRAVITY = 900;
 /** Aim is clamped to the upper half-plane, a little above horizontal. */
@@ -113,6 +124,9 @@ export type GameState = {
   pondR: number;
   gunX: number;
   gunY: number;
+  /** The easter egg. */
+  murder: boolean;
+  clip: number;
   aim: number;
   aiming: boolean;
   ammo: number;
@@ -133,10 +147,14 @@ export type GameState = {
   geese: number;
   swans: number;
   coots: number;
+  /** Banded geese dropped. */
+  bands: number;
+  /** Birds knocked down (any kind). */
+  downs: number;
   over: boolean;
 };
 
-export function newGame(width: number, height: number, layout: GameLayout): GameState {
+export function newGame(width: number, height: number, layout: GameLayout, murder = false): GameState {
   'worklet';
   const { gunY, skyTop, reedTop } = layout;
   return {
@@ -151,9 +169,11 @@ export function newGame(width: number, height: number, layout: GameLayout): Game
     pondR: width * 0.73,
     gunX: width / 2,
     gunY,
+    murder,
+    clip: murder ? MURDER_CLIP : CLIP,
     aim: -Math.PI / 2,
     aiming: false,
-    ammo: CLIP,
+    ammo: murder ? MURDER_CLIP : CLIP,
     reloadUntil: 0,
     birds: [],
     dogs: [],
@@ -171,6 +191,8 @@ export function newGame(width: number, height: number, layout: GameLayout): Game
     geese: 0,
     swans: 0,
     coots: 0,
+    bands: 0,
+    downs: 0,
     over: false,
   };
 }
@@ -200,7 +222,7 @@ export function reloading(s: GameState): boolean {
 export function shellsShown(s: GameState): number {
   'worklet';
   if (!reloading(s)) return s.ammo;
-  return Math.floor(CLIP * (1 - (s.reloadUntil - s.t) / RELOAD_SECONDS));
+  return Math.floor(s.clip * (1 - (s.reloadUntil - s.t) / RELOAD_SECONDS));
 }
 
 export function fire(s: GameState): void {
@@ -210,14 +232,25 @@ export function fire(s: GameState): void {
     s.events.push({ k: 'dry' });
     return;
   }
-  const cos = Math.cos(s.aim);
-  const sin = Math.sin(s.aim);
-  s.bullets.push({ x: s.gunX + cos * GUN_LENGTH, y: s.gunY + sin * GUN_LENGTH, vx: cos * BULLET_SPEED, vy: sin * BULLET_SPEED });
+  const muzzleX = s.gunX + Math.cos(s.aim) * GUN_LENGTH;
+  const muzzleY = s.gunY + Math.sin(s.aim) * GUN_LENGTH;
+  if (s.murder) {
+    // Buckshot: a random handful of pellets in a random (but not silly) spread.
+    const pellets = PELLETS_MIN + Math.floor(Math.random() * (PELLETS_MAX - PELLETS_MIN + 1));
+    const spread = SPREAD_MIN + Math.random() * (SPREAD_MAX - SPREAD_MIN);
+    for (let i = 0; i < pellets; i++) {
+      const a = s.aim + (Math.random() * 2 - 1) * spread;
+      const v = BULLET_SPEED * (0.92 + Math.random() * 0.16);
+      s.bullets.push({ x: muzzleX, y: muzzleY, vx: Math.cos(a) * v, vy: Math.sin(a) * v });
+    }
+  } else {
+    s.bullets.push({ x: muzzleX, y: muzzleY, vx: Math.cos(s.aim) * BULLET_SPEED, vy: Math.sin(s.aim) * BULLET_SPEED });
+  }
   s.shots++;
   s.ammo--;
   s.events.push({ k: 'shot' });
   if (s.ammo <= 0) {
-    s.ammo = CLIP;
+    s.ammo = s.clip;
     s.reloadUntil = s.t + RELOAD_SECONDS;
     s.events.push({ k: 'reload' });
   }
@@ -286,7 +319,7 @@ function spawnFlock(s: GameState): void {
   'worklet';
   const species = pickSpecies();
   const sp = FLOCK_SPECIES[species];
-  const size = 3 + Math.floor(Math.random() * 4);
+  const size = s.murder ? 6 + Math.floor(Math.random() * 7) : 3 + Math.floor(Math.random() * 4);
   const span = s.skyBottom - s.skyTop - DUCK_PX_H - 40;
   const leadY = s.skyTop + 20 + Math.random() * Math.max(10, span);
   const speed = (110 + Math.random() * 80) * sp.speed * Math.max(0.85, s.width / 400);
@@ -325,8 +358,8 @@ function maybeSpawnMerganser(s: GameState): void {
 /** Roll for the big birds. At most one per game, and only early enough to be shot down. */
 function maybeSpawnSpecial(s: GameState): void {
   'worklet';
-  if (s.specialSeen || s.t > GAME_SECONDS - 6) return;
-  const r = Math.random();
+  if ((s.specialSeen && !s.murder) || s.t > GAME_SECONDS - 6) return;
+  const r = s.murder ? Math.random() * 0.4 : Math.random();
   const scale = Math.max(0.85, s.width / 400);
   const mid = s.skyTop + (s.skyBottom - s.skyTop) * (0.25 + Math.random() * 0.35);
   let bird: Bird | null = null;
@@ -367,7 +400,14 @@ export function birdName(b: Bird): string {
 
 function popup(s: GameState, b: Bird, pts: number): void {
   'worklet';
-  s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: POPUP_LIFE, label: birdName(b) });
+  // Murder Mode would be wall-to-wall popups: clip the name and cut the life short.
+  const full = birdName(b);
+  let label = full;
+  if (s.murder) {
+    label = '';
+    for (const ch of full) if (ch >= 'A' && ch <= 'Z' && label.length < 4) label += ch;
+  }
+  s.popups.push({ x: b.x + b.w / 2, y: b.y, text: pts > 0 ? `+${pts}` : `${pts}`, life: s.murder ? POPUP_LIFE * 0.55 : POPUP_LIFE, label });
 }
 
 function knockDown(b: Bird): void {
@@ -420,6 +460,7 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
       if (zone === 'ko') s.kos++;
       if (b.kind === 'goose') s.geese++;
       else s.swans++;
+      if (b.banded) s.bands++;
       burst(s, b.x + b.w / 2, b.y + b.h / 2, 46, ['#E8B923', '#FFFFFF', '#F26B1D', '#FFE29A'], 260);
     }
     s.events.push({ k: 'special', kind: b.kind, pts: down ? b.earned : 0, banded: b.banded, down });
@@ -427,6 +468,7 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
   if (!down) return 0;
   if (b.kind === 'duck') b.earned += FLOCK_SPECIES[b.species].bonus ?? 0;
   if (b.sit === 2) s.events.push({ k: 'sitting' });
+  s.downs++;
   knockDown(b);
   s.score += b.earned;
   popup(s, b, b.earned);
@@ -475,7 +517,7 @@ export function step(s: GameState, dt: number): void {
       spawnFlock(s);
       maybeSpawnMerganser(s);
       maybeSpawnSpecial(s);
-      s.nextFlock = s.t + 1.5 + Math.random() * 0.9;
+      s.nextFlock = s.t + (s.murder ? 0.3 + Math.random() * 0.35 : 1.5 + Math.random() * 0.9);
     }
   }
 

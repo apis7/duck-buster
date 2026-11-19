@@ -84,7 +84,23 @@ function woof() {
   return s.map((v, i) => v * 0.8 + (Math.random() * 2 - 1) * 0.15 * (1 - i / s.length));
 }
 
+/** Police siren: a square wave wailing up and down. */
+function siren(dur = 2.4) {
+  const n = Math.floor(dur * RATE);
+  const s = [];
+  let phase = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / RATE;
+    const f = 700 + 300 * Math.sin(2 * Math.PI * 0.9 * t);
+    phase += f / RATE;
+    const env = Math.min(1, i / 2000) * Math.min(1, (n - i) / 4000);
+    s.push((phase % 1 < 0.5 ? 1 : -1) * 0.32 * env);
+  }
+  return s;
+}
+
 const files = {
+  'siren.wav': siren(),
   'boom.wav': noise(0.7, 1, 3.2, 9),
   'dry.wav': clicks([0], 0.5),
   'reload.wav': clicks([0, 0.16], 0.9),

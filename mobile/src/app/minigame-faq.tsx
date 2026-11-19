@@ -40,7 +40,19 @@ export default function MinigameFaq() {
     <SubScreen title="MINIGAME FAQ">
       <Q q="What is it?">
         <Body>
-          {`A ${GAME_SECONDS}-second duck shoot that opens the app. Flocks cross the marsh from left to right; drop as many as you can before the clock runs out.`}
+          {`A ${GAME_SECONDS}-second duck shoot. Flocks cross the marsh from left to right; drop as many as you can before the clock runs out.`}
+        </Body>
+      </Q>
+
+      <Q q="Practice vs. the round that counts">
+        <Body>The game that opens the app (and More › Practice) is practice. It keeps its own practice high scores, but nothing counts for the season.</Body>
+        <Body>
+          The real round: when you finalize a hunt, the hunt's winner gets one round of the duck shoot — one per day. That score is saved for the
+          season and shows on the Bragging Board (high score, highest overall, most coots…). Highest overall at season's end wins Arcade Champion.
+        </Body>
+        <Body muted style={{ fontSize: 13 }}>
+          Winning a hunt: drakes 3, hens 2, rare birds a bonus (wood ducks and cans +2), coots 0. Any band is an automatic win. The winner can play right
+          away or later that day — the round is gone at midnight.
         </Body>
       </Q>
 
@@ -94,11 +106,11 @@ export default function MinigameFaq() {
       </Q>
 
       <Q q="How do I skip it?">
-        <Body>Tap the little duck at the top of the screen seven times. Want to play again later? More › Play the duck shoot.</Body>
+        <Body>Tap the little duck at the top of the screen seven times. Want to practice later? More › Practice the duck shoot.</Body>
       </Q>
 
       <Q q="Ads?">
-        <Body>Never during the game. You might see one after you leave a game you replayed from the More tab.</Body>
+        <Body>Never during the game. You might see one after you leave a practice game from the More tab, or after a winner's round.</Body>
       </Q>
 
       <Text style={{ textAlign: 'center', color: C.muted, fontSize: 12 }}>Good shooting. Leave the coots alone.</Text>

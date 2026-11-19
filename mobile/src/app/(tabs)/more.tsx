@@ -1,10 +1,14 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 
 import { setMuted } from '@/audio/sfx';
+import { exportBackup, pickBackup } from '@/db/backup';
+import { describe } from '@/transfer/snapshot';
 import { useStore } from '@/state/store';
-import { Body, Card, Pixel, Screen, Section } from '@/ui/kit';
+import { useDialog } from '@/ui/Dialog';
+import { Body, Btn, Card, Pixel, Screen, Section } from '@/ui/kit';
 import { C, MEDALS } from '@/ui/theme';
 
 function Row({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
@@ -18,19 +22,76 @@ function Row({ icon, label, onPress }: { icon: string; label: string; onPress: (
 }
 
 export default function More() {
-  const { highScores, settings, setSetting } = useStore();
+  const { data, highScores, settings, setSetting, importData } = useStore();
+  const ask = useDialog();
+  const [busy, setBusy] = useState(false);
   const muted = settings.muted === '1';
+  const lastBackup = settings.lastBackupAt ? new Date(Number(settings.lastBackupAt)).toLocaleDateString() : null;
+
+  async function backup() {
+    setBusy(true);
+    try {
+      await exportBackup(data);
+      await setSetting('lastBackupAt', String(Date.now()));
+    } catch (e) {
+      await ask({ icon: '⚠️', title: 'Backup failed', message: e instanceof Error ? e.message : String(e), buttons: [{ label: 'OK', value: 'ok' }] });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restore() {
+    let snap;
+    try {
+      snap = await pickBackup();
+    } catch (e) {
+      await ask({ icon: '⚠️', title: 'Not a backup', message: e instanceof Error ? e.message : String(e), buttons: [{ label: 'OK', value: 'ok' }] });
+      return;
+    }
+    if (!snap) return;
+    const choice = await ask({
+      icon: '📦',
+      title: 'Restore this backup?',
+      message: `${describe(snap.data)}. Merge adds what's new and keeps what's here; Replace makes this phone an exact copy of the backup.`,
+      buttons: [
+        { label: 'Merge', value: 'merge', kind: 'primary' },
+        { label: 'Replace everything', value: 'replace', kind: 'danger' },
+        { label: 'Cancel', value: 'cancel' },
+      ],
+    });
+    if (choice !== 'merge' && choice !== 'replace') return;
+    setBusy(true);
+    try {
+      await importData(snap.data, choice);
+      await ask({ icon: '✅', title: 'Restored', message: describe(snap.data), buttons: [{ label: 'Nice', value: 'ok' }] });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Screen title="MORE">
       <Card style={{ paddingVertical: 4 }}>
         <Row icon="👥" label="Hunters" onPress={() => router.push('/hunters')} />
-        <Row icon="🎮" label="Play the duck shoot" onPress={() => router.push('/game')} />
+        <Row icon="🎮" label="Practice the duck shoot" onPress={() => router.push('/game')} />
+        <Row icon="🗄️" label="Past seasons" onPress={() => router.push('/seasons')} />
         <Row icon="📤" label="Send to a phone" onPress={() => router.push('/transfer-send')} />
         <Row icon="📥" label="Receive from a phone" onPress={() => router.push('/transfer-receive')} />
       </Card>
 
-      <Section title="Arcade high scores">
+      <Section title="Backup">
+        <Card style={{ gap: 10 }}>
+          <Body>
+            Save every season — hunters, hunts, birds, duck-shoot scores — to a file you keep (Drive, email, wherever). Restore
+            it on any phone.
+          </Body>
+          <Body muted style={{ fontSize: 13 }}>{lastBackup ? `Last backup: ${lastBackup}` : 'No backup yet.'}</Body>
+          <Btn label={busy ? 'WORKING…' : '💾 SAVE A BACKUP'} onPress={backup} disabled={busy} />
+          <Btn label="📂 RESTORE FROM A BACKUP" kind="secondary" onPress={restore} disabled={busy} />
+        </Card>
+      </Section>
+
+      <Section title="Practice high scores">
         <Card style={{ gap: 6 }}>
           {highScores.length === 0 ? <Body muted>No scores yet.</Body> : null}
           {highScores.slice(0, 5).map((s, i) => (
@@ -76,7 +137,7 @@ export default function More() {
         <Card style={{ gap: 8 }}>
           <Body>
             Your hunts live only on this phone. No account, no cloud, no tracking. The only thing that talks to the internet
-            is the ads. Moving to a new phone? Use Send to a phone — it goes screen to camera, nothing in between.
+            is the ads. Moving to a new phone? Use Send to a phone (screen to camera), or a backup file.
           </Body>
         </Card>
       </Section>

@@ -1,17 +1,43 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { newlyArchived, shouldRemindBackup } from '@/domain/archive';
 import { currentSeason, prettyDate, seasonLabel, seasonOf, todayISO } from '@/domain/season';
+import { huntWinner } from '@/domain/winner';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { useStore } from '@/state/store';
 import { Body, Btn, Card, Dot, Pixel, Screen, Section } from '@/ui/kit';
+import { useDialog } from '@/ui/Dialog';
 import { HunterSetup } from '@/ui/HunterSetup';
 import { C } from '@/ui/theme';
 
 export default function Hunts() {
-  const { data } = useStore();
+  const { data, settings, setSetting } = useStore();
+  const ask = useDialog();
   const season = currentSeason();
+
+  // July 1: last season goes in the books. Say so once, with a nudge to back up.
+  useEffect(() => {
+    const done = newlyArchived(data, settings.archiveSeen ? Number(settings.archiveSeen) : null);
+    if (done == null) return;
+    setSetting('archiveSeen', String(done));
+    ask({
+      icon: '🗄️',
+      title: `${seasonLabel(done)} is in the books`,
+      message: 'The season is archived — final board, awards, badges and duck-shoot scores are saved under Past seasons. Good time to save a backup too.',
+      buttons: [
+        { label: 'See the final board', value: 'view', kind: 'primary' },
+        { label: 'Save a backup', value: 'backup' },
+        { label: 'Later', value: 'later' },
+      ],
+    }).then((v) => {
+      if (v === 'view') router.push({ pathname: '/season/[year]', params: { year: String(done) } });
+      if (v === 'backup') router.navigate('/more');
+    });
+    // Once per load is plenty; the setting stops it repeating.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.hunts.length]);
 
   const hunts = useMemo(
     () => [...data.hunts].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt),
@@ -33,6 +59,11 @@ export default function Hunts() {
   // One hunt per day: if today's is already logged, the button opens it.
   const today = todayISO();
   const todays = data.hunts.find((h) => h.date === today);
+  // Today's winner hasn't played their round yet (it expires at midnight).
+  const winner = todays ? huntWinner(data, todays.id) : null;
+  const roundWaiting = !!winner && !data.gameScores.some((g) => g.huntId === todays?.id);
+  const winnerName = winner ? data.hunters.find((h) => h.id === winner.hunterId)?.name : '';
+  const remindBackup = shouldRemindBackup(data, settings.lastBackupAt ? Number(settings.lastBackupAt) : null);
 
   return (
     <Screen
@@ -56,6 +87,27 @@ export default function Hunts() {
           <Pixel size={8} color={C.muted}>HUNTS</Pixel>
         </Card>
       </View>
+
+      {roundWaiting && todays ? (
+        <Pressable onPress={() => router.push({ pathname: '/round', params: { huntId: todays.id } })} style={styles.round}>
+          <Text style={{ fontSize: 30 }}>🎮</Text>
+          <View style={{ flex: 1 }}>
+            <Pixel size={10} color={C.white}>{`${(winnerName ?? '').toUpperCase()}'S ROUND IS WAITING`}</Pixel>
+            <Text style={{ color: C.navySoft, fontSize: 13 }}>Today's winner plays one round. Gone at midnight.</Text>
+          </View>
+          <Pixel size={12} color={C.gold}>{'›'}</Pixel>
+        </Pressable>
+      ) : null}
+
+      {remindBackup ? (
+        <Pressable onPress={() => router.navigate('/more')} style={styles.backup}>
+          <Text style={{ fontSize: 24 }}>💾</Text>
+          <View style={{ flex: 1 }}>
+            <Pixel size={9}>SEASON WINDING DOWN?</Pixel>
+            <Text style={{ color: C.ink, fontSize: 13 }}>Save a backup of everything. More › Backup.</Text>
+          </View>
+        </Pressable>
+      ) : null}
 
       <Btn
         label={todays ? "OPEN TODAY'S HUNT" : '+ LOG A HUNT'}
@@ -98,3 +150,8 @@ export default function Hunts() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  round: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.navy, borderWidth: 2.5, borderColor: C.gold, borderBottomWidth: 5, borderRightWidth: 5, padding: 12 },
+  backup: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.orangeSoft, borderWidth: 2, borderColor: C.orange, padding: 12 },
+});

@@ -35,9 +35,11 @@ export function snapshotFromBytes(bytes: Uint8Array): Snapshot {
   // Older snapshots predate parties and custom birds.
   d.parties ??= [];
   d.customSpecies ??= [];
+  d.gameScores ??= [];
   for (const h of d.hunters ?? []) h.partyId ??= null;
   const ok =
     Array.isArray(d.parties) && d.parties.every((p) => isStr(p.id) && isStr(p.name) && isStr(p.color) && isNum(p.createdAt)) &&
+    Array.isArray(d.gameScores) && d.gameScores.every((g) => isStr(g.id) && isStr(g.huntId) && isStr(g.hunterId) && isNum(g.score)) &&
     Array.isArray(d.customSpecies) && d.customSpecies.every((c) => isStr(c.id) && isStr(c.name) && typeof c.sexed === 'boolean') &&
     Array.isArray(d.hunters) && d.hunters.every((h) => isStr(h.id) && isStr(h.name) && isStr(h.color) && isNum(h.createdAt)) &&
     Array.isArray(d.hunts) && d.hunts.every((h) => isStr(h.id) && /^\d{4}-\d{2}-\d{2}$/.test(h.date) && isNum(h.createdAt)) &&

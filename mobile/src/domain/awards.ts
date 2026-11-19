@@ -1,4 +1,5 @@
 import { formatMeat } from './meat';
+import { gamesFor, gameStats, type GameStats } from './gameStats';
 import { seasonOf } from './season';
 import { SPECIES_BY_ID } from './species';
 import { hunterStats, type HunterStats } from './stats';
@@ -19,7 +20,7 @@ export type AwardDef = {
   lowest?: boolean;
   /** Fewest qualifying value to hand the award out (highest-wins awards). */
   min?: number;
-  metric: (s: HunterStats, ctx: { firstEverSeason: number | null; season: number }) => number | null;
+  metric: (s: HunterStats, ctx: { firstEverSeason: number | null; season: number; game: GameStats }) => number | null;
   describe: (value: number) => string;
 };
 
@@ -48,6 +49,8 @@ export const AWARDS: AwardDef[] = [
     metric: (s) => s.teal, describe: (v) => n(v, 'teal', 'teal') },
   { id: 'goose_whisperer', title: 'Goose Whisperer', icon: '🪿', min: 1,
     metric: (s) => s.geese, describe: (v) => n(v, 'goose', 'geese') },
+  { id: 'arcade_champ', title: 'Arcade Champion', icon: '🕹️', min: 1,
+    metric: (_s, ctx) => (ctx.game.games ? ctx.game.total : null), describe: (v) => `${v} points in the duck shoot this season` },
   { id: 'freezer_filler', title: 'Freezer Filler', icon: '🧊', min: 1,
     metric: (s) => Math.round(s.meatOz), describe: (v) => `${formatMeat(v)} of meat in the freezer` },
   { id: 'bird_nerd', title: 'Bird Nerd of the Year', icon: '📚', min: 2,
@@ -66,6 +69,8 @@ export const AWARDS: AwardDef[] = [
     metric: (s) => ofGroup(s, 'merganser'), describe: (v) => `${n(v, 'merganser', 'mergansers')}. Bon appétit.` },
   { id: 'gadwall_society', title: 'Gadwall Appreciation Society', icon: '👻', roast: true, min: 2,
     metric: (s) => s.bySpecies.gadw ?? 0, describe: (v) => `${n(v, 'gadwall', 'gadwall')}. Somebody has to.` },
+  { id: 'coot_clown', title: 'Coot Clown', icon: '🤡', roast: true, min: 1,
+    metric: (_s, ctx) => (ctx.game.games ? ctx.game.coots : null), describe: (v) => `${n(v, 'coot', 'coots')} shot in the duck shoot. In a video game.` },
   { id: 'participation', title: 'Participation Trophy', icon: '🏅', roast: true, lowest: true,
     metric: (s) => s.birds, describe: (v) => `${n(v, 'bird', 'birds')}. You showed up!` },
   { id: 'fair_weather', title: 'Fair-Weather Fowler', icon: '☀️', roast: true, lowest: true,
@@ -86,14 +91,14 @@ export function seasonAwards(data: Data, season: number): AwardResult[] {
     if (s.firstDate) firstSeason.set(h.id, seasonOf(s.firstDate));
   }
   const field = data.hunters
-    .map((h) => ({ id: h.id, stats: hunterStats(data, h.id, { season }) }))
+    .map((h) => ({ id: h.id, stats: hunterStats(data, h.id, { season }), game: gameStats(gamesFor(data, h.id, { season })) }))
     .filter((e) => e.stats.hunts > 0);
   if (field.length === 0) return [];
 
   const results: AwardResult[] = [];
   for (const award of AWARDS) {
     const scored = field
-      .map((e) => ({ id: e.id, v: award.metric(e.stats, { firstEverSeason: firstSeason.get(e.id) ?? null, season }) }))
+      .map((e) => ({ id: e.id, v: award.metric(e.stats, { firstEverSeason: firstSeason.get(e.id) ?? null, season, game: e.game }) }))
       .filter((e): e is { id: string; v: number } => e.v != null);
     if (scored.length === 0) continue;
     const values = scored.map((e) => e.v);

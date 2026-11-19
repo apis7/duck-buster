@@ -1,7 +1,7 @@
 import { dayOfWeek, daysBetween, isThanksgiving, seasonOf } from './season';
 import { isCoot, isDuck, isGoose, LIGHT_GEESE, SCAUP, SPECIES_BY_ID, TEAL } from './species';
 import { hunterDays, statsFromDays, sum, type HunterDay, type HunterStats } from './stats';
-import type { Data, Harvest } from './types';
+import type { Data, GameScore, Harvest } from './types';
 
 /**
  * Badges are secret. The app never lists the ones not yet earned — it only says
@@ -28,6 +28,8 @@ export type BadgeContext = {
   /** Total birds per hunter on each hunt, for "who outshot whom". */
   partyBirds: (huntId: string) => Map<string, number>;
   hunterId: string;
+  /** Duck-shoot rounds this hunter won the right to play. */
+  games: GameScore[];
 };
 
 const has = (rows: Harvest[], pick: (r: Harvest) => boolean) => rows.some((r) => r.count > 0 && pick(r));
@@ -194,6 +196,28 @@ export const BADGES: Badge[] = [
   { id: 'hot_streak', name: 'Hot Streak', icon: '🔥', blurb: 'Birds on five hunts in a row.',
     test: (c) => longestRun(c.days, (d) => d.birds > 0) >= 5 },
 
+  // ── The duck shoot (rounds won by winning a hunt) ─────────────────────
+  { id: 'winner_winner', name: 'Winner Winner', icon: '🍗', blurb: 'Won a hunt and earned a round of the duck shoot.',
+    test: (c) => c.games.length >= 1 },
+  { id: 'arcade_ace', name: 'Arcade Ace', icon: '🕹️', blurb: '30 points in a single round.',
+    test: (c) => c.games.some((g) => g.score >= 30) },
+  { id: 'joystick_legend', name: 'Joystick Legend', icon: '👾', blurb: '60 points in a single round. Put a quarter in.',
+    test: (c) => c.games.some((g) => g.score >= 60) },
+  { id: 'pixel_honker', name: 'Pixel Honker', icon: '🪿', blurb: 'Dropped a goose in the duck shoot.',
+    test: (c) => c.games.some((g) => g.geese > 0) },
+  { id: 'swan_song', name: 'Swan Song', icon: '🦢', blurb: 'Dropped a swan in the duck shoot. Two dogs, one bird.',
+    test: (c) => c.games.some((g) => g.swans > 0) },
+  { id: 'golden_band', name: 'Golden Band', icon: '🏅', blurb: 'Dropped the banded goose. One in a hundred-something.',
+    test: (c) => c.games.some((g) => g.bands > 0) },
+  { id: 'coot_clown', name: 'Coot Clown', icon: '🤡', blurb: 'Three coots in one round. On purpose, surely.',
+    test: (c) => c.games.some((g) => g.coots >= 3) },
+  { id: 'three_peat', name: 'Three-Peat', icon: '🔁', blurb: 'Won three hunts in one season.',
+    test: (c) => {
+      const bySeason = new Map<number, number>();
+      for (const g of c.games) bySeason.set(seasonOf(g.date), (bySeason.get(seasonOf(g.date)) ?? 0) + 1);
+      return Array.from(bySeason.values()).some((n) => n >= 3);
+    } },
+
   // ── Holidays ──────────────────────────────────────────────────────────
   { id: 'christmas_duck', name: 'Christmas Duck', icon: '🎄', blurb: 'Birds on Christmas Eve or Christmas Day.',
     test: (c) => anyDay(c, (d) => d.birds > 0 && /-12-2[45]$/.test(d.hunt.date)) },
@@ -217,6 +241,12 @@ export function partyBirdsFor(data: Data): (huntId: string) => Map<string, numbe
 
 export function earnedBadges(data: Data, hunterId: string): string[] {
   const days = hunterDays(data, hunterId);
-  const ctx: BadgeContext = { days, stats: statsFromDays(days), partyBirds: partyBirdsFor(data), hunterId };
+  const ctx: BadgeContext = {
+    days,
+    stats: statsFromDays(days),
+    partyBirds: partyBirdsFor(data),
+    hunterId,
+    games: data.gameScores.filter((g) => g.hunterId === hunterId),
+  };
   return BADGES.filter((b) => b.test(ctx)).map((b) => b.id);
 }

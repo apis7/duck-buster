@@ -10,14 +10,14 @@ import { Pixel } from '@/ui/kit';
 import { C } from '@/ui/theme';
 
 import {
-  aimToward, CLIP, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
+  aimToward, dogTop, finished, fire, GAME_SECONDS, GUN_LENGTH, newGame, POPUP_LIFE, reloading, shellsShown, step, wingsUp,
   type Bird, type GameEvent, type GameState,
 } from './engine';
 import type { GameLayout } from './layout';
 import { backgroundPicture, foregroundPicture, gamePictures, type GamePictures } from './pictures';
 import { GUN_H, GUN_W } from './sprites';
 
-export type GameResult = { score: number; shots: number; hits: number; kos: number; geese: number; swans: number; coots: number };
+export type GameResult = { score: number; shots: number; hits: number; kos: number; geese: number; swans: number; coots: number; bands: number; downs: number };
 
 /** Touches that start within this radius of the gun pick it up. */
 const GRAB_RADIUS = 80;
@@ -73,13 +73,13 @@ function drawBird(canvas: SkCanvas, pics: GamePictures, b: Bird, t: number) {
  * thread; the JS thread hears about events (sounds, banners) and the end.
  */
 export function GameView({
-  width, height, scale, layout, running, onEnd,
-}: { width: number; height: number; scale: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void }) {
+  width, height, scale, layout, running, onEnd, murder = false,
+}: { width: number; height: number; scale: number; layout: GameLayout; running: boolean; onEnd: (r: GameResult) => void; murder?: boolean }) {
   const { gunY, skyTop } = layout;
   const pics = useMemo(() => gamePictures(), []);
-  const initial = useMemo(() => newGame(width, height, layout), [width, height, layout]);
-  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop), [width, height, layout]);
-  const fg = useMemo(() => foregroundPicture(width, height, initial.groundY), [width, height, initial.groundY]);
+  const initial = useMemo(() => newGame(width, height, layout, murder), [width, height, layout, murder]);
+  const bg = useMemo(() => backgroundPicture(width, height, layout.reedTop, murder), [width, height, layout, murder]);
+  const fg = useMemo(() => foregroundPicture(width, height, initial.groundY, murder), [width, height, initial.groundY, murder]);
   const state = useSharedValue<GameState>(initial);
   const live = useSharedValue(false);
   const lastScore = useSharedValue(0);
@@ -172,7 +172,7 @@ export function GameView({
     }
     if (finished(s)) {
       live.set(false);
-      scheduleOnRN(finish, { score: s.score, shots: s.shots, hits: s.hits, kos: s.kos, geese: s.geese, swans: s.swans, coots: s.coots });
+      scheduleOnRN(finish, { score: s.score, shots: s.shots, hits: s.hits, kos: s.kos, geese: s.geese, swans: s.swans, coots: s.coots, bands: s.bands, downs: s.downs });
     }
   });
 
@@ -298,9 +298,10 @@ export function GameView({
       }
 
       const shown = shellsShown(s);
-      for (let i = 0; i < CLIP; i++) {
+      for (let i = 0; i < s.clip; i++) {
         canvas.save();
-        canvas.translate(s.gunX + 56 + i * 18, s.gunY - 6);
+        // Murder Mode's 8 shells wrap into two rows.
+        canvas.translate(s.gunX + 56 + (i % 4) * 18, s.gunY - 6 + Math.floor(i / 4) * 30 - (s.clip > 4 ? 15 : 0));
         if (i >= shown) {
           paint.setColor(Skia.Color('#FFFFFF'));
           paint.setAlphaf(0.18);
@@ -325,7 +326,7 @@ export function GameView({
         </Canvas>
       </GestureDetector>
       <View pointerEvents="none" style={[styles.hud, { top: (skyTop - 56) * scale }]}>
-        <Pixel size={16 * scale} color={C.white}>{`${hud.score}`}</Pixel>
+        <Pixel size={16 * scale} color={murder ? '#FF5A4E' : C.white}>{`${hud.score}`}</Pixel>
         <Pixel size={11 * scale} color={hud.left <= 3 ? '#FFB199' : C.white}>{`0:${String(hud.left).padStart(2, '0')}`}</Pixel>
       </View>
       {reloadingNow ? (

@@ -5,8 +5,8 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import Animated, { FadeInDown, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { maybeShowInterstitial } from '@/ads/ads';
 import { play } from '@/audio/sfx';
+import { isLockedDate } from '@/domain/archive';
 import { searchSpecies } from '@/domain/search';
 import { prettyDate, shiftDate, todayISO } from '@/domain/season';
 import { pickSkunkLine, SKUNK_LINES } from '@/domain/skunk';
@@ -121,6 +121,9 @@ export default function LogHunt() {
   const ask = useDialog();
   const insets = useSafeAreaInsets();
   const existing = id ? data.hunts.find((h) => h.id === id) : undefined;
+  // Hunts in an archived (past) season are read-only.
+  const locked = !!existing && isLockedDate(existing.date);
+  const savedId = useRef<string | null>(null);
 
   const lastParty = useMemo(() => {
     const last = [...data.hunts].sort((a, b) => b.createdAt - a.createdAt)[0];
@@ -236,6 +239,15 @@ export default function LogHunt() {
   // ── Date, save, delete ───────────────────────────────────────────────────
   async function pickDate(d: string) {
     setPicking(false);
+    if (isLockedDate(d)) {
+      await ask({
+        icon: '🗄️',
+        title: 'Archived season',
+        message: 'That season is over and archived. Pick a date in this season.',
+        buttons: [{ label: 'OK', value: 'ok' }],
+      });
+      return;
+    }
     const other = data.hunts.find((h) => h.date === d && h.id !== existing?.id);
     if (other) {
       const go = await ask({
@@ -265,7 +277,8 @@ export default function LogHunt() {
     if (data.hunts.some((h) => h.date === date && h.id !== existing?.id)) return pickDate(date);
     setSaving(true);
     try {
-      const { newBadges } = await saveHunt({ id: existing?.id, date, party, rows: rowsFrom(entries, party) });
+      const { huntId, newBadges } = await saveHunt({ id: existing?.id, date, party, rows: rowsFrom(entries, party) });
+      savedId.current = huntId;
       play('quack');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       if (newBadges.length) setParade(newBadges);
@@ -275,9 +288,10 @@ export default function LogHunt() {
     }
   }
 
+  /** On to the winner: they may get today's round of the duck shoot. */
   function finish() {
-    router.back();
-    maybeShowInterstitial();
+    if (savedId.current) router.replace({ pathname: '/winner', params: { huntId: savedId.current } });
+    else router.back();
   }
 
   async function confirmDelete() {
@@ -332,7 +346,7 @@ export default function LogHunt() {
           <Pixel size={10}>{'< BACK'}</Pixel>
         </Pressable>
         <Pixel size={12}>{existing ? 'EDIT HUNT' : 'LOG A HUNT'}</Pixel>
-        {existing ? (
+        {existing && !locked ? (
           <Pressable onPress={confirmDelete} hitSlop={10}>
             <Pixel size={10} color={C.red}>DEL</Pixel>
           </Pressable>
@@ -342,7 +356,13 @@ export default function LogHunt() {
       </View>
 
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 130 }}>
-        <View style={styles.dateRow}>
+        {locked ? (
+          <View style={styles.lockedBanner}>
+            <Text style={{ fontSize: 20 }}>🗄️</Text>
+            <Text style={{ flex: 1, color: C.white, fontWeight: '700' }}>Archived season — this hunt is read-only.</Text>
+          </View>
+        ) : null}
+        <View style={styles.dateRow} pointerEvents={locked ? 'none' : 'auto'}>
           <Pressable onPress={() => pickDate(shiftDate(date, -1))} hitSlop={10} style={styles.arrow}>
             <Pixel size={14}>{'<'}</Pixel>
           </Pressable>
@@ -535,12 +555,16 @@ export default function LogHunt() {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <Btn
-          label={saving ? 'SAVING…' : pending.length ? `${pending.length} ${pending.length === 1 ? 'HUNTER' : 'HUNTERS'} LEFT ›` : 'SAVE HUNT'}
-          kind={pending.length ? 'secondary' : 'primary'}
-          onPress={save}
-          disabled={saving}
-        />
+        {locked ? (
+          <Btn label="BACK" kind="secondary" onPress={() => router.back()} />
+        ) : (
+          <Btn
+            label={saving ? 'SAVING…' : pending.length ? `${pending.length} ${pending.length === 1 ? 'HUNTER' : 'HUNTERS'} LEFT ›` : 'FINALIZE HUNT 🏆'}
+            kind={pending.length ? 'secondary' : 'primary'}
+            onPress={save}
+            disabled={saving}
+          />
+        )}
       </View>
 
       {picking ? <DatePicker visible value={date} huntDays={huntDays} onPick={pickDate} onClose={() => setPicking(false)} /> : null}
@@ -597,5 +621,6 @@ const styles = StyleSheet.create({
   hens: { borderWidth: 2, borderColor: C.line, minWidth: 54, height: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: C.paper },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.navySoft, borderWidth: 2, borderColor: C.navy, paddingVertical: 10, paddingHorizontal: 12 },
   doneTxt: { flex: 1, fontSize: 15, fontWeight: '700', color: C.navy },
+  lockedBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.muted, padding: 12, borderWidth: 2, borderColor: C.navy },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, backgroundColor: C.paper, borderTopWidth: 2.5, borderColor: C.navy },
 });

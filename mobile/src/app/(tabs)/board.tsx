@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 
 import { AdBanner } from '@/ads/ads';
 import { currentSeason, seasonLabel } from '@/domain/season';
+import { gameLeaders } from '@/domain/gameStats';
 import { formatMeat } from '@/domain/meat';
 import { hunterStats, partyMembers, partyRaceSeries, partyStats, raceSeries, seasonsIn } from '@/domain/stats';
 import { useStore } from '@/state/store';
@@ -44,6 +45,8 @@ export default function Board() {
     [data, season],
   );
   const partyMax = Math.max(1, ...partyRows.map((r) => r.s.birds));
+  const shoot = gameLeaders(data, scope);
+  const names = new Map(data.hunters.map((h) => [h.id, h.name]));
   const race =
     season == null
       ? []
@@ -129,6 +132,21 @@ export default function Board() {
           </Section>
         ) : null}
 
+        <Section title="Duck shoot">
+          <Card style={{ gap: 8 }}>
+            {shoot.length === 0 ? (
+              <Body muted style={{ fontSize: 13 }}>Win a hunt to play the round that counts. Scores land here.</Body>
+            ) : null}
+            {shoot.map((l) => (
+              <View key={l.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 18 }}>{l.icon}</Text>
+                <Body style={{ flex: 1, color: l.roast ? C.orange : C.ink }}>{l.label}</Body>
+                <Body style={{ fontWeight: '800' }}>{`${names.get(l.hunterId) ?? '?'} · ${l.value}`}</Body>
+              </View>
+            ))}
+          </Card>
+        </Section>
+
         <View style={{ flexDirection: 'row', gap: 12 }}>
           <Card style={{ flex: 1, gap: 6 }}>
             <Pixel size={9} color={C.marsh}>GREENHEAD CLUB</Pixel>
@@ -163,6 +181,7 @@ export default function Board() {
           />
           <Btn label="🏆 AWARDS NIGHT" kind="secondary" onPress={() => router.push({ pathname: '/awards', params: { season: String(season ?? currentSeason()) } })} />
           <Btn label="🎁 SEASON WRAPPED" kind="secondary" onPress={() => router.push({ pathname: '/wrapped', params: { season: String(season ?? currentSeason()) } })} />
+          <Btn label="🗄️ PAST SEASONS" kind="secondary" onPress={() => router.push('/seasons')} />
         </View>
       </Screen>
       <AdBanner />

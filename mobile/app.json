@@ -67,7 +67,8 @@
             "extraProguardRules": "# WorkManager (pulled in by Google Mobile Ads) builds its Room database by reflection.\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class androidx.work.impl.** { *; }\n-keep class androidx.room.** { *; }\n"
           }
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

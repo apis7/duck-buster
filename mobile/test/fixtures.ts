@@ -20,6 +20,7 @@ export function makeData(): Data & {
     hunts: [],
     huntHunters: [],
     harvests: [],
+    gameScores: [],
   };
   return Object.assign(data, {
     hunt(date: string, party: string[]) {

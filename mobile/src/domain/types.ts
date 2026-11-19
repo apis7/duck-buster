@@ -51,6 +51,28 @@ export type Harvest = {
   banded: number;
 };
 
+/**
+ * The winner's round of the duck shoot after a hunt. One per hunt (and so one
+ * per day). The launch game is practice and is never stored here.
+ */
+export type GameScore = {
+  id: string;
+  huntId: string;
+  hunterId: string;
+  /** Hunt date, YYYY-MM-DD: places the round in a season. */
+  date: string;
+  score: number;
+  shots: number;
+  hits: number;
+  kos: number;
+  geese: number;
+  swans: number;
+  coots: number;
+  /** Banded geese dropped. */
+  bands: number;
+  createdAt: number;
+};
+
 export type Data = {
   hunters: Hunter[];
   parties: Party[];
@@ -58,6 +80,7 @@ export type Data = {
   hunts: Hunt[];
   huntHunters: HuntHunter[];
   harvests: Harvest[];
+  gameScores: GameScore[];
 };
 
-export const EMPTY_DATA: Data = { hunters: [], parties: [], customSpecies: [], hunts: [], huntHunters: [], harvests: [] };
+export const EMPTY_DATA: Data = { hunters: [], parties: [], customSpecies: [], hunts: [], huntHunters: [], harvests: [], gameScores: [] };

@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { CustomSpecies, Data, Harvest, Hunt, HuntHunter, Hunter, Party } from '@/domain/types';
+import type { CustomSpecies, Data, GameScore, Harvest, Hunt, HuntHunter, Hunter, Party } from '@/domain/types';
 
 /**
  * The phone's only copy of the season. Hand-written, append-only migrations on
@@ -74,6 +74,24 @@ const MIGRATIONS: string[][] = [
       created_at INTEGER NOT NULL
     );`,
   ],
+  // 3: the hunt winner's round of the duck shoot (one per hunt).
+  [
+    `CREATE TABLE IF NOT EXISTS game_scores (
+      id TEXT PRIMARY KEY NOT NULL,
+      hunt_id TEXT NOT NULL UNIQUE,
+      hunter_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      shots INTEGER NOT NULL,
+      hits INTEGER NOT NULL,
+      kos INTEGER NOT NULL,
+      geese INTEGER NOT NULL,
+      swans INTEGER NOT NULL,
+      coots INTEGER NOT NULL,
+      bands INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );`,
+  ],
 ];
 
 export async function migrate(): Promise<void> {
@@ -95,6 +113,8 @@ export type HighScore = { id: string; initials: string; score: number; createdAt
 export type Loaded = {
   data: Data;
   celebrated: Set<string>;
+  /** When each badge was first celebrated — places it in a season for the archive. */
+  celebratedAt: { hunterId: string; badgeId: string; at: number }[];
   highScores: HighScore[];
   settings: Record<string, string>;
 };
@@ -102,7 +122,7 @@ export type Loaded = {
 export const celebratedKey = (hunterId: string, badgeId: string) => `${hunterId}:${badgeId}`;
 
 export async function loadAll(): Promise<Loaded> {
-  const [hunters, parties, customSpecies, hunts, huntHunters, harvests, celebrated, highScores, settings] = await Promise.all([
+  const [hunters, parties, customSpecies, hunts, huntHunters, harvests, gameScores, celebrated, highScores, settings] = await Promise.all([
     db.getAllAsync<{ id: string; name: string; color: string; party_id: string | null; created_at: number }>('SELECT * FROM hunters ORDER BY created_at'),
     db.getAllAsync<{ id: string; name: string; color: string; created_at: number }>('SELECT * FROM parties ORDER BY created_at'),
     db.getAllAsync<{ id: string; name: string; sexed: number; created_at: number }>('SELECT * FROM custom_species ORDER BY name'),
@@ -111,7 +131,8 @@ export async function loadAll(): Promise<Loaded> {
     db.getAllAsync<{ id: string; hunt_id: string; hunter_id: string; species_id: string; sex: string; count: number; banded: number }>(
       'SELECT * FROM harvests',
     ),
-    db.getAllAsync<{ hunter_id: string; badge_id: string }>('SELECT hunter_id, badge_id FROM celebrated_badges'),
+    db.getAllAsync<Record<string, string | number>>('SELECT * FROM game_scores ORDER BY date'),
+    db.getAllAsync<{ hunter_id: string; badge_id: string; at: number }>('SELECT hunter_id, badge_id, at FROM celebrated_badges'),
     db.getAllAsync<{ id: string; initials: string; score: number; created_at: number }>(
       'SELECT * FROM high_scores ORDER BY score DESC, created_at ASC LIMIT 10',
     ),
@@ -133,7 +154,9 @@ export async function loadAll(): Promise<Loaded> {
         count: r.count,
         banded: r.banded,
       })),
+      gameScores: gameScores.map(gameFromRow),
     },
+    celebratedAt: celebrated.map((c) => ({ hunterId: c.hunter_id, badgeId: c.badge_id, at: c.at })),
     celebrated: new Set(celebrated.map((c) => celebratedKey(c.hunter_id, c.badge_id))),
     highScores: highScores.map((s) => ({ id: s.id, initials: s.initials, score: s.score, createdAt: s.created_at })),
     settings: Object.fromEntries(settings.map((s) => [s.key, s.value])),
@@ -200,6 +223,7 @@ export async function deleteHuntRows(id: string): Promise<void> {
   await db.withTransactionAsync(async () => {
     await db.runAsync('DELETE FROM harvests WHERE hunt_id = ?', id);
     await db.runAsync('DELETE FROM hunt_hunters WHERE hunt_id = ?', id);
+    await db.runAsync('DELETE FROM game_scores WHERE hunt_id = ?', id);
     await db.runAsync('DELETE FROM hunts WHERE id = ?', id);
   });
 }
@@ -208,6 +232,32 @@ export async function markCelebrated(pairs: { hunterId: string; badgeId: string 
   const at = Date.now();
   for (const p of pairs)
     await db.runAsync('INSERT OR IGNORE INTO celebrated_badges (hunter_id, badge_id, at) VALUES (?, ?, ?)', p.hunterId, p.badgeId, at);
+}
+
+function gameFromRow(r: Record<string, string | number>): GameScore {
+  return {
+    id: String(r.id),
+    huntId: String(r.hunt_id),
+    hunterId: String(r.hunter_id),
+    date: String(r.date),
+    score: Number(r.score),
+    shots: Number(r.shots),
+    hits: Number(r.hits),
+    kos: Number(r.kos),
+    geese: Number(r.geese),
+    swans: Number(r.swans),
+    coots: Number(r.coots),
+    bands: Number(r.bands),
+    createdAt: Number(r.created_at),
+  };
+}
+
+export async function insertGameScore(g: GameScore): Promise<void> {
+  await db.runAsync(
+    `INSERT OR REPLACE INTO game_scores (id, hunt_id, hunter_id, date, score, shots, hits, kos, geese, swans, coots, bands, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    g.id, g.huntId, g.hunterId, g.date, g.score, g.shots, g.hits, g.kos, g.geese, g.swans, g.coots, g.bands, g.createdAt,
+  );
 }
 
 export async function insertHighScore(s: HighScore): Promise<void> {
@@ -222,12 +272,13 @@ export async function writeSetting(key: string, value: string): Promise<void> {
 export async function importRows(incoming: Data, mode: 'merge' | 'replace'): Promise<void> {
   await db.withTransactionAsync(async () => {
     if (mode === 'replace') {
-      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'parties', 'custom_species', 'celebrated_badges'])
+      for (const t of ['harvests', 'hunt_hunters', 'hunts', 'hunters', 'parties', 'custom_species', 'game_scores', 'celebrated_badges'])
         await db.execAsync(`DELETE FROM ${t};`);
     }
     for (const p of incoming.parties) await insertParty(p);
     for (const c of incoming.customSpecies) await insertCustomSpecies(c);
     for (const h of incoming.hunters) await insertHunter(h);
+    for (const g of incoming.gameScores) await insertGameScore(g);
     for (const hunt of incoming.hunts) {
       await writeHuntRows(
         hunt,
