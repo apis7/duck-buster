@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import mobileAds, {
   AdEventType,
   AdsConsent,
@@ -83,6 +83,14 @@ export function maybeShowInterstitial(): void {
 
 export function AdBanner() {
   const [failed, setFailed] = useState(false);
+  // No real ad unit yet: hold the space so the layout matches what ships.
+  if (!REAL.banner) {
+    return (
+      <View style={{ height: 60, margin: 6, borderWidth: 2, borderStyle: 'dashed', borderColor: C.muted, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 12, fontWeight: '800', color: C.muted }}>AD SPACE · BANNER</Text>
+      </View>
+    );
+  }
   if (failed) return null;
   return (
     <View style={{ alignItems: 'center', backgroundColor: C.paper }}>
