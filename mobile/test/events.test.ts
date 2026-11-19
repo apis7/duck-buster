@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { applyHit, fire, GAME_SECONDS, ghostShowing, makeBird, newGame, step, type GameState } from '@/game/engine';
-import { gameDay, isFullMoon, NO_FX, type GameFx } from '@/game/events';
+import { gameDay, isFullMoon, NO_FX, practiceDay, type GameFx } from '@/game/events';
 import { gameLayout } from '@/game/layout';
 
 const calm = () => 0.99; // no random blizzard
@@ -172,5 +172,16 @@ describe('feast days', () => {
   it('the summary names the day', () => {
     expect(gameDay('2026-11-03', calm).names[0]).toMatch(/Hubert/);
     expect(gameDay('2026-08-12', calm).names).toEqual([]);
+  });
+});
+
+describe('practice', () => {
+  it('only gets the plain season — no holidays, partridge, weather or banners', () => {
+    const xmas = practiceDay('2026-12-26');
+    expect(xmas.theme.id).toBe('winter');
+    expect(xmas.fx).toEqual(NO_FX);
+    expect(xmas.banners).toEqual([]);
+    expect(practiceDay('2026-11-03').names).toEqual([]);
+    expect(practiceDay('2026-10-20').theme.id).toBe('fall');
   });
 });

@@ -93,6 +93,12 @@ export function moonAge(date: string): number {
 
 export const isFullMoon = (date: string) => Math.abs(moonAge(date) - 14.765) < 1.0;
 
+/** Practice: just the season's look — no holidays, feasts, weather or bonuses. */
+export function practiceDay(date: string): GameDay {
+  const base = themeFor(date);
+  return { theme: base.id === 'christmas' ? THEMES.winter : base, fx: NO_FX, banners: [], names: [] };
+}
+
 export function gameDay(date: string, rng: () => number = Math.random): GameDay {
   const [y, m, d] = date.split('-').map(Number);
   const base = themeFor(date);
