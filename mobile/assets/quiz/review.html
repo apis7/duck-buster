@@ -14,13 +14,48 @@ button{background:#F26B1D;color:#fff;border:0;padding:10px 16px;font-weight:700;
 textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:13px}
 </style></head><body>
 <h1>Duck Buster — quiz review</h1>
-<p class="sub">74 photos + 5 calls = 79 questions. Each round picks 10 at random; the 7 answer choices are generated (look-alikes from the same group first). Mark anything to replace or drop, then press <b>Copy my review</b> and paste it to Claude.</p>
+<p class="sub">74 photos + 25 calls = 99 questions. Each round picks 10 at random; the 7 answer choices are generated (look-alikes from the same group first). Mark anything to replace or drop, then press <b>Copy my review</b> and paste it to Claude.</p>
 <div class="bar"><button onclick="copyReview()">Copy my review</button><span id="msg"></span></div>
-<h2>Calls (5)</h2><div class="grid"><div class="card" data-id="amco-audio" data-label="American Coot (call, amco.mp3)">
+<h2>Calls (25)</h2><div class="grid"><div class="card" data-id="abdu-audio" data-label="American Black Duck (call, abdu.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/abdu.mp3"></audio>
+  <h3>American Black Duck <small>CALL · abdu.mp3</small></h3>
+  <p class="cr">er-birds · CC BY 4.0 · <a href="https://www.inaturalist.org/observations/245236584" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="abdu-audio" value="ok" checked> OK</label><label><input type="radio" name="abdu-audio" value="replace"> Replace</label><label><input type="radio" name="abdu-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="amco-audio" data-label="American Coot (call, amco.mp3)">
   <div class="snd">🔊</div><audio controls preload="none" src="audio/amco.mp3"></audio>
   <h3>American Coot <small>CALL · amco.mp3</small></h3>
   <p class="cr">NPS &amp; MSU Acoustic Atlas/Jennifer Jerrett · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Yellowstone_sound_library_-_American_Coots_-_001.mp3" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="amco-audio" value="ok" checked> OK</label><label><input type="radio" name="amco-audio" value="replace"> Replace</label><label><input type="radio" name="amco-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="amwi-audio" data-label="American Wigeon (call, amwi.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/amwi.mp3"></audio>
+  <h3>American Wigeon <small>CALL · amwi.mp3</small></h3>
+  <p class="cr">Kalvin Chan · CC0 1.0 · <a href="https://www.inaturalist.org/observations/262477578" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="amwi-audio" value="ok" checked> OK</label><label><input type="radio" name="amwi-audio" value="replace"> Replace</label><label><input type="radio" name="amwi-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bbwd-audio" data-label="Black-bellied Whistling-Duck (call, bbwd.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/bbwd.mp3"></audio>
+  <h3>Black-bellied Whistling-Duck <small>CALL · bbwd.mp3</small></h3>
+  <p class="cr">Contina Lab at UTRGV · CC BY 4.0 · <a href="https://xeno-canto.org/1008043" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="bbwd-audio" value="ok" checked> OK</label><label><input type="radio" name="bbwd-audio" value="replace"> Replace</label><label><input type="radio" name="bbwd-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bran-audio" data-label="Brant (call, bran.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/bran.mp3"></audio>
+  <h3>Brant <small>CALL · bran.mp3</small></h3>
+  <p class="cr">Sonothèque ADVL (rec. Corentin Rivière) · CC0 1.0 · <a href="https://xeno-canto.org/705887" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="bran-audio" value="ok" checked> OK</label><label><input type="radio" name="bran-audio" value="replace"> Replace</label><label><input type="radio" name="bran-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="bwte-audio" data-label="Blue-winged Teal (call, bwte.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/bwte.mp3"></audio>
+  <h3>Blue-winged Teal <small>CALL · bwte.mp3</small></h3>
+  <p class="cr">Jonathon Jongsma · CC BY-SA 4.0 · <a href="https://xeno-canto.org/179673" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="bwte-audio" value="ok" checked> OK</label><label><input type="radio" name="bwte-audio" value="replace"> Replace</label><label><input type="radio" name="bwte-audio" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
 <div class="card" data-id="cacg-audio" data-label="Cackling Goose (call, cacg.mp3)">
@@ -37,6 +72,69 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <div class="v"><label><input type="radio" name="cago-audio" value="ok" checked> OK</label><label><input type="radio" name="cago-audio" value="replace"> Replace</label><label><input type="radio" name="cago-audio" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div>
+<div class="card" data-id="coei-audio" data-label="Common Eider (call, coei.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/coei.mp3"></audio>
+  <h3>Common Eider <small>CALL · coei.mp3</small></h3>
+  <p class="cr">Doug Hynes · CC BY-SA 4.0 · <a href="https://xeno-canto.org/1033167" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="coei-audio" value="ok" checked> OK</label><label><input type="radio" name="coei-audio" value="replace"> Replace</label><label><input type="radio" name="coei-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="come-audio" data-label="Common Merganser (call, come.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/come.mp3"></audio>
+  <h3>Common Merganser <small>CALL · come.mp3</small></h3>
+  <p class="cr">Richard Littauer · CC BY 4.0 · <a href="https://www.inaturalist.org/observations/50143011" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="come-audio" value="ok" checked> OK</label><label><input type="radio" name="come-audio" value="replace"> Replace</label><label><input type="radio" name="come-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="euwi-audio" data-label="Eurasian Wigeon (call, euwi.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/euwi.mp3"></audio>
+  <h3>Eurasian Wigeon <small>CALL · euwi.mp3</small></h3>
+  <p class="cr">Lawrence Shove / The British Library Board · CC BY-SA 4.0 · <a href="https://commons.wikimedia.org/wiki/File:Eurasian_Wigeon_(Anas_penelope)_(W1CDR0001386_BD2).ogg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="euwi-audio" value="ok" checked> OK</label><label><input type="radio" name="euwi-audio" value="replace"> Replace</label><label><input type="radio" name="euwi-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="fuwd-audio" data-label="Fulvous Whistling-Duck (call, fuwd.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/fuwd.mp3"></audio>
+  <h3>Fulvous Whistling-Duck <small>CALL · fuwd.mp3</small></h3>
+  <p class="cr">Joaquín Krasuk · CC BY 4.0 · <a href="https://www.inaturalist.org/observations/395127412" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="fuwd-audio" value="ok" checked> OK</label><label><input type="radio" name="fuwd-audio" value="replace"> Replace</label><label><input type="radio" name="fuwd-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="gadw-audio" data-label="Gadwall (call, gadw.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/gadw.mp3"></audio>
+  <h3>Gadwall <small>CALL · gadw.mp3</small></h3>
+  <p class="cr">Joost van Bruggen · CC BY-SA 4.0 · <a href="https://xeno-canto.org/436359" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="gadw-audio" value="ok" checked> OK</label><label><input type="radio" name="gadw-audio" value="replace"> Replace</label><label><input type="radio" name="gadw-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="gwfg-audio" data-label="Greater White-fronted Goose (call, gwfg.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/gwfg.mp3"></audio>
+  <h3>Greater White-fronted Goose <small>CALL · gwfg.mp3</small></h3>
+  <p class="cr">Robert Petersen · CC BY-SA 4.0 · <a href="https://xeno-canto.org/1089033" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="gwfg-audio" value="ok" checked> OK</label><label><input type="radio" name="gwfg-audio" value="replace"> Replace</label><label><input type="radio" name="gwfg-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="gwte-audio" data-label="Green-winged Teal (call, gwte.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/gwte.mp3"></audio>
+  <h3>Green-winged Teal <small>CALL · gwte.mp3</small></h3>
+  <p class="cr">Kalvin Chan · CC0 1.0 · <a href="https://www.inaturalist.org/observations/346013652" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="gwte-audio" value="ok" checked> OK</label><label><input type="radio" name="gwte-audio" value="replace"> Replace</label><label><input type="radio" name="gwte-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="home-audio" data-label="Hooded Merganser (call, home.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/home.mp3"></audio>
+  <h3>Hooded Merganser <small>CALL · home.mp3</small></h3>
+  <p class="cr">Jonathon Jongsma · CC BY-SA 4.0 · <a href="https://xeno-canto.org/477560" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="home-audio" value="ok" checked> OK</label><label><input type="radio" name="home-audio" value="replace"> Replace</label><label><input type="radio" name="home-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="ltdu-audio" data-label="Long-tailed Duck (call, ltdu.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/ltdu.mp3"></audio>
+  <h3>Long-tailed Duck <small>CALL · ltdu.mp3</small></h3>
+  <p class="cr">Tony Phillips · CC BY 3.0 · <a href="https://commons.wikimedia.org/wiki/File:Clangula_hyemalis.ogg" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="ltdu-audio" value="ok" checked> OK</label><label><input type="radio" name="ltdu-audio" value="replace"> Replace</label><label><input type="radio" name="ltdu-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
 <div class="card" data-id="mall-audio" data-label="Mallard (call, mall.mp3)">
   <div class="snd">🔊</div><audio controls preload="none" src="audio/mall.mp3"></audio>
   <h3>Mallard <small>CALL · mall.mp3</small></h3>
@@ -49,6 +147,48 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <h3>Northern Pintail <small>CALL · nopi.mp3</small></h3>
   <p class="cr">National Park Service (Wind Cave NP) · Public domain · <a href="https://commons.wikimedia.org/wiki/File:Anas_acuta.ogg" target="_blank">source</a></p>
   <div class="v"><label><input type="radio" name="nopi-audio" value="ok" checked> OK</label><label><input type="radio" name="nopi-audio" value="replace"> Replace</label><label><input type="radio" name="nopi-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="nsho-audio" data-label="Northern Shoveler (call, nsho.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/nsho.mp3"></audio>
+  <h3>Northern Shoveler <small>CALL · nsho.mp3</small></h3>
+  <p class="cr">Dan MacNeal · CC BY 4.0 · <a href="https://www.inaturalist.org/observations/162140322" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="nsho-audio" value="ok" checked> OK</label><label><input type="radio" name="nsho-audio" value="replace"> Replace</label><label><input type="radio" name="nsho-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="rbme-audio" data-label="Red-breasted Merganser (call, rbme.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/rbme.mp3"></audio>
+  <h3>Red-breasted Merganser <small>CALL · rbme.mp3</small></h3>
+  <p class="cr">Jochem verweij · CC BY-SA 4.0 · <a href="https://xeno-canto.org/898199" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="rbme-audio" value="ok" checked> OK</label><label><input type="radio" name="rbme-audio" value="replace"> Replace</label><label><input type="radio" name="rbme-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="redh-audio" data-label="Redhead (call, redh.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/redh.mp3"></audio>
+  <h3>Redhead <small>CALL · redh.mp3</small></h3>
+  <p class="cr">Kalvin Chan · CC0 1.0 · <a href="https://www.inaturalist.org/observations/264016648" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="redh-audio" value="ok" checked> OK</label><label><input type="radio" name="redh-audio" value="replace"> Replace</label><label><input type="radio" name="redh-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="rndu-audio" data-label="Ring-necked Duck (call, rndu.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/rndu.mp3"></audio>
+  <h3>Ring-necked Duck <small>CALL · rndu.mp3</small></h3>
+  <p class="cr">Sean Frey · CC BY 4.0 · <a href="https://www.inaturalist.org/observations/118390539" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="rndu-audio" value="ok" checked> OK</label><label><input type="radio" name="rndu-audio" value="replace"> Replace</label><label><input type="radio" name="rndu-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="sngo-audio" data-label="Snow Goose (call, sngo.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/sngo.mp3"></audio>
+  <h3>Snow Goose <small>CALL · sngo.mp3</small></h3>
+  <p class="cr">Tuoichen · CC BY 4.0 · <a href="https://www.inaturalist.org/observations/106524831" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="sngo-audio" value="ok" checked> OK</label><label><input type="radio" name="sngo-audio" value="replace"> Replace</label><label><input type="radio" name="sngo-audio" value="drop"> Drop</label></div>
+  <input class="note" placeholder="Note (optional)">
+</div>
+<div class="card" data-id="wodu-audio" data-label="Wood Duck (call, wodu.mp3)">
+  <div class="snd">🔊</div><audio controls preload="none" src="audio/wodu.mp3"></audio>
+  <h3>Wood Duck <small>CALL · wodu.mp3</small></h3>
+  <p class="cr">Jonathon Jongsma · CC BY-SA 3.0 · <a href="https://xeno-canto.org/63109" target="_blank">source</a></p>
+  <div class="v"><label><input type="radio" name="wodu-audio" value="ok" checked> OK</label><label><input type="radio" name="wodu-audio" value="replace"> Replace</label><label><input type="radio" name="wodu-audio" value="drop"> Drop</label></div>
   <input class="note" placeholder="Note (optional)">
 </div></div>
 <h2>Photos (74)</h2><div class="grid"><div class="card" data-id="abdu-image" data-label="American Black Duck drake (photo, abdu.jpg)">
@@ -570,7 +710,7 @@ textarea{width:100%;height:160px;margin-top:10px}.miss{color:#9fb3d1;font-size:1
   <input class="note" placeholder="Note (optional)">
 </div></div>
 <h2>Missing</h2>
-<p class="miss"><b>No call recording yet (37):</b> American Black Duck, Mottled Duck, Mexican Duck, Gadwall, American Wigeon, Eurasian Wigeon, Northern Shoveler, Blue-winged Teal, Green-winged Teal, Cinnamon Teal, Wood Duck, Fulvous Whistling-Duck, Black-bellied Whistling-Duck, Canvasback, Redhead, Ring-necked Duck, Greater Scaup, Lesser Scaup, Bufflehead, Common Goldeneye, Barrow's Goldeneye, Ruddy Duck, Hooded Merganser, Common Merganser, Red-breasted Merganser, Long-tailed Duck, Surf Scoter, White-winged Scoter, Black Scoter, Harlequin Duck, Common Eider, King Eider, Snow Goose, Ross's Goose, Greater White-fronted Goose, Brant, Emperor Goose</p>
+<p class="miss"><b>No call recording yet (17):</b> Mottled Duck, Mexican Duck, Cinnamon Teal, Canvasback, Greater Scaup, Lesser Scaup, Bufflehead, Common Goldeneye, Barrow's Goldeneye, Ruddy Duck, Surf Scoter, White-winged Scoter, Black Scoter, Harlequin Duck, King Eider, Ross's Goose, Emperor Goose</p>
 <p class="miss"><b>No photo yet (0):</b> none</p>
 <textarea id="out" placeholder="Your review appears here too, in case copying is blocked."></textarea>
 <script>
