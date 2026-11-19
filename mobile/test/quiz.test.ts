@@ -4,12 +4,19 @@ import { CHOICES, makeChoices, makeRound } from '@/domain/quiz';
 import { SPECIES_BY_ID } from '@/domain/species';
 
 describe('quiz', () => {
-  it('seven unique choices including the answer, look-alikes first', () => {
+  it('seven unique choices including the answer', () => {
     const c = makeChoices('gwte');
     expect(c).toHaveLength(CHOICES);
     expect(new Set(c).size).toBe(CHOICES);
     expect(c).toContain('gwte');
-    expect(c.filter((id) => SPECIES_BY_ID[id].group === 'dabbler').length).toBeGreaterThanOrEqual(4);
+    expect(c.every((id) => SPECIES_BY_ID[id])).toBe(true);
+  });
+
+  it('only the right answer is fixed: the wrong ones change between asks', () => {
+    for (const id of ['amco', 'gwte', 'fuwd']) {
+      const sets = new Set(Array.from({ length: 30 }, () => makeChoices(id).filter((x) => x !== id).sort().join(',')));
+      expect(sets.size).toBeGreaterThan(20);
+    }
   });
 
   it('round uses only species with media and never repeats', () => {

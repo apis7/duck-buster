@@ -2,8 +2,8 @@ import { SPECIES, SPECIES_BY_ID } from './species';
 
 /**
  * Duck ID quiz: show a photo or play a call, pick the bird from seven choices.
- * Distractors come from the same group first (teal vs teal is a real test;
- * teal vs Canada goose is not), then fill from anywhere.
+ * Only the right answer is fixed: the six wrong ones are drawn fresh every time,
+ * usually with a few look-alikes from the same group (teal vs teal is a real test).
  */
 
 export const CHOICES = 7;
@@ -27,8 +27,10 @@ export function makeChoices(answer: string, rng: Rng = Math.random): string[] {
   const group = SPECIES_BY_ID[answer]?.group;
   const same = shuffle(SPECIES.filter((s) => s.id !== answer && s.group === group).map((s) => s.id), rng);
   const rest = shuffle(SPECIES.filter((s) => s.id !== answer && s.group !== group).map((s) => s.id), rng);
-  // At most four look-alikes, so there's always something to rule out.
-  const picks = [...same.slice(0, 4), ...rest].slice(0, CHOICES - 1);
+  // A random number of look-alikes (0–3), so the wrong answers differ every time the
+  // question comes up — even in small groups — and there's always something to rule out.
+  const alike = Math.floor(rng() * (Math.min(3, same.length) + 1));
+  const picks = [...same.slice(0, alike), ...rest].slice(0, CHOICES - 1);
   return shuffle([answer, ...picks], rng);
 }
 
