@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import Animated, { FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeOut, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { Pixel } from './kit';
 import { C } from './theme';
@@ -10,7 +10,8 @@ export function SkunkSplash({ name, message, onDismiss }: { name: string; messag
   const hop = useSharedValue(0);
 
   useEffect(() => {
-    hop.set(withRepeat(withSequence(withTiming(-6, { duration: 160 }), withTiming(0, { duration: 160 })), 2));
+    // The skunk is allowed to hop. It's the one exception to the calm animations.
+    hop.set(withRepeat(withSequence(withSpring(-14, { damping: 6 }), withTiming(0, { duration: 260 })), 4));
     const t = setTimeout(onDismiss, 6000);
     return () => clearTimeout(t);
   }, [hop, onDismiss]);
