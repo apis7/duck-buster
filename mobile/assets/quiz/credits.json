@@ -359,46 +359,6 @@
     "license": "Public domain"
   },
   {
-    "code": "mall",
-    "kind": "audio",
-    "file": "assets/quiz/audio/mall.mp3",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ducks_snatching.ogg",
-    "author": "Bert76",
-    "license": "CC0"
-  },
-  {
-    "code": "nopi",
-    "kind": "audio",
-    "file": "assets/quiz/audio/nopi.mp3",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Anas_acuta.ogg",
-    "author": "National Park Service (Wind Cave NP)",
-    "license": "Public domain"
-  },
-  {
-    "code": "cago",
-    "kind": "audio",
-    "file": "assets/quiz/audio/cago.mp3",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Branta_canadensis.ogg",
-    "author": "National Park Service (Wind Cave NP)",
-    "license": "Public domain"
-  },
-  {
-    "code": "cacg",
-    "kind": "audio",
-    "file": "assets/quiz/audio/cacg.mp3",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cackling_goose_(Branta_hutchinsii)_flock_at_Baskett_Slough_National_Wildlife_Refuge_in_western_Oregon_on_February_25,_2025.webm",
-    "author": "USFWS - Pacific Region",
-    "license": "Public domain"
-  },
-  {
-    "code": "amco",
-    "kind": "audio",
-    "file": "assets/quiz/audio/amco.mp3",
-    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Yellowstone_sound_library_-_American_Coots_-_001.mp3",
-    "author": "NPS & MSU Acoustic Atlas/Jennifer Jerrett",
-    "license": "Public domain"
-  },
-  {
     "code": "quack",
     "kind": "sfx",
     "file": "assets/sfx/quack.mp3",
@@ -935,5 +895,50 @@
     "license": "CC0 1.0",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
     "note": "flock 'cronk' flight calls (France)"
+  },
+  {
+    "code": "mall",
+    "kind": "audio",
+    "file": "assets/quiz/audio/mall.mp3",
+    "sourceUrl": "https://xeno-canto.org/62258",
+    "author": "Jonathon Jongsma",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+  },
+  {
+    "code": "nopi",
+    "kind": "audio",
+    "file": "assets/quiz/audio/nopi.mp3",
+    "sourceUrl": "https://xeno-canto.org/730777",
+    "author": "Sonothèque ADVL",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  {
+    "code": "cago",
+    "kind": "audio",
+    "file": "assets/quiz/audio/cago.mp3",
+    "sourceUrl": "https://xeno-canto.org/934272",
+    "author": "Doug Hynes",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "code": "cacg",
+    "kind": "audio",
+    "file": "assets/quiz/audio/cacg.mp3",
+    "sourceUrl": "https://www.inaturalist.org/observations/194297297",
+    "author": "Dan Horowitz",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  {
+    "code": "amco",
+    "kind": "audio",
+    "file": "assets/quiz/audio/amco.mp3",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Yellowstone_sound_library_-_American_Coots_-_001.mp3",
+    "author": "NPS & MSU Acoustic Atlas / Jennifer Jerrett",
+    "license": "Public domain",
+    "licenseUrl": ""
   }
 ]
