@@ -3,6 +3,7 @@ import { Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { C, PIXEL_FONT } from '@/ui/theme';
+import { useUpdateCheck } from '@/ui/useUpdateCheck';
 
 const icon = (glyph: string) =>
   function TabIcon({ focused }: { focused: boolean }) {
@@ -12,6 +13,7 @@ const icon = (glyph: string) =>
 export default function TabsLayout() {
   // Android draws edge to edge: the tab bar has to sit above the nav buttons / gesture bar itself.
   const insets = useSafeAreaInsets();
+  useUpdateCheck();
   return (
     <Tabs
       screenOptions={{

@@ -1,0 +1,6 @@
+{
+  "platforms": ["android"],
+  "android": {
+    "modules": ["com.duckbuster.inappupdates.InAppUpdatesModule"]
+  }
+}
