@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import mobileAds, {
   AdEventType,
   AdsConsent,
@@ -23,10 +23,10 @@ import { C } from '@/ui/theme';
  * (dating, gambling, sexual content…) is done in the AdMob console.
  */
 
-// Real Apsinthion unit ids go here before release. Until then, Google's test ads.
+// Apsinthion AdMob units (app ca-app-pub-6569912864934024~7041548815). Dev builds use Google's test ads.
 const REAL = {
-  banner: '',
-  interstitial: '',
+  banner: Platform.OS === 'android' ? 'ca-app-pub-6569912864934024/5588866341' : '',
+  interstitial: Platform.OS === 'android' ? 'ca-app-pub-6569912864934024/7368851872' : '',
 };
 
 const unit = {
