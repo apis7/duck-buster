@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { maybeShowInterstitial } from '@/ads/ads';
 import { play } from '@/audio/sfx';
-import { todayISO } from '@/domain/season';
+import { prettyDate, todayISO } from '@/domain/season';
 import { huntStandings, huntWinner } from '@/domain/winner';
 import { useStore } from '@/state/store';
 import { Btn, Pixel } from '@/ui/kit';
@@ -43,7 +43,7 @@ export default function Winner() {
         <Animated.View entering={ZoomIn.duration(200)} style={{ alignItems: 'center', gap: 12 }}>
           <Text style={{ fontSize: 70 }}>🏆</Text>
           <Pixel size={22} color={C.gold} style={{ textAlign: 'center', lineHeight: 34 }}>{name.toUpperCase()}</Pixel>
-          <Pixel size={11} color={C.white} style={{ textAlign: 'center', lineHeight: 20 }}>{'IS THE WINNER OF\nTODAY’S HUNT!'}</Pixel>
+          <Pixel size={11} color={C.white} style={{ textAlign: 'center', lineHeight: 20 }}>{hunt && hunt.date !== todayISO() ? `IS THE WINNER OF\nTHE ${prettyDate(hunt.date).toUpperCase()} HUNT!` : 'IS THE WINNER OF\nTODAY’S HUNT!'}</Pixel>
           <Text style={{ color: C.navySoft, fontSize: 15 }}>
             {winner.bands ? `${winner.bands} ${winner.bands === 1 ? 'band' : 'bands'} — an automatic win` : `${count(winner.points, 'point')} · ${count(winner.birds, 'bird')}`}
           </Text>

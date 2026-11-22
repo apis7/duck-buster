@@ -115,7 +115,7 @@ export default function Slugfest() {
         <Body>
           A season-long showdown between hunting crews. Your crew logs hunts in this app; another crew — the in-laws, the
           neighbors, the guys from the other camp — logs theirs on their own phone. Swap season cards and every hunter from
-          every crew lands on one combined board, ranked by birds. Bragging rights across camps.
+          every crew lands on one combined board, ranked by points (drake 3, hen 2, rare bonus — the same as a hunt winner). Bragging rights across camps.
         </Body>
         <Body muted style={{ fontSize: 13 }}>
           {'How: 1) name your crew  2) SEND YOUR SEASON — show your QR or send the file  3) add theirs — SCAN QR or FROM FILE  4) tick the crews to compare. Swap again any time to update. Nothing goes online.'}

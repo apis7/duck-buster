@@ -106,7 +106,7 @@ export default function Rivalry() {
             </Pixel>
             {r.together > 0 ? (
               <Body style={{ color: C.navySoft, textAlign: 'center', fontSize: 13 }}>
-                {`Hunted together ${r.together}×. ${ha.name} outshot ${hb.name} ${r.aWins}×, ${hb.name} won ${r.bWins}×${r.ties ? `, ${r.ties} ties` : ''}.`}
+                {`Hunted together ${r.together}×. ${ha.name} outshot ${hb.name} ${r.aWins}×, ${hb.name} won ${r.bWins}×${r.ties ? `, ${count(r.ties, 'tie')}` : ''}.`}
               </Body>
             ) : (
               <Body style={{ color: C.navySoft, fontSize: 13 }}>Never in the same blind. Settle it.</Body>
