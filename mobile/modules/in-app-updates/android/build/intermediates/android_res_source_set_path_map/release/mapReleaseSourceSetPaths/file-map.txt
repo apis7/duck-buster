@@ -1,0 +1,9 @@
+com.duckbuster.inappupdates.in-app-updates-pngs-0 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\build\generated\res\pngs\release
+com.duckbuster.inappupdates.in-app-updates-updated_navigation_xml-1 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\build\generated\updated_navigation_xml\release
+com.duckbuster.inappupdates.in-app-updates-mergeReleaseResources-2 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\build\intermediates\incremental\release\mergeReleaseResources\merged.dir
+com.duckbuster.inappupdates.in-app-updates-mergeReleaseResources-3 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\build\intermediates\incremental\release\mergeReleaseResources\stripped.dir
+com.duckbuster.inappupdates.in-app-updates-release-4 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\build\intermediates\merged_res\release\mergeReleaseResources
+com.duckbuster.inappupdates.in-app-updates-release-5 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\build\intermediates\packaged_res\release\packageReleaseResources
+com.duckbuster.inappupdates.in-app-updates-main-6 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\src\main\res
+com.duckbuster.inappupdates.in-app-updates-release-7 C:\Dev\duck_buster\mobile\modules\in-app-updates\android\src\release\res
+gradleHome-0 C:\Users\User\.gradle
