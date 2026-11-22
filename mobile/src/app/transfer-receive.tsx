@@ -106,7 +106,7 @@ export default function TransferReceive() {
             <Pixel size={11} color={C.marsh}>GOT IT!</Pixel>
             <Body>{describe(incoming!)}</Body>
             <Body muted>
-              Merge adds what's new and keeps what's here. Replace makes this phone an exact copy of the other one.
+              Merge adds what's new and keeps what's here (same names are the same hunter; same-day hunts combine). Replace makes this phone an exact copy of the other one.
             </Body>
             <Btn label="MERGE" onPress={() => apply('merge')} disabled={busy} />
             <Btn label="REPLACE" kind="secondary" onPress={() => apply('replace')} disabled={busy} />

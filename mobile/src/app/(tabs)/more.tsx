@@ -65,7 +65,7 @@ export default function More() {
     const choice = await ask({
       icon: '📦',
       title: 'Restore this backup?',
-      message: `${describe(snap.data)}. Merge adds what's new and keeps what's here; Replace makes this phone an exact copy of the backup.`,
+      message: `${describe(snap.data)}. Merge adds what's new and keeps what's here (same names are the same hunter; same-day hunts combine). Replace makes this phone an exact copy of the backup.`,
       buttons: [
         { label: 'Merge', value: 'merge', kind: 'primary' },
         { label: 'Replace everything', value: 'replace', kind: 'danger' },

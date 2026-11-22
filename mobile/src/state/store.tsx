@@ -5,6 +5,7 @@ import * as db from '@/db/database';
 import { BADGE_BY_ID, earnedBadges, type Badge } from '@/domain/badges';
 import { hunterStats } from '@/domain/stats';
 import { titleFor, xpFor } from '@/domain/titles';
+import { prepareMerge } from '@/domain/merge';
 import type { SlugfestCard } from '@/domain/slugfest';
 import { registerCustomSpecies } from '@/domain/species';
 import { EMPTY_DATA, type CustomSpecies, type Data, type GameScore, type Harvest, type Hunter, type Party } from '@/domain/types';
@@ -318,14 +319,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const importData = useCallback(
     async (incoming: Data, mode: 'merge' | 'replace') => {
-      await db.importRows(incoming, mode);
+      // Merge lines a backup from another phone up with this one (same names, same days).
+      await db.importRows(mode === 'merge' ? prepareMerge(data, incoming) : incoming, mode);
       const loaded = await db.loadAll();
       // Imported history shouldn't set off a parade of badge pop-ups.
       const pairs = loaded.data.hunters.flatMap((h) => earnedBadges(loaded.data, h.id).map((badgeId) => ({ hunterId: h.id, badgeId })));
       await db.markCelebrated(pairs);
       await reload();
     },
-    [reload],
+    [data, reload],
   );
 
   const value = useMemo<Store>(
