@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, Switch, Text, View } from 'react-native';
 
 import { setMuted } from '@/audio/sfx';
 import { exportBackup, pickBackup } from '@/db/backup';
@@ -10,6 +10,8 @@ import { useStore } from '@/state/store';
 import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Card, Pixel, Screen, Section } from '@/ui/kit';
 import { C, MEDALS } from '@/ui/theme';
+
+const PRIVACY_URL = 'https://apis7.github.io/apsinthion-apps/duck-buster/privacy/';
 
 function Row({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
   return (
@@ -32,7 +34,18 @@ export default function More() {
     setBusy(true);
     try {
       await exportBackup(data);
-      await setSetting('lastBackupAt', String(Date.now()));
+      // Android's share sheet doesn't say whether it was cancelled, so ask before
+      // recording a backup — the Jan–Jun reminder goes quiet once one is recorded.
+      const saved = await ask({
+        icon: '💾',
+        title: 'Saved it?',
+        message: 'Did the backup file make it somewhere safe (Drive, email, Files)?',
+        buttons: [
+          { label: 'Yes, saved', value: 'yes', kind: 'primary' },
+          { label: 'Not yet', value: 'no' },
+        ],
+      });
+      if (saved === 'yes') await setSetting('lastBackupAt', String(Date.now()));
     } catch (e) {
       await ask({ icon: '⚠️', title: 'Backup failed', message: e instanceof Error ? e.message : String(e), buttons: [{ label: 'OK', value: 'ok' }] });
     } finally {
@@ -137,14 +150,18 @@ export default function More() {
       <Section title="Privacy">
         <Card style={{ gap: 8 }}>
           <Body>
-            Your hunts live only on this phone. No account, no cloud, no tracking. The only thing that talks to the internet
-            is the ads. Moving to a new phone? Use Send to a phone (screen to camera), or a backup file.
+            Your hunts live only on this phone: no account, no cloud. The only thing that talks to the internet is the ads
+            (Google AdMob), which use your phone's advertising ID — your hunting log is never shared. Moving to a new phone?
+            Use Send to a phone (screen to camera), or a backup file.
           </Body>
+          <Pressable onPress={() => Linking.openURL(PRIVACY_URL)} hitSlop={8}>
+            <Body style={{ color: C.orange, fontWeight: '800' }}>Privacy policy ›</Body>
+          </Pressable>
         </Card>
       </Section>
 
       <Body muted style={{ textAlign: 'center', fontSize: 12 }}>
-        {`Duck Buster ${Constants.expoConfig?.version ?? ''} · Quiz photos and calls are public domain — credits in the quiz.`}
+        {`Duck Buster ${Constants.expoConfig?.version ?? ''} · Quiz photos and calls are public domain or Creative Commons — credits in the quiz.`}
       </Body>
     </Screen>
   );

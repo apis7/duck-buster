@@ -4,6 +4,7 @@ import { seasonOf } from './season';
 import { SPECIES_BY_ID } from './species';
 import { hunterStats, type HunterStats } from './stats';
 import type { Data } from './types';
+import { count } from './plural';
 
 /**
  * Season Awards Night: every hunter who went out this season is in the running.
@@ -35,7 +36,7 @@ export const AWARDS: AwardDef[] = [
     metric: (s) => s.biggestDay?.birds ?? 0, describe: (v) => `${n(v, 'bird', 'birds')} in one hunt` },
   { id: 'sharpshooter', title: 'Sharpshooter', icon: '🎯', min: 0.01,
     metric: (s) => (s.hunts >= 2 ? Math.round((s.birds / s.hunts) * 10) / 10 : null),
-    describe: (v) => `${v} birds per hunt` },
+    describe: (v) => `${count(v, 'bird')} per hunt` },
   { id: 'iron_man', title: 'Iron Man', icon: '🦾', min: 2,
     metric: (s) => s.hunts, describe: (v) => n(v, 'hunt', 'hunts') },
   { id: 'rookie', title: 'Rookie of the Year', icon: '🐣', min: 1,
@@ -50,7 +51,7 @@ export const AWARDS: AwardDef[] = [
   { id: 'goose_whisperer', title: 'Goose Whisperer', icon: '🪿', min: 1,
     metric: (s) => s.geese, describe: (v) => n(v, 'goose', 'geese') },
   { id: 'arcade_champ', title: 'Arcade Champion', icon: '🕹️', min: 1,
-    metric: (_s, ctx) => (ctx.game.games ? ctx.game.total : null), describe: (v) => `${v} points in the duck shoot this season` },
+    metric: (_s, ctx) => (ctx.game.games ? ctx.game.total : null), describe: (v) => `${count(v, 'point')} in the duck shoot this season` },
   { id: 'badge_collector', title: 'Badge Collector', icon: '🎖️', min: 1,
     metric: (_s, ctx) => ctx.badges, describe: (v) => `${v} ${v === 1 ? 'badge' : 'badges'} earned this season` },
   { id: 'freezer_filler', title: 'Freezer Filler', icon: '🧊', min: 1,

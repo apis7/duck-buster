@@ -12,6 +12,7 @@ import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Card, Chip, Explainer, Pixel, Section } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C, MEDALS } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /**
  * Duck Season Slugfest: pick a season, add other crews' season cards (QR or file),
@@ -60,7 +61,7 @@ export default function Slugfest() {
       if (card.crewId === crew.id) throw new Error('That’s your own season card.');
       await addSlugCard(card);
       setSeason(card.season);
-      await ask({ icon: '🥊', title: `${card.crewName} is in`, message: `${seasonLabel(card.season)} · ${card.hunters.length} hunters · ${card.final ? 'final' : `as of ${prettyDate(card.asOf)}`}`, buttons: [{ label: 'Bring it', value: 'ok' }] });
+      await ask({ icon: '🥊', title: `${card.crewName} is in`, message: `${seasonLabel(card.season)} · ${count(card.hunters.length, 'hunter')} · ${card.final ? 'final' : `as of ${prettyDate(card.asOf)}`}`, buttons: [{ label: 'Bring it', value: 'ok' }] });
     } catch (e) {
       await fail(e);
     }
@@ -149,7 +150,7 @@ export default function Slugfest() {
           ? 'First, name your crew.'
           : compared.length < 2
             ? `${seasonLabel(season)}: only ${compared.length ? 'your crew is' : 'nobody is'} in so far. Add another crew's season below (scan their QR or open their file) to compare.`
-            : `${seasonLabel(season)}: comparing ${compared.map((c) => c.crewName + (c.crewId === crew.id ? ' (you)' : '')).join(' vs ')} — ${board.length} hunters on one board.` +
+            : `${seasonLabel(season)}: comparing ${compared.map((c) => c.crewName + (c.crewId === crew.id ? ' (you)' : '')).join(' vs ')} — ${count(board.length, 'hunter')} on one board.` +
               (others.some((c) => unticked.has(c.crewId))
                 ? ` Left out: ${others.filter((c) => unticked.has(c.crewId)).map((c) => c.crewName).join(', ')}.`
                 : '') +
@@ -161,7 +162,7 @@ export default function Slugfest() {
           <Card style={{ gap: 10 }}>
             <Body>
               {mine.hunters.length
-                ? `${crew.name}: ${mine.hunters.length} hunters, ${mine.hunters.reduce((n, h) => n + h.birds, 0)} birds — ${mine.final ? 'final' : `as of today`}.`
+                ? `${crew.name}: ${count(mine.hunters.length, 'hunter')}, ${count(mine.hunters.reduce((n, h) => n + h.birds, 0), 'bird')} — ${mine.final ? 'final' : `as of today`}.`
                 : `No hunts logged for ${seasonLabel(season)} yet.`}
             </Body>
             <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -185,7 +186,7 @@ export default function Slugfest() {
                 <Pressable onPress={() => toggle(c.crewId)} style={{ flex: 1 }}>
                   <Body style={{ fontWeight: '800' }}>{c.crewName}</Body>
                   <Body muted style={{ fontSize: 12 }}>
-                    {`${c.hunters.length} hunters · ${c.final ? 'FINAL' : `as of ${prettyDate(c.asOf)}`}`}
+                    {`${count(c.hunters.length, 'hunter')} · ${c.final ? 'FINAL' : `as of ${prettyDate(c.asOf)}`}`}
                   </Body>
                 </Pressable>
                 <Pressable onPress={() => remove(c)} hitSlop={10}>
@@ -216,7 +217,7 @@ export default function Slugfest() {
                     <Text style={styles.boardName}>{r.name}</Text>
                     <Text style={styles.boardCrew}>{`${r.crewName}${r.final ? '' : ` · as of ${prettyDate(r.asOf)}`}`}</Text>
                   </View>
-                  <Text style={styles.boardStat}>{`${r.birds} birds${r.bands ? ` · ${r.bands}💍` : ''}`}</Text>
+                  <Text style={styles.boardStat}>{`${count(r.birds, 'bird')}${r.bands ? ` · ${r.bands}💍` : ''}`}</Text>
                   <Pixel size={11} color={C.white} style={{ width: 54, textAlign: 'right' }}>{`${r.points}`}</Pixel>
                 </View>
               ))}

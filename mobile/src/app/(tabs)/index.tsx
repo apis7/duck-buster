@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { newlyArchived, shouldRemindBackup } from '@/domain/archive';
-import { currentSeason, prettyDate, seasonLabel, seasonOf, todayISO } from '@/domain/season';
+import { currentSeason, prettyDate, seasonLabel, seasonOf, shiftDate, todayISO } from '@/domain/season';
 import { huntWinner } from '@/domain/winner';
 import { SPECIES_BY_ID } from '@/domain/species';
 import { useStore } from '@/state/store';
@@ -58,6 +58,11 @@ export default function Hunts() {
 
   // One hunt per day: if today's is already logged, the button opens it.
   const today = todayISO();
+  const firstFreeDayBefore = (d: string) => {
+    let x = shiftDate(d, -1);
+    while (data.hunts.some((h) => h.date === x)) x = shiftDate(x, -1);
+    return x;
+  };
   const todays = data.hunts.find((h) => h.date === today);
   // Today's winner hasn't played their round yet (it expires at midnight).
   const winner = todays ? huntWinner(data, todays.id) : null;
@@ -113,6 +118,10 @@ export default function Hunts() {
         label={todays ? "OPEN TODAY'S HUNT" : '+ LOG A HUNT'}
         onPress={() => router.push(todays ? { pathname: '/hunt', params: { id: todays.id } } : '/hunt')}
       />
+      {todays ? (
+        // Today's done; this is for the hunt someone forgot to log.
+        <Btn label="+ LOG AN EARLIER DAY" kind="secondary" small onPress={() => router.push({ pathname: '/hunt', params: { date: firstFreeDayBefore(today) } })} />
+      ) : null}
 
       <Section title="Recent hunts">
         {hunts.length === 0 ? <Body muted>No hunts yet. Go get some!</Body> : null}

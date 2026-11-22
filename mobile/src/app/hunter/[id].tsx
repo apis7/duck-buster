@@ -15,6 +15,7 @@ import { Bar, Body, Btn, Card, Chip, Pixel, Section } from '@/ui/kit';
 import { PixelBird } from '@/ui/PixelBird';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 export default function HunterProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -94,7 +95,7 @@ export default function HunterProfile() {
         </Pressable>
       ) : null}
       {s.biggestDay ? (
-        <Body muted>{`Biggest day: ${s.biggestDay.birds} birds on ${prettyDate(s.biggestDay.hunt.date)}`}</Body>
+        <Body muted>{`Biggest day: ${count(s.biggestDay.birds, 'bird')} on ${prettyDate(s.biggestDay.hunt.date)}`}</Body>
       ) : null}
 
       <Section title={`Badges ${badges.length + leads.length}`}>

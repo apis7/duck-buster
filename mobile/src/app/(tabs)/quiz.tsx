@@ -113,9 +113,16 @@ export default function Quiz() {
     );
   }
 
+  function next() {
+    setPicked(null);
+    setI((n) => n + 1);
+  }
+
   return (
     <Screen title="DUCK ID QUIZ" right={<Pixel size={9} color={C.muted}>{`${playerName.toUpperCase()} · ${i + 1}/${round.length} · ${score}✓`}</Pixel>}>
       <Prompt q={q} answered={!!picked} right={picked === q.speciesId} />
+      {/* Right under the prompt: on a tall list of seven choices, a button below them sits under the tab bar. */}
+      {picked ? <Btn label={i + 1 < round.length ? 'NEXT ›' : 'SEE SCORE ›'} onPress={next} /> : null}
       <View style={{ gap: 8 }}>
         {q.choices.map((id) => {
           const right = picked && id === q.speciesId;
@@ -123,7 +130,7 @@ export default function Quiz() {
           return (
             <Pressable
               key={id}
-              onPress={() => choose(id)}
+              onPress={() => (picked ? next() : choose(id))}
               style={[styles.choice, right && { backgroundColor: C.marsh, borderColor: C.marsh }, wrong && { backgroundColor: C.red, borderColor: C.red }]}
             >
               <Text style={[styles.choiceTxt, (right || wrong) && { color: C.white }]}>{SPECIES_BY_ID[id]?.name}</Text>
@@ -131,15 +138,6 @@ export default function Quiz() {
           );
         })}
       </View>
-      {picked ? (
-        <Btn
-          label={i + 1 < round.length ? 'NEXT' : 'SEE SCORE'}
-          onPress={() => {
-            setPicked(null);
-            setI((n) => n + 1);
-          }}
-        />
-      ) : null}
     </Screen>
   );
 }

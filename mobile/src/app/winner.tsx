@@ -11,6 +11,7 @@ import { huntStandings, huntWinner } from '@/domain/winner';
 import { useStore } from '@/state/store';
 import { Btn, Pixel } from '@/ui/kit';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /**
  * After a hunt is finalized: who won, and — if it's today's hunt and the round
@@ -44,7 +45,7 @@ export default function Winner() {
           <Pixel size={22} color={C.gold} style={{ textAlign: 'center', lineHeight: 34 }}>{name.toUpperCase()}</Pixel>
           <Pixel size={11} color={C.white} style={{ textAlign: 'center', lineHeight: 20 }}>{'IS THE WINNER OF\nTODAY’S HUNT!'}</Pixel>
           <Text style={{ color: C.navySoft, fontSize: 15 }}>
-            {winner.bands ? `${winner.bands} ${winner.bands === 1 ? 'band' : 'bands'} — an automatic win` : `${winner.points} points · ${winner.birds} birds`}
+            {winner.bands ? `${winner.bands} ${winner.bands === 1 ? 'band' : 'bands'} — an automatic win` : `${count(winner.points, 'point')} · ${count(winner.birds, 'bird')}`}
           </Text>
         </Animated.View>
       ) : (

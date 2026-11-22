@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-na
 
 import { AdBanner } from '@/ads/ads';
 import { awardsOpen, hasPastSeasons } from '@/domain/archive';
-import { currentSeason, seasonLabel } from '@/domain/season';
+import { currentSeason, seasonLabel, seasonOf } from '@/domain/season';
 import { gameLeaders } from '@/domain/gameStats';
 import { quizLeaders } from '@/domain/quiz';
 import { formatMeat } from '@/domain/meat';
@@ -14,6 +14,7 @@ import { Bar, Body, Btn, Card, Chip, Dot, Explainer, Pixel, Screen, Section } fr
 import { useDialog } from '@/ui/Dialog';
 import { RaceChart } from '@/ui/RaceChart';
 import { C, MEDALS } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 export default function Board() {
   const { data, titleOf, settings, setSetting } = useStore();
@@ -145,7 +146,7 @@ export default function Board() {
                   <Bar value={r.s.birds} max={partyMax} color={r.p.color} />
                 </View>
                 <Body muted style={{ fontSize: 12, paddingLeft: 34 }}>
-                  {`${r.members} hunters · ${r.s.hunts} hunts · ${r.s.species.size} species · ${formatMeat(r.s.meatOz)}`}
+                  {`${count(r.members, 'hunter')} · ${count(r.s.hunts, 'hunt')} · ${r.s.species.size} species · ${formatMeat(r.s.meatOz)}`}
                 </Body>
               </Pressable>
             ))}
@@ -159,27 +160,33 @@ export default function Board() {
             <Pixel size={10}>{`${totals.birds} BIRDS`}</Pixel>
           </View>
           {rows.map((r, i) => (
-            <View key={r.h.id} style={{ gap: 4 }}>
+            <Pressable key={r.h.id} onPress={() => router.push({ pathname: '/hunter/[id]', params: { id: r.h.id } })} style={{ gap: 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Pixel size={11} color={MEDALS[i] && r.s.birds > 0 ? MEDALS[i] : C.muted} style={{ width: 26 }}>{`${i + 1}`}</Pixel>
                 <Dot color={r.h.color} />
-                <Body style={{ fontWeight: '800', flex: 1 }} >{r.h.name}</Body>
+                <Body style={{ fontWeight: '800', flex: 1 }}>{r.h.name}</Body>
                 <Pixel size={11}>{`${r.s.birds}`}</Pixel>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 34 }}>
                 <Bar value={r.s.birds} max={max} color={r.h.color} />
               </View>
               <Body muted style={{ fontSize: 12, paddingLeft: 34 }}>
-                {`${titleOf(r.h.id).name} · ${r.s.hunts} hunts · ${r.s.species.size} species · ${formatMeat(r.s.meatOz)}${r.s.banded ? ` · ${r.s.banded}💍` : ''}`}
+                {`${titleOf(r.h.id).name} · ${count(r.s.hunts, 'hunt')} · ${r.s.species.size} species · ${formatMeat(r.s.meatOz)}${r.s.banded ? ` · ${r.s.banded}💍` : ''}`}
               </Body>
-            </View>
+            </Pressable>
           ))}
         </Card>
         ) : null}
 
         {season != null && totals.birds > 0 ? (
           <Section title="The race">
-            <RaceChart width={width - 32} start={raceStart(season, race)} series={race} />
+            {data.hunts.filter((h) => seasonOf(h.date) === season).length >= 2 ? (
+              <RaceChart width={width - 32} start={raceStart(season, race)} series={race} />
+            ) : (
+              <Card>
+                <Body muted style={{ fontSize: 13 }}>The race chart starts after your second hunt.</Body>
+              </Card>
+            )}
           </Section>
         ) : null}
 

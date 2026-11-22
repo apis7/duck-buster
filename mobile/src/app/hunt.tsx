@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeInDown, SlideInRight, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { play } from '@/audio/sfx';
 import { isLockedDate } from '@/domain/archive';
+import { nameTaken } from '@/domain/names';
 import { searchSpecies } from '@/domain/search';
 import { prettyDate, shiftDate, todayISO } from '@/domain/season';
 import { pickSkunkLine, SKUNK_LINES } from '@/domain/skunk';
@@ -20,6 +21,7 @@ import { useDialog } from '@/ui/Dialog';
 import { Btn, Chip, Explainer, Pixel, Stepper } from '@/ui/kit';
 import { SkunkSplash } from '@/ui/SkunkSplash';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /**
  * Logging a hunt, one hunter at a time, one question at a time:
@@ -116,7 +118,7 @@ function StepCard({ n, title, children }: { n: number; title: string; children: 
 }
 
 export default function LogHunt() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, date: dateParam } = useLocalSearchParams<{ id?: string; date?: string }>();
   const { data, usage, saveHunt, deleteHunt, addHunter, settings, setSetting } = useStore();
   const ask = useDialog();
   const insets = useSafeAreaInsets();
@@ -131,7 +133,7 @@ export default function LogHunt() {
     return p.length ? p : data.hunters.map((h) => h.id);
   }, [data]);
 
-  const [date, setDate] = useState(existing?.date ?? todayISO());
+  const [date, setDate] = useState(existing?.date ?? (dateParam && dateParam <= todayISO() ? dateParam : todayISO()));
   const [party, setParty] = useState<string[]>(() =>
     existing ? data.huntHunters.filter((p) => p.huntId === existing.id).map((p) => p.hunterId) : lastParty,
   );
@@ -153,6 +155,27 @@ export default function LogHunt() {
   const [splash, setSplash] = useState<{ hunterId: string; line: number } | null>(null);
   // Re-tapping SKUNKED for the same hunter shows the same zinger — no cycling for laughs.
   const zingerFor = useRef(new Map<string, number>());
+
+  // Leaving with unsaved changes asks first — a half-logged hunt is easy to lose to a stray BACK.
+  const [initial] = useState(() => JSON.stringify({ date, party, entries }));
+  const [leaving, setLeaving] = useState(false);
+  // Saving and deleting navigate away through allowLeave(), so they never hit the question.
+  const dirty = !leaving && JSON.stringify({ date, party, entries }) !== initial;
+  const allowLeave = usePreventRemove(dirty, ({ repeat }) => {
+    ask({
+      icon: '🦆',
+      title: 'Leave without saving?',
+      message: 'The birds you entered for this hunt will be lost.',
+      buttons: [
+        { label: 'Keep logging', value: 'stay', kind: 'primary' },
+        { label: 'Leave', value: 'leave', kind: 'danger' },
+      ],
+    }).then((v) => {
+      if (v !== 'leave') return;
+      setLeaving(true);
+      repeat();
+    });
+  });
 
   const huntDays = useMemo(() => new Set(data.hunts.filter((h) => h.id !== existing?.id).map((h) => h.date)), [data.hunts, existing]);
   const hunterById = new Map(data.hunters.map((h) => [h.id, h]));
@@ -306,7 +329,7 @@ export default function LogHunt() {
       const first = hunterById.get(pending[0])?.name ?? '';
       const go = await ask({
         icon: '📝',
-        title: pending.length === 1 ? 'One hunter to finish' : `${pending.length} hunters to finish`,
+        title: pending.length === 1 ? 'One hunter to finish' : `${count(pending.length, 'hunter')} to finish`,
         message: whatsLeft().join('\n'),
         buttons: [
           { label: `Go to ${first}`, value: 'go', kind: 'primary' },
@@ -332,6 +355,7 @@ export default function LogHunt() {
 
   /** On to the winner: they may get today's round of the duck shoot. */
   function finish() {
+    allowLeave();
     if (savedId.current) router.replace({ pathname: '/winner', params: { huntId: savedId.current } });
     else router.back();
   }
@@ -349,6 +373,7 @@ export default function LogHunt() {
     });
     if (yes !== 'yes') return;
     await deleteHunt(existing.id);
+    allowLeave();
     router.back();
   }
 
@@ -360,6 +385,17 @@ export default function LogHunt() {
     const n = pendingName.current?.trim();
     pendingName.current = null;
     if (!n) {
+      setNewName(null);
+      return;
+    }
+    // Typing an existing hunter's name just brings that hunter along.
+    const existing = nameTaken(data.hunters, n);
+    if (existing) {
+      if (!party.includes(existing.id)) {
+        setParty((p) => [...p, existing.id]);
+        patch(existing.id, newEntry());
+      }
+      setActive(existing.id);
       setNewName(null);
       return;
     }

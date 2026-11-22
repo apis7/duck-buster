@@ -14,6 +14,7 @@ import { Body, Btn, Card, Dot, Pixel, Section } from '@/ui/kit';
 import { SeasonBadges } from '@/ui/SeasonBadges';
 import { SubScreen } from '@/ui/SubScreen';
 import { C, MEDALS } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /** One season, as it ended: final board, parties, duck shoot, awards and the badges earned. */
 export default function SeasonArchive() {
@@ -64,7 +65,7 @@ export default function SeasonArchive() {
               <Pixel size={11} color={MEDALS[i] ?? C.muted} style={{ width: 24 }}>{`${i + 1}`}</Pixel>
               <Dot color={r.h.color} />
               <Body style={{ flex: 1, fontWeight: '800' }}>{r.h.name}</Body>
-              <Body muted style={{ fontSize: 12 }}>{`${r.s.hunts} hunts · ${formatMeat(r.s.meatOz)}`}</Body>
+              <Body muted style={{ fontSize: 12 }}>{`${count(r.s.hunts, 'hunt')} · ${formatMeat(r.s.meatOz)}`}</Body>
               <Pixel size={11}>{`${r.s.birds}`}</Pixel>
             </View>
           ))}

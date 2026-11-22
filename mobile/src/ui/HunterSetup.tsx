@@ -1,8 +1,10 @@
 import { useRef, useState, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { firstDuplicate } from '@/domain/names';
 import type { Party } from '@/domain/types';
 import { useStore } from '@/state/store';
+import { useDialog } from '@/ui/Dialog';
 
 import { Body, Btn, Card, Chip, Dot, Pixel } from './kit';
 import { C } from './theme';
@@ -16,6 +18,7 @@ type Row = { key: number; name: string; partyId: string | null };
  */
 export function HunterSetup({ onDone, firstRun }: { onDone: () => void; firstRun?: boolean }) {
   const { data, addHunters, draftParty } = useStore();
+  const ask = useDialog();
   const [rows, setRows] = useState<Row[]>([{ key: 1, name: '', partyId: null }]);
   const [newParties, setNewParties] = useState<Party[]>([]);
   const [partyName, setPartyName] = useState('');
@@ -61,6 +64,11 @@ export function HunterSetup({ onDone, firstRun }: { onDone: () => void; firstRun
 
   async function save() {
     if (!named.length) return;
+    const dup = firstDuplicate(data.hunters, named.map((r) => r.name));
+    if (dup) {
+      await ask({ icon: '👯', title: `Two hunters named ${dup}`, message: 'Give each hunter their own name (a last initial works) so the Bragging Board can tell them apart.', buttons: [{ label: 'OK', value: 'ok', kind: 'primary' }] });
+      return;
+    }
     setSaving(true);
     try {
       await addHunters(named.map((r) => ({ name: r.name, partyId: r.partyId })), newParties);

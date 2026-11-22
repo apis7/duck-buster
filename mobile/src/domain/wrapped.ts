@@ -3,6 +3,7 @@ import { prettyDate, seasonLabel } from './season';
 import { SPECIES, SPECIES_BY_ID } from './species';
 import { hunterDays, hunterStats, statsFromDays } from './stats';
 import type { Data } from './types';
+import { count } from './plural';
 
 /** Season Wrapped: a stack of big-number cards for one hunter's season. */
 
@@ -89,7 +90,7 @@ export function seasonWrapped(data: Data, hunterId: string, season: number, titl
   }
   const bestMonth = Array.from(byMonth.entries()).sort((a, b) => b[1] - a[1])[0];
   if (bestMonth && bestMonth[1] > 0) {
-    cards.push({ id: 'month', kicker: 'Hottest month', big: MONTHS[bestMonth[0]], caption: `${bestMonth[1]} birds. The flight came through.` });
+    cards.push({ id: 'month', kicker: 'Hottest month', big: MONTHS[bestMonth[0]], caption: `${count(bestMonth[1], 'bird')}. The flight came through.` });
   }
 
   const field = data.hunters

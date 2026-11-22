@@ -14,6 +14,7 @@ import { Body, Btn, Pixel } from '@/ui/kit';
 import { SeasonBadges } from '@/ui/SeasonBadges';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /** Awards Night: envelopes opened one at a time, serious awards first, then the roast. */
 export default function Awards() {
@@ -32,7 +33,7 @@ export default function Awards() {
       .filter((h): h is NonNullable<typeof h> => !!h)
       .map((h) => ({
         key: `title-${h.id}`, icon: HONORS[h.id].icon, title: HONORS[h.id].title, winners: h.hunterIds,
-        text: h.id === 'coots' ? `${h.value} coots. The ditch chickens fear you.` : `${HONORS[h.id].why} · ${h.value} points`, kind: 'title',
+        text: h.id === 'coots' ? `${h.value} coots. The ditch chickens fear you.` : `${HONORS[h.id].why} · ${count(h.value, 'point')}`, kind: 'title',
       }));
     return [...awards, ...titles];
   }, [data, season, badges]);

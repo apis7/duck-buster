@@ -19,6 +19,7 @@ import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /**
  * Slugfest by QR. With ?season=… this phone shows its season card as a loop of
@@ -89,7 +90,7 @@ function Receive() {
         await ask({
           icon: '🥊',
           title: `${card.crewName} is in`,
-          message: `${seasonLabel(card.season)} · ${card.hunters.length} hunters · ${card.final ? 'final' : `as of ${prettyDate(card.asOf)}`}`,
+          message: `${seasonLabel(card.season)} · ${count(card.hunters.length, 'hunter')} · ${card.final ? 'final' : `as of ${prettyDate(card.asOf)}`}`,
           buttons: [{ label: 'Bring it', value: 'ok' }],
         });
         router.back();

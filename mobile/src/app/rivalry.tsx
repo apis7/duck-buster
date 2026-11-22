@@ -12,6 +12,7 @@ import { useStore } from '@/state/store';
 import { Body, Card, Chip, Explainer, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /** Tale of the tape between two hunters. */
 export default function Rivalry() {
@@ -20,7 +21,7 @@ export default function Rivalry() {
   const [parties, setParties] = useState(params.mode === 'parties');
   // Either side is a hunter or a party; both use the same tale of the tape.
   const sides = parties
-    ? data.parties.map((p) => ({ id: p.id, name: p.name, color: p.color, members: partyMembers(data, p.id), sub: `${partyMembers(data, p.id).length} hunters` }))
+    ? data.parties.map((p) => ({ id: p.id, name: p.name, color: p.color, members: partyMembers(data, p.id), sub: `${count(partyMembers(data, p.id).length, 'hunter')}` }))
     : data.hunters.map((h) => ({ id: h.id, name: h.name, color: h.color, members: [h.id], sub: titleOf(h.id).name }));
   const [aId, setA] = useState<string | undefined>(undefined);
   const [bId, setB] = useState<string | undefined>(undefined);

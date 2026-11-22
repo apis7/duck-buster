@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 
 import { hasPastSeasons } from '@/domain/archive';
+import { nameTaken } from '@/domain/names';
 import { hunterStats } from '@/domain/stats';
 import { useStore } from '@/state/store';
 import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Card, Chip, Dot, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 const inputStyle = { borderWidth: 2, borderColor: C.navy, padding: 10, fontSize: 16, backgroundColor: C.white, flex: 1 } as const;
 
@@ -23,6 +25,11 @@ export default function Hunters() {
 
   const add = async () => {
     if (!name.trim()) return;
+    const clash = nameTaken(data.hunters, name);
+    if (clash) {
+      await ask({ icon: '👯', title: `There's already a ${clash.name}`, message: 'Give each hunter their own name (a last initial works) so the Bragging Board can tell them apart.', buttons: [{ label: 'OK', value: 'ok', kind: 'primary' }] });
+      return;
+    }
     await addHunter(name);
     setName('');
   };
@@ -62,6 +69,11 @@ export default function Hunters() {
                   label="OK"
                   small
                   onPress={async () => {
+                    const clash = nameTaken(data.hunters, draft, h.id);
+                    if (clash) {
+                      await ask({ icon: '👯', title: `There's already a ${clash.name}`, message: 'Give each hunter their own name (a last initial works) so the Bragging Board can tell them apart.', buttons: [{ label: 'OK', value: 'ok', kind: 'primary' }] });
+                      return;
+                    }
                     if (draft.trim()) await renameHunter(h.id, draft);
                     setEditing(null);
                   }}
@@ -73,7 +85,7 @@ export default function Hunters() {
                 <View style={{ flex: 1 }}>
                   <Pixel size={11}>{h.name.toUpperCase()}</Pixel>
                   <Body muted style={{ fontSize: 13 }}>
-                    {`${titleOf(h.id).name} · ${s.birds} birds${history ? ' all time' : ''}${party ? ` · ${party.name}` : ''}`}
+                    {`${titleOf(h.id).name} · ${count(s.birds, 'bird')}${history ? ' all time' : ''}${party ? ` · ${party.name}` : ''}`}
                   </Body>
                 </View>
               </Pressable>

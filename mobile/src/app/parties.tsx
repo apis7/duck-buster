@@ -9,6 +9,7 @@ import { useDialog } from '@/ui/Dialog';
 import { Body, Btn, Card, Chip, Dot, Explainer, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /** Parties (teams): create, rename, recolor, choose members. */
 export default function Parties() {
@@ -65,7 +66,7 @@ export default function Parties() {
               <View style={{ flex: 1 }}>
                 <Pixel size={11}>{p.name.toUpperCase()}</Pixel>
                 <Body muted style={{ fontSize: 13 }}>
-                  {`${members.length} ${members.length === 1 ? 'hunter' : 'hunters'} · ${s.birds} birds · ${formatMeat(s.meatOz)}`}
+                  {`${members.length} ${members.length === 1 ? 'hunter' : 'hunters'} · ${count(s.birds, 'bird')} · ${formatMeat(s.meatOz)}`}
                 </Body>
               </View>
               <Pixel size={10} color={C.muted}>{'>'}</Pixel>

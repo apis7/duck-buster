@@ -2,6 +2,7 @@ import { strFromU8, strToU8 } from 'fflate';
 
 import { parseCard } from '@/domain/slugfest';
 import type { Data, Harvest } from '@/domain/types';
+import { count } from '@/domain/plural';
 
 /**
  * What a phone-to-phone transfer carries: every hunter, hunt and bird. Settings,
@@ -66,5 +67,5 @@ export function snapshotFromBytes(bytes: Uint8Array): Snapshot {
 export function describe(data: Data): string {
   const birds = data.harvests.reduce((n, r) => n + r.count, 0);
   const parties = data.parties.length ? ` · ${data.parties.length} parties` : '';
-  return `${data.hunters.length} hunters${parties} · ${data.hunts.length} hunts · ${birds} birds`;
+  return `${count(data.hunters.length, 'hunter')}${parties} · ${count(data.hunts.length, 'hunt')} · ${count(birds, 'bird')}`;
 }

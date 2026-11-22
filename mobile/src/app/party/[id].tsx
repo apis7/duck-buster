@@ -11,6 +11,7 @@ import { useStore } from '@/state/store';
 import { Bar, Body, Btn, Card, Chip, Dot, Pixel, Section } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /** A party's numbers, laid out like a hunter's profile, with its members ranked inside. */
 export default function PartyProfile() {
@@ -56,7 +57,7 @@ export default function PartyProfile() {
         {stat('SKUNKS', s.skunks)}
       </Card>
       <Body>{`🧊 Freezer: ${formatMeat(s.meatOz)} of meat (estimate)`}</Body>
-      {s.biggestDay ? <Body muted>{`Biggest day: ${s.biggestDay.birds} birds on ${prettyDate(s.biggestDay.hunt.date)}`}</Body> : null}
+      {s.biggestDay ? <Body muted>{`Biggest day: ${count(s.biggestDay.birds, 'bird')} on ${prettyDate(s.biggestDay.hunt.date)}`}</Body> : null}
 
       <Section title="Members">
         <Card style={{ gap: 10 }}>

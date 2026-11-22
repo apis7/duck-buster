@@ -8,6 +8,7 @@ import { useStore } from '@/state/store';
 import { Body, Card, Pixel } from '@/ui/kit';
 import { SubScreen } from '@/ui/SubScreen';
 import { C } from '@/ui/theme';
+import { count } from '@/domain/plural';
 
 /** Every finished season, newest first. Each opens its frozen final board. */
 export default function Seasons() {
@@ -31,7 +32,7 @@ export default function Seasons() {
               <Pixel size={13}>{seasonLabel(s)}</Pixel>
               <Pixel size={10} color={C.muted}>{'>'}</Pixel>
             </View>
-            <Body muted style={{ fontSize: 13 }}>{`${hunts} hunts · ${total} birds`}</Body>
+            <Body muted style={{ fontSize: 13 }}>{`${count(hunts, 'hunt')} · ${count(total, 'bird')}`}</Body>
             {ranked[0] ? <Body>{`🏆 ${ranked[0].h.name} led with ${ranked[0].birds}`}</Body> : null}
           </Card>
         );
