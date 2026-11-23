@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Linking, Pressable, Switch, Text, View } from 'react-native';
 
 import { setMuted } from '@/audio/sfx';
+import { testCrash } from '@/crash/crash';
 import { exportBackup, pickBackup } from '@/db/backup';
 import { describe } from '@/transfer/snapshot';
 import { useStore } from '@/state/store';
@@ -159,6 +160,15 @@ export default function More() {
           </Pressable>
         </Card>
       </Section>
+
+      {__DEV__ ? (
+        <Section title="Crash reporter (debug only)">
+          <Card style={{ gap: 10 }}>
+            <Btn label="THROW A JS ERROR" kind="secondary" onPress={testCrash.js} />
+            <Btn label="NATIVE CRASH" kind="danger" onPress={testCrash.native} />
+          </Card>
+        </Section>
+      ) : null}
 
       <Body muted style={{ textAlign: 'center', fontSize: 12 }}>
         {`Duck Buster ${Constants.expoConfig?.version ?? ''} · Quiz photos and calls are public domain or Creative Commons — credits in the quiz.`}

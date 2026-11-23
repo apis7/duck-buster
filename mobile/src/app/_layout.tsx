@@ -7,11 +7,14 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { startAds } from '@/ads/ads';
+import { startCrashReporting, wrapRoot } from '@/crash/crash';
 import { initAudio, setMuted } from '@/audio/sfx';
 import { StoreProvider, useStore } from '@/state/store';
 import { DialogProvider } from '@/ui/Dialog';
 import { C } from '@/ui/theme';
 
+// First, so a crash during start-up is caught too.
+startCrashReporting();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function Gate() {
@@ -36,7 +39,7 @@ function Gate() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => {
     initAudio();
     startAds();
@@ -54,3 +57,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default wrapRoot(RootLayout);
