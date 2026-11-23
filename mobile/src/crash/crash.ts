@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/react-native';
 
 /**
  * Crash reporting to our own portal (crash.apsinthion.llc) with the open-source
- * Sentry SDK — never sentry.io. Crashes only: no tracing, replay, feedback or
+ * Sentry SDK — never Sentry's own cloud. Crashes only: no tracing, replay, feedback or
  * screenshots, and no personal data. Setup: C:\Dev\DevTools\framework_crash_reporter\integrate.md.
  */
 
