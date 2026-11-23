@@ -2,4 +2,4 @@
 // go through crash-upload (scripts/release-android.sh), never Sentry's tooling.
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
-module.exports = getSentryExpoConfig(__dirname, { includeWebReplay: false, includeWebFeedback: false });
+module.exports = getSentryExpoConfig(__dirname);

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duck Buster",
     "slug": "duck-buster",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "duckbuster",
@@ -30,7 +30,7 @@
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "predictiveBackGestureEnabled": false,
-      "versionCode": 2
+      "versionCode": 3
     },
     "plugins": [
       "expo-router",
