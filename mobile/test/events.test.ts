@@ -214,6 +214,14 @@ describe('practice', () => {
     expect(xmas.banners).toEqual([]);
     expect(practiceDay('2026-11-03').names).toEqual([]);
     expect(practiceDay('2026-10-20').theme.id).toBe('fall');
+    expect(practiceDay('2027-02-02').fx).toEqual(NO_FX);
+  });
+
+  it('gets the eagle on the Fourth', () => {
+    const fourth = practiceDay('2027-07-04');
+    expect(fourth.fx).toEqual({ ...NO_FX, eagle: true });
+    expect(fourth.banners).toHaveLength(1);
+    expect(practiceDay('2027-07-06').fx).toEqual(NO_FX);
   });
 });
 

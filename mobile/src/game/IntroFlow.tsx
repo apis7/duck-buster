@@ -54,8 +54,8 @@ export function IntroFlow({
   const [taps, setTaps] = useState(0);
   const [marauder, setMarauder] = useState(false);
   // The marsh follows the calendar: fall colors, winter snow, Christmas trees and the partridge.
-  // Practice gets the plain season only (fall, winter…). Holidays, feast days, the
-  // partridge and the rest are saved for the winner's round.
+  // Practice gets the plain season only (fall, winter…), plus the Fourth's eagle. Holidays,
+  // feast days, the partridge and the rest are saved for the winner's round.
   const [day] = useState(() => (mode === 'hunt' ? gameDay(todayISO()) : practiceDay(todayISO())));
   const theme = day.theme;
   const justHeld = useRef(false);

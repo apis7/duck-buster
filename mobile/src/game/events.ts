@@ -93,10 +93,18 @@ export function moonAge(date: string): number {
 
 export const isFullMoon = (date: string) => Math.abs(moonAge(date) - 14.765) < 1.0;
 
-/** Practice: just the season's look — no holidays, feasts, weather or bonuses. */
+const isFourth = (m: number, d: number) => m === 7 && d >= 3 && d <= 5;
+
+/** Practice: just the season's look — no holidays, feasts, weather or bonuses — except the Fourth's eagle. */
 export function practiceDay(date: string): GameDay {
+  const [, m, d] = date.split('-').map(Number);
   const base = themeFor(date);
-  return { theme: base.id === 'christmas' ? THEMES.winter : base, fx: NO_FX, banners: [], names: [] };
+  const theme = base.id === 'christmas' ? THEMES.winter : base;
+  if (isFourth(m, d)) {
+    return { theme: { ...theme, fireworks: true }, fx: { ...NO_FX, eagle: true }, banners: ['HAPPY FOURTH!
+DON’T SHOOT THE EAGLE'], names: [] };
+  }
+  return { theme, fx: NO_FX, banners: [], names: [] };
 }
 
 export function gameDay(date: string, rng: () => number = Math.random): GameDay {
@@ -140,7 +148,7 @@ export function gameDay(date: string, rng: () => number = Math.random): GameDay 
     theme = THEMES.stpatrick;
     banners.push("ST. PATRICK'S DAY\nFIND THE LUCKY DUCK");
   }
-  if (m === 7 && d >= 3 && d <= 5) {
+  if (isFourth(m, d)) {
     fx.eagle = true;
     theme = { ...theme, fireworks: true };
     banners.push('HAPPY FOURTH!\nDON’T SHOOT THE EAGLE');
