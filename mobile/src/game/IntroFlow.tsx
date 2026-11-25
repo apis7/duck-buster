@@ -253,6 +253,11 @@ function Stats({ result }: { result: GameResult }) {
   const accuracy = result.shots ? Math.round((result.hits / result.shots) * 100) : 0;
   return (
     <>
+      {result.busted ? (
+        <Pixel size={10} color="#FF5A4E" style={{ textAlign: 'center', lineHeight: 16 }}>
+          {'YOU SHOT A BALD EAGLE!\nTHE GAME WARDEN ENDED YOUR ROUND'}
+        </Pixel>
+      ) : null}
       <Pixel size={9} color={C.navySoft}>{`HITS ${result.hits}  KO ${result.kos}  ACC ${accuracy}%`}</Pixel>
       {result.geese + result.swans + result.coots + result.bands > 0 ? (
         <Pixel size={9} color={C.navySoft}>

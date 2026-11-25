@@ -25,6 +25,8 @@ export type GameResult = {
   tally: Record<string, { ko: number; hits: number; pts: number }>;
   /** Holiday and seasonal bonuses (negative for penalties). Rows + bonuses = score. */
   bonuses: Record<string, number>;
+  /** Shot a bald eagle: the game warden ended the round. */
+  busted: boolean;
 };
 
 /** Touches that start within this radius of the gun pick it up. */
@@ -216,7 +218,7 @@ export function GameView({
           break;
         case 'eagle':
           play('siren');
-          showBanner('FEDERAL OFFENSE!\nTHE GAME WARDEN ENDED YOUR ROUND', '#FF5A4E', true, 2600);
+          showBanner('YOU SHOT A BALD EAGLE!\nFEDERAL OFFENSE — THE GAME WARDEN ENDED YOUR ROUND', '#FF5A4E', true, 3000);
           break;
         case 'penance':
           play('wrong');
@@ -298,7 +300,7 @@ export function GameView({
     }
     if (finished(s)) {
       live.set(false);
-      scheduleOnRN(finish, { score: s.score, shots: s.shots, hits: s.hits, kos: s.kos, geese: s.geese, swans: s.swans, coots: s.coots, bands: s.bands, downs: s.downs, tally: { ...s.tally }, bonuses: { ...s.bonuses } });
+      scheduleOnRN(finish, { score: s.score, shots: s.shots, hits: s.hits, kos: s.kos, geese: s.geese, swans: s.swans, coots: s.coots, bands: s.bands, downs: s.downs, tally: { ...s.tally }, bonuses: { ...s.bonuses }, busted: s.busted });
     }
   });
 

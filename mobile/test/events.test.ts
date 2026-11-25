@@ -75,6 +75,18 @@ describe('event birds', () => {
     expect(s.bullets).toHaveLength(0);
   });
 
+  it('a bald eagle is rare, likelier on the Fourth, and never in Marauder Mode', () => {
+    const rate = (fx: Partial<GameFx>, marauder = false) => {
+      let n = 0;
+      for (let i = 0; i < 4000; i++) if (newGame(400, 800, gameLayout(400, 800, 24, 48), marauder, { ...NO_FX, ...fx }).eagleAt < Infinity) n++;
+      return n / 4000;
+    };
+    expect(rate({})).toBeGreaterThan(0.02);
+    expect(rate({})).toBeLessThan(0.1);
+    expect(rate({ eagle: true })).toBeGreaterThan(0.25);
+    expect(rate({ eagle: true }, true)).toBe(0);
+  });
+
   it('the gun keeps firing after the buzzer while birds are still leaving', () => {
     const s = game();
     while (!s.over) step(s, 1 / 60);
@@ -226,7 +238,11 @@ describe('practice', () => {
 });
 
 describe('round end', () => {
-  const game = (fx: Partial<GameFx> = {}): GameState => newGame(400, 800, gameLayout(400, 800, 24, 48), false, { ...NO_FX, ...fx });
+  const game = (fx: Partial<GameFx> = {}): GameState => {
+    const s = newGame(400, 800, gameLayout(400, 800, 24, 48), false, { ...NO_FX, ...fx });
+    s.eagleAt = Infinity; // a rare eagle would make this test flaky
+    return s;
+  };
   it('no birds after the buzzer; they all leave, then it ends — well before the cap', () => {
     for (const fx of [{}, { turkey: true }, { hubert: true }, { partridge: true }, { pheasants: true }] as Partial<GameFx>[]) {
       const s = game(fx);

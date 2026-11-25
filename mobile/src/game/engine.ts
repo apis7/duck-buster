@@ -63,6 +63,9 @@ export const KO_FRACTION: Record<BirdKind, number> = { duck: 0.33, coot: 1, goos
 /** Candlemas: candles on the bank; each miss blows one out; each still lit at the end is worth this. */
 export const CANDLES = 8;
 export const CANDLE_POINTS = 2;
+/** A bald eagle is rare: the chance one flies over a round — higher around the Fourth of July. */
+export const EAGLE_CHANCE = 0.05;
+export const EAGLE_CHANCE_FOURTH = 0.35;
 /** St. Isidore's angel takes this long to plough across. */
 export const ANGEL_SECONDS = 9;
 /** St. Hubert's blessing multiplier once the stag has passed. */
@@ -259,7 +262,7 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     fx,
     luckyAt: fx.lucky ? 2 + Math.random() * 4 : Infinity,
     turkeyAt: fx.turkey ? 1.5 + Math.random() * 4 : Infinity,
-    eagleAt: fx.eagle ? 3 + Math.random() * 4 : Infinity,
+    eagleAt: !marauder && Math.random() < (fx.eagle ? EAGLE_CHANCE_FOURTH : EAGLE_CHANCE) ? 3 + Math.random() * 4 : Infinity,
     nextPheasant: fx.pheasants ? 1 + Math.random() * 1.5 : Infinity,
     midnightShown: false,
     stagAt: fx.hubert ? 0.8 + Math.random() * 1.2 : Infinity,

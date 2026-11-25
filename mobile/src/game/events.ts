@@ -18,8 +18,8 @@ import { themeFor, THEMES, type Theme } from './theme';
  *  - Spring Snow Goose Conservation Order (Feb 15 – Apr 30): huge snow goose flocks.
  *  - Blizzard (random winter days): whiteout gusts, and wind drifts your shots.
  *  - St. Patrick's Day: a rainbow, and one emerald lucky duck worth 7.
- *  - Fourth of July (Jul 3–5): fireworks, and a bald eagle. Shoot it and the game
- *    warden ends your round.
+ *  - Fourth of July (Jul 3–5): fireworks, and a bald eagle is far likelier. A rare
+ *    eagle can fly over any round (engine.ts); shoot it and the game warden ends it.
  *  - Full moon: a moonlit night marsh with fewer, bigger, slower flocks.
  *
  * Feast days (domain/calendar.ts):
