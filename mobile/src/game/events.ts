@@ -101,8 +101,7 @@ export function practiceDay(date: string): GameDay {
   const base = themeFor(date);
   const theme = base.id === 'christmas' ? THEMES.winter : base;
   if (isFourth(m, d)) {
-    return { theme: { ...theme, fireworks: true }, fx: { ...NO_FX, eagle: true }, banners: ['HAPPY FOURTH!
-DON’T SHOOT THE EAGLE'], names: [] };
+    return { theme: { ...theme, fireworks: true }, fx: { ...NO_FX, eagle: true }, banners: ['HAPPY FOURTH!\nDON’T SHOOT THE EAGLE'], names: [] };
   }
   return { theme, fx: NO_FX, banners: [], names: [] };
 }
