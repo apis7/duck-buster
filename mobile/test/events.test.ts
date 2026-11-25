@@ -71,6 +71,15 @@ describe('event birds', () => {
     s.birds.push(e);
     applyHit(s, e, 'body', 0, 0);
     expect(s.over).toBe(true);
+    fire(s);
+    expect(s.bullets).toHaveLength(0);
+  });
+
+  it('the gun keeps firing after the buzzer while birds are still leaving', () => {
+    const s = game();
+    while (!s.over) step(s, 1 / 60);
+    fire(s);
+    expect(s.bullets).toHaveLength(1);
   });
 
   it('ghost ducks flicker', () => {

@@ -209,7 +209,10 @@ export type GameState = {
   tally: Record<string, { ko: number; hits: number; pts: number }>;
   /** Holiday and seasonal bonus points by source (negative for penalties). */
   bonuses: Record<string, number>;
+  /** The buzzer has gone: no new birds, the ones still up leave. The gun keeps firing until they're gone. */
   over: boolean;
+  /** Shot the eagle: the game warden took the gun. */
+  busted: boolean;
 };
 
 export function newGame(width: number, height: number, layout: GameLayout, marauder = false, fx: GameFx = NO_FX): GameState {
@@ -268,6 +271,7 @@ export function newGame(width: number, height: number, layout: GameLayout, marau
     tally: {},
     bonuses: {},
     over: false,
+    busted: false,
   };
 }
 
@@ -321,7 +325,7 @@ export function shellsShown(s: GameState): number {
 
 export function fire(s: GameState): void {
   'worklet';
-  if (s.over) return;
+  if (s.busted) return;
   if (reloading(s)) {
     s.events.push({ k: 'dry' });
     return;
@@ -631,6 +635,7 @@ export function applyHit(s: GameState, b: Bird, zone: 'ko' | 'body', bx: number,
     b.earned = 0;
     down = true;
     s.over = true;
+    s.busted = true;
     s.aiming = false;
     s.events.push({ k: 'eagle' });
   } else if (b.kind === 'coot') {
@@ -778,10 +783,7 @@ export function step(s: GameState, dt: number): void {
   // The dogs and falling birds finish their show even after the buzzer.
   if (!s.over) {
     s.t += dt;
-    if (s.t >= GAME_SECONDS) {
-      s.over = true;
-      s.aiming = false;
-    }
+    if (s.t >= GAME_SECONDS) s.over = true;
     if (s.fx.midnight && !s.midnightShown && s.t >= GAME_SECONDS - 3) {
       s.midnightShown = true;
       s.events.push({ k: 'midnight' });
@@ -930,7 +932,8 @@ export function step(s: GameState, dt: number): void {
       }
     }
     if (!spent && bl.x > -20 && bl.x < s.width + 20 && bl.y > -20) keep.push(bl);
-    else if (!spent) s.misses++;
+    // Candles are counted at the buzzer, so later misses don't blow any out.
+    else if (!spent && !s.over) s.misses++;
   }
   s.bullets = keep;
 

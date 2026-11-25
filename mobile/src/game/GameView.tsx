@@ -311,7 +311,7 @@ export function GameView({
     onBegin: (e) => {
       'worklet';
       const s = state.value;
-      if (!live.value || s.over) return;
+      if (!live.value || s.busted) return;
       const dx = e.x / scale - s.gunX;
       const dy = e.y / scale - s.gunY;
       if (dx * dx + dy * dy > GRAB_RADIUS * GRAB_RADIUS) return;
