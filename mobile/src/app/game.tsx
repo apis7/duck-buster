@@ -10,6 +10,7 @@ export default function Game() {
     <>
       <StatusBar style="light" />
       <IntroFlow
+        holidays
         onDone={() => {
           router.back();
           maybeShowInterstitial();

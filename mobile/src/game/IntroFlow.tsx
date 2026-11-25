@@ -19,7 +19,7 @@ import { gameDay, practiceDay } from './events';
 type Phase = 'whirl' | 'count' | 'play' | 'summary';
 
 /**
- * - practice: the launch game (and replays from More). Logo intro → 3-2-1 → twelve
+ * - practice: the launch game (and replays from More, which get the day's holidays). Logo intro → 3-2-1 → twelve
  *   seconds → arcade summary with PRACTICE high scores. Nothing counts for the season.
  *   Tap the duck at the top 7× to skip. Hold it for 5 seconds and… Marauder Mode.
  * - hunt: the hunt winner's round. No intro, no skip, no easter egg; the result is
@@ -36,10 +36,12 @@ const HOLD_TICK_MS = 600;
 const TAP_MAX_MS = 500;
 
 export function IntroFlow({
-  mode = 'practice', intro = true, playerName, onDone, onResult,
+  mode = 'practice', intro = true, holidays = false, playerName, onDone, onResult,
 }: {
   mode?: GameMode;
   intro?: boolean;
+  /** Practice replayed from More: today's holidays, feasts and weather too, as in a hunt round. */
+  holidays?: boolean;
   playerName?: string;
   onDone: () => void;
   /** Hunt rounds: called once with the result, before the summary shows. */
@@ -54,9 +56,9 @@ export function IntroFlow({
   const [taps, setTaps] = useState(0);
   const [marauder, setMarauder] = useState(false);
   // The marsh follows the calendar: fall colors, winter snow, Christmas trees and the partridge.
-  // Practice gets the plain season only (fall, winter…), plus the Fourth's eagle. Holidays,
-  // feast days, the partridge and the rest are saved for the winner's round.
-  const [day] = useState(() => (mode === 'hunt' ? gameDay(todayISO()) : practiceDay(todayISO())));
+  // The launch game gets the plain season only (fall, winter…), plus the Fourth's eagle.
+  // Replays from More and the winner's round get the holidays, feast days, partridge and the rest.
+  const [day] = useState(() => (mode === 'hunt' || holidays ? gameDay(todayISO()) : practiceDay(todayISO())));
   const theme = day.theme;
   const justHeld = useRef(false);
   const holdStart = useRef(0);
