@@ -1,1 +1,1 @@
-First release: hunt log for your whole crew, Bragging Board, Duck-dex, secret badges, Season Awards Night, duck ID quiz and the pixel duck-shoot mini-game.
+Duck shoot: keep firing after the buzzer until the last bird is gone. Replays from the More tab now get the day's holidays and seasons. Watch out for the rare bald eagle — shoot it and the game warden ends your round. Crash reports to our own server help us fix bugs.
